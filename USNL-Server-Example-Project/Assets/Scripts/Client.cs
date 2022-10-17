@@ -33,7 +33,7 @@ public class Client {
     public class TCP {
         public TcpClient socket;
 
-        private readonly int id;
+        private readonly int clientId;
         private NetworkStream stream;
         private Packet receivedData;
         private byte[] receiveBuffer;
@@ -41,7 +41,7 @@ public class Client {
         Client client;
 
         public TCP(int _id, Client _client) {
-            id = _id;
+            clientId = _id;
             client = _client;
         }
 
@@ -68,7 +68,7 @@ public class Client {
                     stream.BeginWrite(_packet.ToArray(), 0, _packet.Length(), null, null);
                 }
             } catch (Exception _ex) {
-                Debug.Log($"Error sending data to client {id} via TCP: {_ex}");
+                Debug.Log($"Error sending data to client {clientId} via TCP: {_ex}");
             }
         }
 
@@ -76,7 +76,7 @@ public class Client {
             try {
                 int _byteLength = stream.EndRead(_result);
                 if (_byteLength <= 0) {
-                    Server.clients[id].Disconnect(id, true);
+                    Server.clients[clientId].Disconnect(clientId, true);
                     return;
                 }
 
@@ -87,7 +87,7 @@ public class Client {
                 stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
             } catch (Exception _ex) {
                 Debug.Log($"Error recieving TCP data: {_ex}");
-                Server.clients[id].Disconnect(id, true);
+                Server.clients[clientId].Disconnect(clientId, true);
             }
         }
 
@@ -109,7 +109,8 @@ public class Client {
                 ThreadManager.ExecuteOnMainThread(() => {
                     using (Packet _packet = new Packet(_packetBytes)) {
                         int _packetId = _packet.ReadInt();
-                        Server.packetHandlers[_packetId](id, _packet);
+                        _packet.PacketId = _packetId;
+                        Server.packetHandlers[_packetId](clientId, _packet);
                     }
                 });
 
@@ -141,10 +142,10 @@ public class Client {
     public class UDP {
         public IPEndPoint endPoint;
 
-        private int id;
+        private int clientId;
 
         public UDP(int _id) {
-            id = _id;
+            clientId = _id;
         }
 
         public void Connect(IPEndPoint _endPoint) {
@@ -163,7 +164,8 @@ public class Client {
             ThreadManager.ExecuteOnMainThread(() => {
                 using (Packet _packet = new Packet(_packetBytes)) {
                     int _packetId = _packet.ReadInt();
-                    Server.packetHandlers[_packetId](id, _packet);
+                    _packet.PacketId = _packetId;
+                    Server.packetHandlers[_packetId](clientId, _packet);
                 }
             });
         }
