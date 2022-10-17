@@ -8,8 +8,8 @@ using UnityEngine;
 public class Client : MonoBehaviour {
     #region Variables
 
-    public static Client instance { get; private set; };
-    public static int dataBufferSize = 4096 { get; private set; };
+    public static Client instance;
+    public static int dataBufferSize = 4096;
 
     [Header("Connection Info")]
     public string ip = "127.0.0.1";
