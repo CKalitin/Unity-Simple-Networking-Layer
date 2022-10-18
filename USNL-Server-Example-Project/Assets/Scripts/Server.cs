@@ -15,9 +15,6 @@ public class Server {
 
     public static List<Client> clients = new List<Client>();
 
-    public delegate void PacketHandler(int _fromClient, Packet _packet);
-    public static List<PacketHandler> packetHandlers;
-
     private static TcpListener tcpListener;
     private static UdpClient udpListener;
 
@@ -112,13 +109,7 @@ public class Server {
             clients.Add(new Client(i));
         }
 
-        packetHandlers = new List<PacketHandler>() {
-            /*{ (int)ClientPackets.welcomeReceived, ServerHandle.WelcomeReceived },
-            { (int)ClientPackets.tcpInput, ServerHandle.TCPInput },
-            { (int)ClientPackets.udpInput, ServerHandle.UDPInput },
-            { (int)ClientPackets.serverData, ServerHandle.ServerDataObject },*/
-        };
-        Debug.Log("Initialized Server Data and Packet Handlers.");
+        Debug.Log("Initialized Server Data.");
     }
 
     public static void Stop() {

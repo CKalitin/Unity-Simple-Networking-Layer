@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 /// Sent from server to client.
 public enum ServerPackets {
@@ -14,22 +12,35 @@ public enum ClientPackets {
 
 // Packet Structs:
 
-public struct WelcomeReceivedPacket {
+public class WelcomeReceivedPacket {
+    private int packetId;
+
     private int clientIdCheck;
 
+    public WelcomeReceivedPacket(int _packetId, int _clientIdCheck) {
+        PacketId = packetId;
+        clientIdCheck = _clientIdCheck;
+    }
+
     public int ClientIdCheck { get => clientIdCheck; set => clientIdCheck = value; }
+    public int PacketId { get => packetId; set => packetId = value; }
 }
 
-public static class PacketHandler {
-    public static void WelcomeReceived(int _fromClient, Packet _packet) {
-        int _clientIdCheck = _packet.ReadInt();
+public static class PacketHandlers {
+    public delegate void PacketHandler(Packet _packet);
+    public static List<PacketHandler> packetHandlers = new List<PacketHandler>() {
+        { WelcomeReceived },
+    };
 
-        Debug.Log($"{Server.clients[_fromClient].Tcp.socket.Client.RemoteEndPoint} connected successfully and is now Player {_fromClient}.");
+    public static void WelcomeReceived(Packet _packet) {
+        // TODO: Put this in ServerManager
+        /*Debug.Log($"{Server.clients[_fromClient].Tcp.socket.Client.RemoteEndPoint} connected successfully and is now Player {_fromClient}.");
         if (_fromClient != _clientIdCheck) {
             Debug.Log($"ID: {_fromClient}) has assumed the wrong client ID ({_clientIdCheck}.");
-        }
+        }*/
 
-        PacketManager.instance.PacketReceived(_packet);
+        WelcomeReceivedPacket welcomeReceivedPacket = new WelcomeReceivedPacket(_packet.PacketId, _packet.ReadInt());
+        PacketManager.instance.PacketReceived(_packet, welcomeReceivedPacket);
     }
 }
 
@@ -79,7 +90,6 @@ public static class PacketSend {
 
     #endregion
 
-    #region Packet Send Functions
 
     public static void Welcome(int _toClient, string _msg) {
         using (Packet _packet = new Packet((int)ServerPackets.welcome)) {
@@ -89,6 +99,4 @@ public static class PacketSend {
             SendTCPData(_toClient, _packet);
         }
     }
-
-    #endregion
 }

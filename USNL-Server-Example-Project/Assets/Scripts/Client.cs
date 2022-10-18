@@ -108,9 +108,9 @@ public class Client {
                 byte[] _packetBytes = receivedData.ReadBytes(_packetLength);
                 ThreadManager.ExecuteOnMainThread(() => {
                     using (Packet _packet = new Packet(_packetBytes)) {
-                        int _packetId = _packet.ReadInt();
-                        _packet.PacketId = _packetId;
-                        Server.packetHandlers[_packetId](clientId, _packet);
+                        _packet.PacketId = _packet.ReadInt();
+                        _packet.FromClient = clientId;
+                        PacketHandlers.packetHandlers[_packet.PacketId](_packet);
                     }
                 });
 
@@ -163,9 +163,9 @@ public class Client {
 
             ThreadManager.ExecuteOnMainThread(() => {
                 using (Packet _packet = new Packet(_packetBytes)) {
-                    int _packetId = _packet.ReadInt();
-                    _packet.PacketId = _packetId;
-                    Server.packetHandlers[_packetId](clientId, _packet);
+                    _packet.PacketId = _packet.ReadInt();
+                    _packet.FromClient = clientId;
+                    PacketHandlers.packetHandlers[_packet.PacketId](_packet);
                 }
             });
         }

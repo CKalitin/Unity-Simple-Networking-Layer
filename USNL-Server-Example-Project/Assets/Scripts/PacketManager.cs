@@ -17,14 +17,14 @@ public class PacketManager : MonoBehaviour {
             Destroy(this);
         }
 
-        // TODO: Track how long this takes in a project with tons of scripts
+        // TODO: Track how long this takes in a project with tons of scripts (THIS HAD TO BE DONE AT COMPILE TODO)
         GeneratePacketReceivedCallbacks();
     }
 
     #region Packet Received Callbacks
 
-    public void PacketReceived(Packet _packet) {
-        object[] parameters = new object[] { _packet }; // passed to function (hope c# garbage collection gets this (probably will))
+    public void PacketReceived(Packet _packet, object _packetStruct) {
+        object[] parameters = new object[] { _packetStruct }; // Yes, I used object as a parameter, and yes i know. ew i hate this code already why couldn't I have thought of something better
 
         for (int i = 0; i < packetReceivedCallbacks[_packet.PacketId].Count; i++) {
             packetReceivedCallbacks[_packet.PacketId][i].Invoke(this, parameters);

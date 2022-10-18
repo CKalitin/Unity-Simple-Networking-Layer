@@ -9,11 +9,14 @@ public class Packet : IDisposable {
     private byte[] readableBuffer;
     private int readPos;
 
+    // This might not need to be in Packet but it simplifies other code by being here:
     private int packetId;
+    private int fromClient;
 
     private bool disposed = false;
 
     public int PacketId { get => packetId; set => packetId = value; }
+    public int FromClient { get => fromClient; set => fromClient = value; }
 
     /// <summary>Creates a new empty packet (without an ID).</summary>
     public Packet() {
