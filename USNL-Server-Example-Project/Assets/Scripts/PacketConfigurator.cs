@@ -16,15 +16,43 @@ using UnityEngine;
 // Packet Handler
 // Packet Sender
 
+[CreateAssetMenu(fileName ="PacketConfigurator", menuName = "USNL/Packet Configurator", order =0)]
 public class PacketConfigurator : ScriptableObject {
     #region Variables
 
-    [SerializeField] private string generationPath = "Scripts/";
+    [SerializeField] private string generationPath = "Assets/";
     [Space]
-    [SerializeField] private PacketConfig[] serverPackets;
-    [SerializeField] private PacketConfig[] clientPackets;
+    [SerializeField] private ServerPacketConfig[] serverPackets;
+    [SerializeField] private ClientPacketConfig[] clientPackets;
 
-    enum PacketVariables {
+    Dictionary<PacketVarTypes, string> packetTypes = new Dictionary<PacketVarTypes, string>() 
+    { { PacketVarTypes.Byte, "byte"},
+    { PacketVarTypes.ByteArray, "byte[]"},
+    { PacketVarTypes.Short, "short"},
+    { PacketVarTypes.Int, "int"},
+    { PacketVarTypes.Long, "long"},
+    { PacketVarTypes.Float, "float"},
+    { PacketVarTypes.Bool, "bool"},
+    { PacketVarTypes.String, "string"},
+    { PacketVarTypes.Vector2, "Vector2"},
+    { PacketVarTypes.Vector3, "Vector3"},
+    { PacketVarTypes.Quaternion, "Quaternion"}
+    };
+    Dictionary<PacketVarTypes, string> packetReadTypes = new Dictionary<PacketVarTypes, string>()
+    { { PacketVarTypes.Byte, "Byte"},
+    { PacketVarTypes.ByteArray, "Bytes"},
+    { PacketVarTypes.Short, "Short"},
+    { PacketVarTypes.Int, "Int"},
+    { PacketVarTypes.Long, "Long"},
+    { PacketVarTypes.Float, "Float"},
+    { PacketVarTypes.Bool, "Bool"},
+    { PacketVarTypes.String, "String"},
+    { PacketVarTypes.Vector2, "Vector2"},
+    { PacketVarTypes.Vector3, "Vector3"},
+    { PacketVarTypes.Quaternion, "Quaternion"}
+    };
+
+    private enum PacketVarTypes {
         Byte,
         ByteArray,
         Short,
@@ -37,160 +65,168 @@ public class PacketConfigurator : ScriptableObject {
         Vector3,
         Quaternion
     }
-    Dictionary<PacketVariables, string> packetTypes = new Dictionary<PacketVariables, string>() 
-    { { PacketVariables.Byte, "byte"},
-    { PacketVariables.ByteArray, "byte[]"},
-    { PacketVariables.Short, "short"},
-    { PacketVariables.Int, "int"},
-    { PacketVariables.Long, "long"},
-    { PacketVariables.Float, "float"},
-    { PacketVariables.Bool, "bool"},
-    { PacketVariables.String, "string"},
-    { PacketVariables.Vector2, "vector2"},
-    { PacketVariables.Vector3, "vector3"},
-    { PacketVariables.Quaternion, "quaternion"}
-    };
-    Dictionary<PacketVariables, string> packetReadTypes = new Dictionary<PacketVariables, string>()
-    { { PacketVariables.Byte, "Byte"},
-    { PacketVariables.ByteArray, "Bytes"},
-    { PacketVariables.Short, "Short"},
-    { PacketVariables.Int, "Int"},
-    { PacketVariables.Long, "Long"},
-    { PacketVariables.Float, "Float"},
-    { PacketVariables.Bool, "Bool"},
-    { PacketVariables.String, "String"},
-    { PacketVariables.Vector2, "Vector2"},
-    { PacketVariables.Vector3, "Vector3"},
-    { PacketVariables.Quaternion, "Quaternion"}
-    };
+    private enum ServerPacketTypes {
+        SendToClient,
+        SendToAllClients,
+        SendToAllClientsExcept
+    }
 
-    private struct PacketConfig {
-        private string packetName; // In C# formatting: eg. "examplePacket"
-        private PacketVariables[] packetVariables;
+    [Serializable]
+    private struct PacketVariable {
+        [SerializeField] private string packetName;
+        [SerializeField] private PacketVarTypes packetType;
 
         public string PacketName { get => packetName; set => packetName = value; }
-        public PacketVariables[] PacketVariables { get => packetVariables; set => packetVariables = value; }
+        public PacketVarTypes PacketType { get => packetType; set => packetType = value; }
     }
-    
+
+    [Serializable]
+    private struct ClientPacketConfig {
+        [Tooltip("Can be done in any formatting (eg. 'exampleName' & 'Example Name' both work)")]
+        [SerializeField] private string packetName; // In C# formatting: eg. "examplePacket"
+        [SerializeField] private PacketVariable[] packetVariables;
+        [Space]
+        [Tooltip("This is only for the user.")]
+        [SerializeField] private string notes;
+
+        public string PacketName { get => packetName; set => packetName = value; }
+        public PacketVariable[] PacketVariables { get => packetVariables; set => packetVariables = value; }
+    }
+
+    [Serializable]
+    private struct ServerPacketConfig {
+        [Tooltip("Can be done in any formatting (eg. 'exampleName' & 'Example Name' both work)")]
+        [SerializeField] private string packetName;
+        [SerializeField] private PacketVariable[] packetVariables;
+        [Tooltip("SendToClient: Send Packet to a single client specified by you.\n" +
+            "SendToAllClients: Send Packet to all clients.\n" +
+            "SendToAllClientsExcept: Send Packet to all clients execpt one specified by you.")]
+        [SerializeField] private ServerPacketTypes sendType;
+        [Space]
+        [Tooltip("This is only for the user.")]
+        [SerializeField] private string notes;
+
+        public string PacketName { get => packetName; set => packetName = value; }
+        public PacketVariable[] PacketVariables { get => packetVariables; set => packetVariables = value; }
+        public ServerPacketTypes SendType { get => sendType; set => sendType = value; }
+    }
+
     #endregion
-
-    private void generateServerPacketManagement() {
+    // UDP OR TCP SERVER PACKETS
+    
+    public void GenerateServerPacketManagement() {
         string filePathAndName = generationPath + "GeneratedServerPacketManagement" + ".cs"; // The folder where the script is expected to exist
-
-        // Packet Handler
-        // Packet name (upper) 
-        // variable names & types
-
-        // Packet Send
-        // Packet Name (upper), parameter (variables - names & types)
 
         #region Server & Client Packet Enums
 
         string serverPacketsString = "";
         for (int i = 0; i < serverPackets.Length; i++) {
-            serverPacketsString += $"\n{Lower(serverPackets[i].ToString())} = {i + 1}, ";
+            serverPacketsString += $"\n    {Upper(serverPackets[i].PacketName.ToString())} = {i + 1},";
         }
-        serverPacketsString = serverPacketsString.Substring(0, serverPacketsString.Length - 2); // Remove last ", "
+        serverPacketsString = serverPacketsString.Substring(1, serverPacketsString.Length - 1); // Remove last ", " & first \n
 
         string clientPacketsString = "";
         for (int i = 0; i < clientPackets.Length; i++) {
-            clientPacketsString += $"\n{Lower(clientPackets[i].ToString())} = {i + 1}, ";
+            clientPacketsString += $"\n    {Upper(clientPackets[i].PacketName.ToString())} = {i + 1},";
         }
-        clientPacketsString = clientPacketsString.Substring(0, clientPacketsString.Length - 2); // Remove last ", "
+        clientPacketsString = clientPacketsString.Substring(1, clientPacketsString.Length - 1); // Remove last ", " & first \n
 
         #endregion
 
         #region Packet Structs
 
-        string packetStructsString = "";
+        string psts = ""; // Packet Structs String
         for (int i = 0; i < clientPackets.Length; i++) {
-            packetStructsString += $"\npublic struct {Upper(clientPackets[i].ToString())}Packet {{";
+            psts += $"\npublic struct {Upper(clientPackets[i].PacketName.ToString())}Packet {{";
 
-            packetStructsString += $"\nprivate int clientId;";
-            packetStructsString += "\n";
+            psts += $"\n    private int clientId;";
+            psts += "\n";
             for (int x = 0; x < clientPackets[i].PacketVariables.Length; x++) {
-                string varLower = Lower(packetTypes[clientPackets[i].PacketVariables[x]].ToString()); // Lower case variable name (C# formatting)
-                string varType = packetTypes[clientPackets[i].PacketVariables[x]]; // Variable type string
-                packetStructsString += $"\nprivate {varType} {varLower};";
+                string varName = Lower(clientPackets[i].PacketVariables[x].PacketName); // Lower case variable name (C# formatting)
+                string varType = packetTypes[clientPackets[i].PacketVariables[x].PacketType]; // Variable type string
+                psts += $"\n    private {varType} {varName};";
             }
 
 
             // Constructor:
-            packetStructsString += "\n";
-            string constructorParameters = "";
+            psts += "\n";
+            string constructorParameters = "int _clientId, ";
             for (int x = 0; x < clientPackets[i].PacketVariables.Length; x++) {
-                constructorParameters += $"{packetTypes[clientPackets[i].PacketVariables[x]]} _{Lower(packetTypes[clientPackets[i].PacketVariables[x]].ToString())}, ";
+                constructorParameters += $"{packetTypes[clientPackets[i].PacketVariables[x].PacketType]} _{Lower(clientPackets[i].PacketVariables[x].PacketName)}, ";
             }
             constructorParameters = constructorParameters.Substring(0, constructorParameters.Length - 2);
 
-            packetStructsString += $"\npublic {Upper(clientPackets[i].ToString())}Packet({constructorParameters}) {{";
+            psts += $"\n    public {Upper(clientPackets[i].PacketName)}Packet({constructorParameters}) {{";
+            psts += "\n        clientId = _clientId;";
             for (int x = 0; x < clientPackets[i].PacketVariables.Length; x++) {
-                packetStructsString += $"\n{Upper(packetTypes[clientPackets[i].PacketVariables[x]].ToString())} = _{Lower(packetTypes[clientPackets[i].PacketVariables[x]].ToString())}";
+                psts += $"\n        {Lower(clientPackets[i].PacketVariables[x].PacketName)} = _{Lower(clientPackets[i].PacketVariables[x].PacketName)};";
             }
-            packetStructsString += "\n}";
-            packetStructsString += "\n";
+            psts += "\n    }";
+            psts += "\n";
 
 
-            packetStructsString += "\npublic int PacketId { get => packetId; set => packetId = value; }";
+            psts += "\n    public int ClientId { get => clientId; set => clientId = value; }";
             for (int x = 0; x < clientPackets[i].PacketVariables.Length; x++) {
-                string varLower = Lower(packetTypes[clientPackets[i].PacketVariables[x]].ToString()); // Lower case variable name (C# formatting)
-                string varType = packetTypes[clientPackets[i].PacketVariables[x]]; // Variable type string
+                string varName = Lower(clientPackets[i].PacketVariables[x].PacketName); // Lower case variable name (C# formatting)
+                string varType = packetTypes[clientPackets[i].PacketVariables[x].PacketType]; // Variable type string
 
-                packetStructsString += $"\npublic {varType} {Upper(varLower)} {{ get => {varLower}; set => {varLower} = value; }}";
+                psts += $"\n    public {varType} {Upper(varName)} {{ get => {varName}; set => {varName} = value; }}";
             }
-            packetStructsString += "\n}";
+            psts += "\n}";
         }
-        packetStructsString = packetStructsString.Substring(0, packetStructsString.Length - 3); // This may or may not remove the "\n" we'll see
 
         #endregion
 
         #region Packet Handlers
 
-        string packetHandlersString = "";
+        string phs = ""; // Packet Handlers String
 
-        packetHandlersString += "\npublic delegate void PacketHandler(Packet _packet);";
-        packetHandlersString += "\npublic static List<PacketHandler> packetHandlers = new List<PacketHandler>() {";
+        phs += "\n    public delegate void PacketHandler(Packet _packet);";
+        phs = phs.Substring(1, phs.Length - 1);
+        phs += "\n    public static List<PacketHandler> packetHandlers = new List<PacketHandler>() {";
         string packetHandlerFunctionsString = "";
         for (int i = 0; i < clientPackets.Length; i++) {
-            packetHandlersString += $"\n{{ {Upper(clientPackets[i].ToString())} }},";
+            phs += $"\n        {{ {Upper(clientPackets[i].PacketName)} }},";
         }
-        packetHandlersString += packetHandlerFunctionsString;
-        packetHandlersString += "\n};";
+        phs += packetHandlerFunctionsString;
+        phs += "\n    };";
 
-        packetHandlersString += "\n";
+        phs += "\n";
 
         for (int i = 0; i < clientPackets.Length; i++) {
-            string upPacketName = Upper(clientPackets[i].ToString());
-            string loPacketName = Lower(clientPackets[i].ToString());
-            packetHandlersString += $"\npublic static void {upPacketName}(Packet _packet) {{";
+            string upPacketName = Upper(clientPackets[i].PacketName);
+            string loPacketName = Lower(clientPackets[i].PacketName);
+            phs += $"\n    public static void {upPacketName}(Packet _packet) {{";
 
             string packetParameters = "";
             packetParameters += "_packet.PacketId, ";
             for (int x = 0; x < clientPackets[i].PacketVariables.Length; x++) {
-                packetParameters += $"_packet.Read{packetReadTypes[clientPackets[i].PacketVariables[x]]}(), ";
+                packetParameters += $"_packet.Read{packetReadTypes[clientPackets[i].PacketVariables[x].PacketType]}(), ";
             }
             packetParameters = packetParameters.Substring(0, packetParameters.Length - 2);
 
-            packetHandlersString += $"\n{upPacketName}Packet {loPacketName}Packet = new {upPacketName}({packetParameters});";
-            packetHandlersString += $"\nPacketManager.instance.PacketReceived(_packet, {loPacketName});";
+            phs += $"\n        {upPacketName}Packet {loPacketName}Packet = new {upPacketName}Packet({packetParameters});";
+            phs += $"\n        PacketManager.instance.PacketReceived(_packet, {loPacketName}Packet);";
 
-            packetHandlersString += "\n}";
-            packetHandlersString += "\n";
+            phs += "\n    }";
+            phs += "\n";
         }
+        phs = phs.Substring(0, phs.Length - 1); // Remove last /n
 
         #endregion
 
-        #region PacketSend
+        #region Packet Send
 
         string pss = ""; // Packet Send String
 
         #region TcpUdpSendFunctionsString
-        string TcpUdpSendFunctionsString = "\n    #region TCP & UDP Send Functions" +
+        string TcpUdpSendFunctionsString = "    #region TCP & UDP Send Functions" +
             "\n" +
             "\n    private static void SendTCPData(int _toClient, Packet _packet) {" +
             "\n        _packet.WriteLength();" +
             "\n        Server.clients[_toClient].Tcp.SendData(_packet);" +
             "\n    }" +
+            "\n" +
             "\n    private static void SendTCPDataToAll(Packet _packet) {" +
             "\n        _packet.WriteLength();" +
             "\n        for (int i = 1; i < Server.MaxClients; i++) {" +
@@ -228,39 +264,76 @@ public class PacketConfigurator : ScriptableObject {
             "\n        }" +
             "\n    }" +
             "\n" +
-            "\n    #endregion";
+            "\n    #endregion" + 
+            "\n";
         #endregion
         pss += TcpUdpSendFunctionsString;
 
+        for (int i = 0; i < serverPackets.Length; i++) {
+            string pas = ""; // Packet arguments (parameters) string
+            if (serverPackets[i].SendType == ServerPacketTypes.SendToClient) { pas = "int _toClient, "; }
+            if (serverPackets[i].SendType == ServerPacketTypes.SendToAllClientsExcept) { pas = "int _exceptClient, "; }
+            for (int x = 0; x < serverPackets[i].PacketVariables.Length; x++) {
+                pas += $"{packetTypes[serverPackets[i].PacketVariables[x].PacketType]} _{Lower(serverPackets[i].PacketVariables[x].PacketName)}, ";
+            }
+            pas = pas.Substring(0, pas.Length - 2);
+
+            pss += $"\n    public static void {Upper(serverPackets[i].PacketName)}({pas}) {{";
+            pss += $"\n        using (Packet _packet = new Packet((int)ServerPackets.{Upper(serverPackets[i].PacketName)})) {{";
+
+            string pws = ""; // Packet writes
+            if (serverPackets[i].SendType == ServerPacketTypes.SendToClient) { pws = "\n            _packet.Write(_toClient);"; }
+            if (serverPackets[i].SendType == ServerPacketTypes.SendToAllClientsExcept) { pas = "\n        _packet.Write(_exceptClient);"; }
+            for (int x = 0; x < serverPackets[i].PacketVariables.Length; x++) {
+                pws += $"\n            _packet.Write(_{Lower(serverPackets[i].PacketVariables[x].PacketName)});";
+            }
+            pss += pws;
+            pss += "\n";
+
+            if (serverPackets[i].SendType == ServerPacketTypes.SendToClient) {
+                pss += "\n            SendTCPData(_toClient, _packet);";
+            } else if (serverPackets[i].SendType == ServerPacketTypes.SendToClient) {
+                pss += "\n            SendTCPDataToAll(_exceptClient, _packet);";
+            } else {
+                pss += "\n            SendTCPDataToAll(_packet);";
+            }
+            pss += "\n        }\n    }\n"; // Close functions and using
+        }
+        pss = pss.Substring(0, pss.Length - 1); // Remove last /n
+
         #endregion
 
-        using (StreamWriter streamWriter = new StreamWriter(filePathAndName)) {
+        try {
+            using (StreamWriter streamWriter = new StreamWriter(filePathAndName)) {
 
-            streamWriter.Write(
-                "using System.Collections.Generic;" +
-                "\nusing System.Collections.Generic;" +
-                "\nusing UnityEngine;" +
-                "\n" +
-                "\n// Sent from Server to Client" +
-                "\n public enum ServerPackets {" +
-                $"\n{serverPacketsString}" +
-                "\n}" +
-                "\n" +
-                "\n// Sent from Client to Server" +
-                "\npublic enum ClientPackets {" +
-                $"\n{clientPacketsString}" +
-                "\n}" +
-                "\n" +
-                "\n/*** Packet Structs ***/" +
-                "\n" +
-                $"\n{packetStructsString}" +
-                "\npublic static class PacketHandlers {" +
-                $"\n{packetHandlersString}" +
-                "\n}" +
-                "\npublic static class PacketSend {" +
-                $"\n{pss}" +
-                "\n}" +
-                "\n");
+                streamWriter.Write(
+                    "using System.Collections.Generic;" +
+                    "using UnityEngine;" +
+                    "\n" +
+                    "\n// Sent from Server to Client" +
+                    "\npublic enum ServerPackets {" +
+                    $"\n{serverPacketsString}" +
+                    "\n}" +
+                    "\n" +
+                    "\n// Sent from Client to Server" +
+                    "\npublic enum ClientPackets {" +
+                    $"\n{clientPacketsString}" +
+                    "\n}" +
+                    "\n" +
+                    "\n/*** Packet Structs ***/" +
+                    $"\n{psts}" +
+                    "\n" +
+                    "\npublic static class PacketHandlers {" +
+                    $"\n{phs}" +
+                    "\n}" +
+                    "\n" +
+                    "\npublic static class PacketSend {" +
+                    $"\n{pss}" +
+                    "\n}" +
+                    "\n");
+            }
+        } catch (Exception _ex) {
+            Debug.LogError($"Could not save Packet Configuration with error: {_ex}");
         }
     }
 
@@ -271,55 +344,6 @@ public class PacketConfigurator : ScriptableObject {
 
     private string Lower(string _input) {
         string output = String.Concat(_input.Where(c => !Char.IsWhiteSpace(c))); // Remove whitespace
-        return $"{Char.ToUpper(output[0])}{output.Substring(1)}";
+        return $"{Char.ToLower(output[0])}{output.Substring(1)}";
     }
-
-    /*private void GenerateServerPacketManagementOld() {
-        string filePathAndName = generationPath + "GeneratedServerPacketManagement" + ".cs"; //The folder where the enum script is expected to exist
-
-        using (StreamWriter streamWriter = new StreamWriter(filePathAndName)) {
-            // Pcaket Structs
-            // Packet Handler
-            // Packet Send
-
-            // Write Using statements
-            streamWriter.WriteLine("using System.Collections;\r\nusing System.Collections.Generic;\r\nusing UnityEngine;");
-
-            streamWriter.WriteLine(""); // Line break
-
-            // Client Packet enums
-            streamWriter.WriteLine("// Sent from Server to Client.");
-            streamWriter.WriteLine("public enum ClientPackets {");
-            for (int i = 0; i < numPackets; i++) {
-                streamWriter.WriteLine($"{packetName} = {i + 1}");
-            }
-            streamWriter.WriteLine("}");
-
-            streamWriter.WriteLine(""); // Line break
-
-            // Server Packet enums
-            streamWriter.WriteLine("// Sent from Client to Server.");
-            streamWriter.WriteLine("public enum ServerPackets {");
-            for (int i = 0; i < numPackets; i++) {
-                streamWriter.WriteLine($"   {packetName} = {i + 1}");
-            }
-            streamWriter.WriteLine("}");
-
-            streamWriter.WriteLine(""); // Line break
-
-            // Packet Structs
-            for (int i = 0; i < numPackets; i++) {
-                streamWriter.WriteLine($"public struct {packetName} {{"); // Might be a bug here
-                streamWriter.WriteLine($"{packetVariable}");
-                // Get Set
-                streamWriter.WriteLine(""); // Line break
-            }
-
-            streamWriter.WriteLine("public static class PacketHandler {");
-            for (int i = 0; i < numPackets; i++) {
-                streamWriter.WriteLine($"    public static void {packetName}(int _fromClient, Packet _packet) {{"); // Might be a bug here
-                // TODO
-            }
-        }
-    }*/
 }
