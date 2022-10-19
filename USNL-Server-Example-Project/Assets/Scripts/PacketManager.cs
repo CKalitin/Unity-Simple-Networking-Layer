@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -22,7 +21,6 @@ public class PacketManager : MonoBehaviour {
         public Type ClassType { get => classType; set => classType = value; }
     }
 
-
     private void Awake() {
         if (instance == null) {
             instance = this;
@@ -30,40 +28,50 @@ public class PacketManager : MonoBehaviour {
             Debug.Log("Packet Manager instance already exists, destroying object.");
             Destroy(this);
         }
-
+        
+        // TODO: Track how long this takes in a project with many scripts
         GeneratePacketReceivedCallbacks();
-
-        Debug.Log(packetReceivedCallbacks[0][0].ClassType);
-        Debug.Log(packetReceivedCallbacks[0][0].MethodInfo);
-
-        object[] parameters = new object[] { /*new WelcomeReceivedPacket()*/ };
-        packetReceivedCallbacks[0][0].MethodInfo.Invoke(FindObjectOfType<Test>(), parameters);
-        parameters = new object[] { new ClientInputPacket() };
-        packetReceivedCallbacks[1][0].MethodInfo.Invoke(packetReceivedCallbacks[1][0].ClassType, parameters);
-
-        for (int i = 0; i < packetReceivedCallbacks.Count; i++) {
-            for (int x = 0; x < packetReceivedCallbacks[i].Count; x++) {
-                Debug.Log(packetReceivedCallbacks[i][x]);
-            }
-        }
     }
 
     #region Packet Received Callbacks
 
     public void PacketReceived(Packet _packet, object _packetStruct) {
-        // Yes, I used object as a parameter, and yes i know. ew i hate this code already why couldn't I have thought of something better
+        // Yes, I used object as a parameter, and yes i know. ew i hate this code already why couldn't I have thought of something better, is this really that unsafe? probably.
 
         Debug.Log($"Packet Received: {_packet.PacketId}");
 
         object[] parameters = new object[] { _packetStruct };
+        CallPacketReceivedCallbacks(_packet.PacketId, parameters);
+    }
 
-        for (int i = 0; i < packetReceivedCallbacks[_packet.PacketId].Count; i++) {
-            var type = packetReceivedCallbacks[_packet.PacketId][i].ClassType.GetType();
-            var fuck = FindObjectsOfType<>().Length;
-
-            for (int x = 0; x < FindObjectsOfType<>().Length; x++)
-            packetReceivedCallbacks[_packet.PacketId][i].MethodInfo.Invoke(packetReceivedCallbacks[_packet.PacketId][i].ClassType, parameters);
+    private void CallPacketReceivedCallbacks(int _packetId, object[] _parameters) {
+        // Loop through all callback methods
+        for (int i = 0; i < packetReceivedCallbacks[_packetId].Count; i++) {
+            // Get and Loop through all classes of type of the base call of method[i]
+            List<MonoBehaviour> types = GetObjectsOfType(packetReceivedCallbacks[_packetId][i].ClassType);
+            for (int x = 0; x < types.Count; x++) {
+                try {
+                    packetReceivedCallbacks[_packetId][i].MethodInfo.Invoke(types[x], _parameters);
+                } catch(Exception _ex) {
+                    Debug.LogError($"Could not run packet callback function: {packetReceivedCallbacks[_packetId][i].MethodInfo} in class {types[x].GetType()}\n{_ex}");
+                }
+            }
         }
+    }
+
+    private List<MonoBehaviour> GetObjectsOfType(Type _t) {
+        // Pretty slow alternative to using FindObjectsOfType<>(), but that doesn't work with a variable type
+
+        MonoBehaviour[] monoBehaviours = FindObjectsOfType<MonoBehaviour>();
+        List<MonoBehaviour> output = new List<MonoBehaviour>();
+
+        for (int i = 0; i < monoBehaviours.Length; i++) {
+            if (monoBehaviours[i].GetType() == _t) {
+                output.Add(monoBehaviours[i]);
+            }
+        }
+
+        return output;
     }
 
     private void GeneratePacketReceivedCallbacks() {
@@ -76,7 +84,7 @@ public class PacketManager : MonoBehaviour {
             // Iterate through every server packet type
             for (int x = 0; x < Enum.GetNames(typeof(ClientPackets)).Length; x++) {
                 // Find method of name "On{packetName}Packet" / "OnWelcomeReceivedPacket()"
-                MethodInfo method = types[i].GetMethod($"On{Enum.GetNames(typeof(ClientPackets))[x]}Packet", BindingFlags.NonPublic);
+                MethodInfo method = types[i].GetMethod($"On{Enum.GetNames(typeof(ClientPackets))[x]}Packet", BindingFlags.NonPublic | BindingFlags.Instance);
                 if (method == null) { method = types[i].GetMethod($"On{Enum.GetNames(typeof(ClientPackets))[x]}Packet"); }
 
                 if (method != null) {
