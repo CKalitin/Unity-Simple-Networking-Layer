@@ -7,7 +7,6 @@ using UnityEngine;
 public class Client {
     #region Variables & Core
 
-    public static int dataBufferSize = 4096; // (TAG: OLDCODE) This should be set by the user
     private TCP tcp;
     private UDP udp;
 
@@ -47,17 +46,17 @@ public class Client {
 
         public void Connect(TcpClient _socket) {
             socket = _socket;
-            socket.ReceiveBufferSize = dataBufferSize;
-            socket.SendBufferSize = dataBufferSize;
+            socket.ReceiveBufferSize = ServerManager.instance.DataBufferSize;
+            socket.SendBufferSize = ServerManager.instance.DataBufferSize;
 
             stream = socket.GetStream();
 
             receivedData = new Packet();
-            receiveBuffer = new byte[dataBufferSize];
+            receiveBuffer = new byte[ServerManager.instance.DataBufferSize];
 
-            stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
+            stream.BeginRead(receiveBuffer, 0, ServerManager.instance.DataBufferSize, ReceiveCallback, null);
 
-            //ServerSend.Welcome(id, "Welcome to the server!"); UPDATE THIS WHEN PACKET CODE IS WRITTEN
+            PacketSend.Welcome(clientId, ServerManager.instance.WelcomeMessage);
 
             client.isConnected = true;
         }
@@ -84,7 +83,7 @@ public class Client {
                 Array.Copy(receiveBuffer, _data, _byteLength);
 
                 receivedData.Reset(HandleData(_data));
-                stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
+                stream.BeginRead(receiveBuffer, 0, ServerManager.instance.DataBufferSize, ReceiveCallback, null);
             } catch (Exception _ex) {
                 Debug.Log($"Error recieving TCP data: {_ex}");
                 Server.clients[clientId].Disconnect(clientId, true);
@@ -180,16 +179,12 @@ public class Client {
     #region Functions
 
     public void Disconnect(int _clientId, bool _forcablyDisconnected = false) {
-        if (_forcablyDisconnected) {
-            Debug.Log($"{tcp.socket.Client.RemoteEndPoint} has been forcably disconnected. - I think this is a bug right here");
-        } else {
-            Debug.Log($"{tcp.socket.Client.RemoteEndPoint} has disconnected.");
-        }
+        Debug.Log($"{tcp.socket.Client.RemoteEndPoint} has disconnected.");
 
         isConnected = false;
 
         ThreadManager.ExecuteOnMainThread(() => {
-            //NetworkManager.instance.CallClientDisconnectedCallbacks(_clientId);
+            //NetworkManager.instance.CallClientDisconnectedCallbacks(_clientId); TODO
         });
 
         tcp.Disconnect();

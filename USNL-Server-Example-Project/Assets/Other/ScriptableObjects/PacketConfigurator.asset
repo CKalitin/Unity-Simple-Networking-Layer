@@ -9,41 +9,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4c6402f0f3d03e04e8c2aa794053d90e, type: 3}
+  m_Script: {fileID: 11500000, guid: d5aef4926c02f6144913e34c25d46f4d, type: 3}
   m_Name: PacketConfigurator
   m_EditorClassIdentifier: 
   generationPath: Assets/
   serverPackets:
   - packetName: Welcome
     packetVariables:
-    - packetName: msg
+    - packetName: Welcome Message
       packetType: 7
-    - packetName: Just A Vector2
-      packetType: 8
     sendType: 0
     protocol: 0
     notes: 
-  - packetName: Packet2
-    packetVariables:
-    - packetName: 'facto  rioIs Fun  '
-      packetType: 1
-    sendType: 2
-    protocol: 1
-    notes: 
   clientPackets:
-  - packetName: WelcomeReceived
+  - packetName: Welcome Received
     packetVariables:
     - packetName: Client Id Check
       packetType: 3
-    - packetName: Another Variable
-      packetType: 5
     protocol: 0
-    notes: 
-  - packetName: Client Input
-    packetVariables:
-    - packetName: Mouse Position
-      packetType: 8
-    - packetName: Colour
-      packetType: 10
-    protocol: 1
     notes: 

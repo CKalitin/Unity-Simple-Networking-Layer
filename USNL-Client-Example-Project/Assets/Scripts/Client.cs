@@ -9,20 +9,21 @@ public class Client : MonoBehaviour {
     #region Variables
 
     public static Client instance;
-    public static int dataBufferSize = 4096;
 
     [Header("Connection Info")]
     public string ip = "127.0.0.1";
     public int port = 26950;
-    
-    private int maxPlayers;
+    [Space]
+    public static int dataBufferSize = 4096;
+
+    private int serverMaxPlayers;
 
     private int clientId = 0;
     private TCP tcp;
     private UDP udp;
     private bool isConnected = false;
 
-    public int MaxPlayers { get => maxPlayers; set => maxPlayers = value; }
+    public int ServerMaxPlayers { get => serverMaxPlayers; set => serverMaxPlayers = value; }
     public int ClientId { get => clientId; set => clientId = value; }
     public UDP Udp { get => udp; set => udp = value; }
     public TCP Tcp { get => tcp; set => tcp = value; }
@@ -81,6 +82,9 @@ public class Client : MonoBehaviour {
             receivedPacket = new Packet();
 
             stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
+
+            instance.isConnected = true; // TODO: This should be a callback
+            Debug.Log("Connected to Server of IP: " + instance.ip);
         }
 
         public void SendData(Packet _packet) {
@@ -133,7 +137,7 @@ public class Client : MonoBehaviour {
                 ThreadManager.ExecuteOnMainThread(() => {
                     using (Packet _packet = new Packet(_packetBytes)) {
                         int _packetId = _packet.ReadInt();
-                        // PacketHandlers.packetHandlers[_packetId](_packet); FIX ME
+                        PacketHandlers.packetHandlers[_packetId](_packet); 
                     }
                 });
 
@@ -228,7 +232,7 @@ public class Client : MonoBehaviour {
             ThreadManager.ExecuteOnMainThread(() => {
                 using (Packet _packet = new Packet(_data)) {
                     int _packetId = _packet.ReadInt();
-                    //PacketHandlers.packetHandlers[_packetId](_packet); FIX ME
+                    PacketHandlers.packetHandlers[_packetId](_packet);
                 }
             });
         }
@@ -245,29 +249,21 @@ public class Client : MonoBehaviour {
 
     #region Functions
 
-    public void SetIP(string _ip) {
+    public void SetIP(string _ip, int _port) {
         if (isConnected) {
             Debug.Log("Client already connected, cannot change IP.");
             return;
         }
 
         instance.ip = _ip;
+        instance.port = _port;
         udp.UpdateIP();
-
-        /* (TAG: OLDCODE)
-        // Need to create a new UDP to update ip
-        udp = null;
-        udp = new UDP();*/
     }
 
     public void ConnectToServer() {
         if (!isConnected) {
             tcp.Connect();
-            //udp = null; idk this line might be important (TAG: OLDCODE)
             udp = new UDP();
-
-            isConnected = true;
-            Debug.Log("Connected to Server of IP: " + ip);
         }
     }
 
@@ -275,25 +271,12 @@ public class Client : MonoBehaviour {
         if (isConnected) {
             tcp.socket.Close();
 
-            udp.socket.Close();
-            udp = null;
-
-            /* (Tag: OLDCODE)
-            // Why a try catch for UDP and not tcp?
-            try {
+            if (udp.socket != null) {
                 udp.socket.Close();
-            } catch {
-                Debug.Log("Could not close UDP socket.");
+                udp = null;
             }
-            udp = null;
-            */
-
-            //NetworkManager.instance.ResetClientObjects();
-            //NetworkManager.instance.ResetCallbacks();
 
             isConnected = false;
-
-            //NetworkManager.instance.CallDisconnectedFromServerCallbacks();
 
             Debug.Log("Disconnected from server.");
         }

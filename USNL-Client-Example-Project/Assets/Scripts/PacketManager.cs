@@ -29,13 +29,8 @@ public class PacketManager : MonoBehaviour {
             Destroy(this);
         }
 
-        // TODO: Track how long this takes in a project with many scripts
+        // Track how long this takes in a project with many scripts
         GeneratePacketReceivedCallbacks();
-
-        object[] parameters = new object[] { new WelcomePacket() };
-        CallPacketReceivedCallbacks(0, parameters);
-        parameters = new object[] { new FactorioIsFunPacket() };
-        CallPacketReceivedCallbacks(1, parameters);
     }
 
     #region Packet Received Callbacks

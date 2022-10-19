@@ -9,37 +9,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 23deb149edadb08499e97efaab009443, type: 3}
+  m_Script: {fileID: 11500000, guid: ebcf2572b0f2d0e4cb5c0d48c671d549, type: 3}
   m_Name: PacketConfigurator
   m_EditorClassIdentifier: 
   generationPath: Assets/
   serverPackets:
   - packetName: Welcome
     packetVariables:
-    - packetName: msg
+    - packetName: Welcome Message
       packetType: 7
     sendType: 0
     protocol: 0
     notes: 
-  - packetName: Factorio Is Fun
-    packetVariables:
-    - packetName: Just An Int
-      packetType: 3
-    sendType: 0
-    protocol: 1
-    notes: 
   clientPackets:
-  - packetName: WelcomeReceived
+  - packetName: Welcome Received
     packetVariables:
     - packetName: Client Id Check
       packetType: 3
     protocol: 0
-    notes: 
-  - packetName: ClientInput
-    packetVariables:
-    - packetName: Mouse Position
-      packetType: 8
-    - packetName: Colour
-      packetType: 10
-    protocol: 1
     notes: 

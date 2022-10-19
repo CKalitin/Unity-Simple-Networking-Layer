@@ -29,7 +29,7 @@ public class PacketManager : MonoBehaviour {
             Destroy(this);
         }
         
-        // TODO: Track how long this takes in a project with many scripts
+        // Track how long this takes in a project with many scripts
         GeneratePacketReceivedCallbacks();
     }
 

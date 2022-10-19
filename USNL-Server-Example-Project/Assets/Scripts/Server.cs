@@ -37,7 +37,20 @@ public class Server {
         udpListener = new UdpClient(Port);
         udpListener.BeginReceive(UDPReceiveCallback, null);
 
-        Debug.Log($"Server started on {Port}.");
+        Debug.Log($"Server started on port {Port}.");
+    }
+
+    private static void InitializeServerData() {
+        for (int i = 0; i <= MaxClients; i++) {
+            clients.Add(new Client(i));
+        }
+    }
+
+    public static void Stop() {
+        tcpListener.Stop();
+        udpListener.Close();
+
+        Debug.Log("Server stopped.");
     }
 
     #endregion
@@ -102,20 +115,7 @@ public class Server {
 
     #endregion
 
-    #region Functions
-
-    private static void InitializeServerData() {
-        for (int i = 0; i <= MaxClients; i++) {
-            clients.Add(new Client(i));
-        }
-
-        Debug.Log("Initialized Server Data.");
+    private void OnWelcomeReceivedPacket(WelcomeReceivedPacket _wrp) {
+        Debug.Log($"Welcome received from Client: {clients[_wrp.ClientId]}, {_wrp.ClientId}");
     }
-
-    public static void Stop() {
-        tcpListener.Stop();
-        udpListener.Close();
-    }
-
-    #endregion
 }
