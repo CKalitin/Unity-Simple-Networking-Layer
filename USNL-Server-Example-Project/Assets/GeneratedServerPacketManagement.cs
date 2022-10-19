@@ -126,7 +126,7 @@ public static class PacketSend {
         using (Packet _packet = new Packet((int)ServerPackets.Packet2)) {
             _packet.Write(_factorioIsFun);
 
-            SendTCPDataToAll(_packet);
+            SendUDPDataToAll(_packet);
         }
     }
 }

@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4c6402f0f3d03e04e8c2aa794053d90e, type: 3}
+  m_Script: {fileID: 11500000, guid: 23deb149edadb08499e97efaab009443, type: 3}
   m_Name: PacketConfigurator
   m_EditorClassIdentifier: 
   generationPath: Assets/
@@ -18,16 +18,14 @@ MonoBehaviour:
     packetVariables:
     - packetName: msg
       packetType: 7
-    - packetName: Just A Vector2
-      packetType: 8
     sendType: 0
     protocol: 0
     notes: 
-  - packetName: Packet2
+  - packetName: Factorio Is Fun
     packetVariables:
-    - packetName: 'facto  rioIs Fun  '
-      packetType: 1
-    sendType: 2
+    - packetName: Just An Int
+      packetType: 3
+    sendType: 0
     protocol: 1
     notes: 
   clientPackets:
@@ -35,11 +33,9 @@ MonoBehaviour:
     packetVariables:
     - packetName: Client Id Check
       packetType: 3
-    - packetName: Another Variable
-      packetType: 5
     protocol: 0
     notes: 
-  - packetName: Client Input
+  - packetName: ClientInput
     packetVariables:
     - packetName: Mouse Position
       packetType: 8

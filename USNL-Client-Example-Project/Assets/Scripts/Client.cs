@@ -22,9 +22,6 @@ public class Client : MonoBehaviour {
     private UDP udp;
     private bool isConnected = false;
 
-    private delegate void PacketHandler(Packet _packet);
-    private static Dictionary<int, PacketHandler> packetHandlers;
-
     public int MaxPlayers { get => maxPlayers; set => maxPlayers = value; }
     public int ClientId { get => clientId; set => clientId = value; }
     public UDP Udp { get => udp; set => udp = value; }
@@ -136,7 +133,7 @@ public class Client : MonoBehaviour {
                 ThreadManager.ExecuteOnMainThread(() => {
                     using (Packet _packet = new Packet(_packetBytes)) {
                         int _packetId = _packet.ReadInt();
-                        packetHandlers[_packetId](_packet);
+                        // PacketHandlers.packetHandlers[_packetId](_packet); FIX ME
                     }
                 });
 
@@ -231,7 +228,7 @@ public class Client : MonoBehaviour {
             ThreadManager.ExecuteOnMainThread(() => {
                 using (Packet _packet = new Packet(_data)) {
                     int _packetId = _packet.ReadInt();
-                    packetHandlers[_packetId](_packet);
+                    //PacketHandlers.packetHandlers[_packetId](_packet); FIX ME
                 }
             });
         }
@@ -247,18 +244,6 @@ public class Client : MonoBehaviour {
     #endregion
 
     #region Functions
-
-    private void InitializePacketHandler() {
-        // Initialize Packets
-        packetHandlers = new Dictionary<int, PacketHandler>() {
-            /*{ (int)ServerPackets.welcome, ClientHandle.Welcome },
-            { (int)ServerPackets.clientObjectUpdate, ClientHandle.ClientObjectUpdate },
-            { (int)ServerPackets.clientObjectNew, ClientHandle.ClientObjectNew },
-            { (int)ServerPackets.clientObjectDelete, ClientHandle.ClientObjectDelete },
-            { (int)ServerPackets.clientData, ClientHandle.ClientDataObject },*/
-        };
-        Debug.Log("Initialized Packet Handlers.");
-    }
 
     public void SetIP(string _ip) {
         if (isConnected) {
@@ -277,8 +262,6 @@ public class Client : MonoBehaviour {
 
     public void ConnectToServer() {
         if (!isConnected) {
-            InitializePacketHandler();
-
             tcp.Connect();
             //udp = null; idk this line might be important (TAG: OLDCODE)
             udp = new UDP();

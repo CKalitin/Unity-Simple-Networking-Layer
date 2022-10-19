@@ -4,27 +4,19 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
-/// <summary>Sent from server to client.</summary>
-public enum ServerPackets {
-    welcome = 1,
-    clientObjectUpdate = 2,
-    clientObjectNew = 3,
-    clientObjectDelete = 4,
-    clientData = 5,
-}
-
-/// <summary>Sent from client to server.</summary>
-public enum ClientPackets {
-    welcomeReceived = 1,
-    tcpInput = 2,
-    udpInput = 3,
-    serverData = 4,
-}
-
 public class Packet : IDisposable {
     private List<byte> buffer;
     private byte[] readableBuffer;
     private int readPos;
+
+    // This might not need to be in Packet but it simplifies other code by being here:
+    private int packetId;
+    private int fromClient;
+
+    private bool disposed = false;
+
+    public int PacketId { get => packetId; set => packetId = value; }
+    public int FromClient { get => fromClient; set => fromClient = value; }
 
     /// <summary>Creates a new empty packet (without an ID).</summary>
     public Packet() {
@@ -307,8 +299,6 @@ public class Packet : IDisposable {
     }
 
     #endregion
-
-    private bool disposed = false;
 
     protected virtual void Dispose(bool _disposing) {
         if (!disposed) {
