@@ -84,7 +84,7 @@ public class Client : MonoBehaviour {
             instance.udp.Connect(((IPEndPoint)instance.tcp.socket.Client.LocalEndPoint).Port);
 
             instance.isConnected = true; // TODO: This should be a callback
-            Debug.Log("Connected to Server of IP: " + instance.ip);
+            Debug.Log($"Connected to Server: {instance.ip}:{instance.port}");
         }
 
         public void SendData(Packet _packet) {

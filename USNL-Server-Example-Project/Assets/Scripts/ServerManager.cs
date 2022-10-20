@@ -33,6 +33,8 @@ public class ServerManager : MonoBehaviour {
         if (Application.isEditor) {
             Application.runInBackground = true;
         }
+
+        Debug.LogError("Opened Console.");
     }
 
     private void Start() {

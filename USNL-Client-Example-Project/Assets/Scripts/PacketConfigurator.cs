@@ -203,7 +203,7 @@ public class PacketConfigurator : ScriptableObject {
             string loPacketName = Lower(serverPackets[i].PacketName);
             phs += $"\n    public static void {upPacketName}(Packet _packet) {{";
 
-            phs += "_packet.ReadInt(); // This needs to be here for packet reading, idk why it just works.";
+            phs += "\n_packet.ReadInt(); // This needs to be here for packet reading, idk why it just works.";
             string packetParameters = "";
             for (int x = 0; x < serverPackets[i].PacketVariables.Length; x++) {
                 packetParameters += $"_packet.Read{packetReadTypes[serverPackets[i].PacketVariables[x].PacketType]}(), ";
