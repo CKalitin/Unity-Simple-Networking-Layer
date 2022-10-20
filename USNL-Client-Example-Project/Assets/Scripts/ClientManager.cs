@@ -36,5 +36,12 @@ public class ClientManager : MonoBehaviour {
         Client.instance.Disconnect();
     }
 
+    private void OnWelcomePacket(WelcomePacket _wp) {
+        Debug.Log($"Welcome message from Server: {_wp.WelcomeMessage}, Client Id: {_wp.ClientId}");
+        Client.instance.ClientId = _wp.ClientId;
+
+        PacketSend.WelcomeReceived(_wp.ClientId);
+    }
+
     #endregion
 }

@@ -38,7 +38,7 @@ public class PacketManager : MonoBehaviour {
     public void PacketReceived(Packet _packet, object _packetStruct) {
         // Yes, I used object as a parameter, and yes i know. ew i hate this code already why couldn't I have thought of something better, is this really that unsafe? probably.
 
-        Debug.Log($"Packet Received: {_packet.PacketId}");
+        Debug.Log($"Packet Received: {Enum.GetName(typeof(ClientPackets), _packet.PacketId)}");
 
         object[] parameters = new object[] { _packetStruct };
         CallPacketReceivedCallbacks(_packet.PacketId, parameters);

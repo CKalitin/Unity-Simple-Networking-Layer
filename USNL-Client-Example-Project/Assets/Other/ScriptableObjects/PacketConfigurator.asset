@@ -16,6 +16,8 @@ MonoBehaviour:
   serverPackets:
   - packetName: Welcome
     packetVariables:
+    - packetName: Welcome Message
+      packetType: 7
     - packetName: Client Id
       packetType: 3
     sendType: 0

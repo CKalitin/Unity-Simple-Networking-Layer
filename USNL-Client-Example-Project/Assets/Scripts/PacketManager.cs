@@ -38,22 +38,24 @@ public class PacketManager : MonoBehaviour {
     public void PacketReceived(Packet _packet, object _packetStruct) {
         // Yes, I used object as a parameter, and yes i know. ew i hate this code already why couldn't I have thought of something better, is this really that unsafe? probably.
 
-        Debug.Log($"Packet Received: {_packet.PacketId}");
+        Debug.Log($"Packet Received: {Enum.GetName(typeof(ServerPackets), _packet.PacketId)}");
 
         object[] parameters = new object[] { _packetStruct };
         CallPacketReceivedCallbacks(_packet.PacketId, parameters);
     }
 
     private void CallPacketReceivedCallbacks(int _packetId, object[] _parameters) {
-        // Loop through all callback methods
-        for (int i = 0; i < packetReceivedCallbacks[_packetId].Count; i++) {
-            // Get and Loop through all classes of type of the base call of method[i]
-            List<MonoBehaviour> types = GetObjectsOfType(packetReceivedCallbacks[_packetId][i].ClassType);
-            for (int x = 0; x < types.Count; x++) {
-                try {
-                    packetReceivedCallbacks[_packetId][i].MethodInfo.Invoke(types[x], _parameters);
-                } catch (Exception _ex) {
-                    Debug.LogError($"Could not run packet callback function: {packetReceivedCallbacks[_packetId][i].MethodInfo} in class {types[x].GetType()}\n{_ex}");
+        if (packetReceivedCallbacks.ContainsKey(_packetId)) {
+            // Loop through all callback methods
+            for (int i = 0; i < packetReceivedCallbacks[_packetId].Count; i++) {
+                // Get and Loop through all classes of type of the base call of method[i]
+                List<MonoBehaviour> types = GetObjectsOfType(packetReceivedCallbacks[_packetId][i].ClassType);
+                for (int x = 0; x < types.Count; x++) {
+                    try {
+                        packetReceivedCallbacks[_packetId][i].MethodInfo.Invoke(types[x], _parameters);
+                    } catch (Exception _ex) {
+                        Debug.LogError($"Could not run packet callback function: {packetReceivedCallbacks[_packetId][i].MethodInfo} in class {types[x].GetType()}\n{_ex}");
+                    }
                 }
             }
         }

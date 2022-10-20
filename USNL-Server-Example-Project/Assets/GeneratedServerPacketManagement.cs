@@ -2,27 +2,27 @@ using System.Collections.Generic;using UnityEngine;
 
 // Sent from Server to Client
 public enum ServerPackets {
-    Welcome = 1,
+    Welcome,
 }
 
 // Sent from Client to Server
 public enum ClientPackets {
-    WelcomeReceived = 1,
+    WelcomeReceived,
 }
 
 /*** Packet Structs ***/
 
 public struct WelcomeReceivedPacket {
-    private int clientId;
+    private int fromClient;
 
     private int clientIdCheck;
 
-    public WelcomeReceivedPacket(int _clientId, int _clientIdCheck) {
-        clientId = _clientId;
+    public WelcomeReceivedPacket(int _fromClient, int _clientIdCheck) {
+        fromClient = _fromClient;
         clientIdCheck = _clientIdCheck;
     }
 
-    public int ClientId { get => clientId; set => clientId = value; }
+    public int FromClient { get => fromClient; set => fromClient = value; }
     public int ClientIdCheck { get => clientIdCheck; set => clientIdCheck = value; }
 }
 
@@ -33,7 +33,6 @@ public static class PacketHandlers {
     };
 
     public static void WelcomeReceived(Packet _packet) {
-        Debug.Log("Welcome Received");
         WelcomeReceivedPacket welcomeReceivedPacket = new WelcomeReceivedPacket(_packet.PacketId, _packet.ReadInt());
         PacketManager.instance.PacketReceived(_packet, welcomeReceivedPacket);
     }
@@ -86,12 +85,12 @@ public static class PacketSend {
 
     #endregion
 
-    public static void Welcome(int _toClient, string _welcomeMessage) {
+    public static void Welcome(int _toClient, string _welcomeMessage, int _clientId) {
         using (Packet _packet = new Packet((int)ServerPackets.Welcome)) {
             _packet.Write(_toClient);
             _packet.Write(_welcomeMessage);
+            _packet.Write(_clientId);
 
-            Debug.Log("Send welcome, " + _toClient);
             SendTCPData(_toClient, _packet);
         }
     }

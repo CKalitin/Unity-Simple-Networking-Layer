@@ -218,6 +218,7 @@ GameObject:
   - component: {fileID: 1974716057}
   - component: {fileID: 1974716056}
   - component: {fileID: 1974716058}
+  - component: {fileID: 1974716059}
   m_Layer: 0
   m_Name: Game Management
   m_TagString: Untagged
@@ -234,7 +235,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1974716055}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3e77cd22b0b283f40a52a984d0f9f11c, type: 3}
+  m_Script: {fileID: 11500000, guid: 6365f3c589d6bb74aa2ed4f3a1e4bafa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!4 &1974716057
@@ -261,9 +262,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 1974716055}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7ded09644a9e2224b91a4e0d98312234, type: 3}
+  m_Script: {fileID: 11500000, guid: 3170c0cff9c468f4688f069d94633078, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   maxPlayers: 20
   port: 26950
-  welcomeMessage: Holy Shit It Worked!
+  welcomeMessage: Holy fuck my code worked! :O :)
+  dataBufferSize: 4096
+--- !u!114 &1974716059
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1974716055}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb064518b11b1704e841fc13a90e8d14, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

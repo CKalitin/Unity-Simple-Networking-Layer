@@ -40,9 +40,7 @@ public class Client : MonoBehaviour {
             Debug.Log("Client instance already exists, destroying object.");
             Destroy(this);
         }
-    }
 
-    private void Start() {
         tcp = new TCP();
         udp = new UDP();
     }
@@ -82,6 +80,8 @@ public class Client : MonoBehaviour {
             receivedPacket = new Packet();
 
             stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
+
+            instance.udp.Connect(((IPEndPoint)instance.tcp.socket.Client.LocalEndPoint).Port);
 
             instance.isConnected = true; // TODO: This should be a callback
             Debug.Log("Connected to Server of IP: " + instance.ip);
@@ -131,14 +131,13 @@ public class Client : MonoBehaviour {
 
             // Read receivedPacket (_data) and create a new Packet type for it and send to a packet handler
             while (_packetLength > 0 && _packetLength <= receivedPacket.UnreadLength()) {
-                Debug.Log("Handle Data");
                 byte[] _packetBytes = receivedPacket.ReadBytes(_packetLength); // Get byte data for packet
 
                 // Create new packet and copy byte data into it and send it to the appropriate packet handler
                 ThreadManager.ExecuteOnMainThread(() => {
                     using (Packet _packet = new Packet(_packetBytes)) {
                         int _packetId = _packet.ReadInt();
-                        PacketHandlers.packetHandlers[_packetId](_packet); 
+                        PacketHandlers.packetHandlers[_packetId](_packet);
                     }
                 });
 
@@ -181,7 +180,7 @@ public class Client : MonoBehaviour {
             endPoint = new IPEndPoint(IPAddress.Parse(instance.ip), instance.port);
         }
 
-        // This is run from ClientHandle
+        // This is run from ClientHandle TODO
         public void Connect(int _localPort) {
             socket = new UdpClient(_localPort);
 
@@ -258,13 +257,13 @@ public class Client : MonoBehaviour {
 
         instance.ip = _ip;
         instance.port = _port;
-        udp.UpdateIP();
     }
 
     public void ConnectToServer() {
         if (!isConnected) {
             tcp.Connect();
-            udp = new UDP();
+            udp.UpdateIP();
+            //udp = new UDP();
         }
     }
 
@@ -274,7 +273,6 @@ public class Client : MonoBehaviour {
 
             if (udp.socket != null) {
                 udp.socket.Close();
-                udp = null;
             }
 
             isConnected = false;

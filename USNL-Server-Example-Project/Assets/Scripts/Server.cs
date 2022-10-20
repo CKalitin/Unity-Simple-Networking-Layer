@@ -114,8 +114,4 @@ public class Server {
     }
 
     #endregion
-
-    private void OnWelcomeReceivedPacket(WelcomeReceivedPacket _wrp) {
-        Debug.Log($"Welcome received from Client: {clients[_wrp.ClientId]}, {_wrp.ClientId}");
-    }
 }

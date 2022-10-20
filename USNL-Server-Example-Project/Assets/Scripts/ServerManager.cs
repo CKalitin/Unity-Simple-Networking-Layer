@@ -50,5 +50,13 @@ public class ServerManager : MonoBehaviour {
 
     #region Server Manager
 
+    private void OnWelcomeReceivedPacket(WelcomeReceivedPacket _wrp) {
+        if (_wrp.ClientIdCheck != _wrp.FromClient) {
+            Server.clients[_wrp.FromClient].Disconnect();
+            return;
+        }
+        Debug.Log($"Client Connected of Id {_wrp.ClientIdCheck}.");
+    }
+
     #endregion
 }

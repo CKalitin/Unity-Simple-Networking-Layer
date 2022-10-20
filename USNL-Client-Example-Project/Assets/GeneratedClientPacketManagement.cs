@@ -2,28 +2,27 @@ using System.Collections.Generic;using UnityEngine;
 
 // Sent from Server to Client
 public enum ServerPackets {
-    Welcome = 1,
+    Welcome,
 }
 
 // Sent from Client to Server
 public enum ClientPackets {
-    WelcomeReceived = 1,
+    WelcomeReceived,
 }
 
 /*** Packet Structs ***/
 
 public struct WelcomePacket {
+    private string welcomeMessage;
     private int clientId;
 
-    private string welcomeMessage;
-
-    public WelcomePacket(int _clientId, string _welcomeMessage) {
-        clientId = _clientId;
+    public WelcomePacket(string _welcomeMessage, int _clientId) {
         welcomeMessage = _welcomeMessage;
+        clientId = _clientId;
     }
 
-    public int ClientId { get => clientId; set => clientId = value; }
     public string WelcomeMessage { get => welcomeMessage; set => welcomeMessage = value; }
+    public int ClientId { get => clientId; set => clientId = value; }
 }
 
 public static class PacketHandlers {
@@ -33,8 +32,8 @@ public static class PacketHandlers {
     };
 
     public static void Welcome(Packet _packet) {
-        Debug.Log("Welcome Packet Handler");
-        WelcomePacket welcomePacket = new WelcomePacket(_packet.PacketId, _packet.ReadString());
+        _packet.ReadInt(); // This needs to be here for packet reading, idk why it just works.
+        WelcomePacket welcomePacket = new WelcomePacket(_packet.ReadString(), _packet.ReadInt());
         PacketManager.instance.PacketReceived(_packet, welcomePacket);
     }
 }

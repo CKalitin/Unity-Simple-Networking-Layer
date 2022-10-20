@@ -129,13 +129,13 @@ public class PacketConfigurator : ScriptableObject {
 
         string serverPacketsString = "";
         for (int i = 0; i < serverPackets.Length; i++) {
-            serverPacketsString += $"\n    {Upper(serverPackets[i].PacketName.ToString())} = {i + 1},";
+            serverPacketsString += $"\n    {Upper(serverPackets[i].PacketName.ToString())},";
         }
         serverPacketsString = serverPacketsString.Substring(1, serverPacketsString.Length - 1); // Remove last ", " & first \n
 
         string clientPacketsString = "";
         for (int i = 0; i < clientPackets.Length; i++) {
-            clientPacketsString += $"\n    {Upper(clientPackets[i].PacketName.ToString())} = {i + 1},";
+            clientPacketsString += $"\n    {Upper(clientPackets[i].PacketName.ToString())},";
         }
         clientPacketsString = clientPacketsString.Substring(1, clientPacketsString.Length - 1); // Remove last ", " & first \n
 
@@ -147,7 +147,7 @@ public class PacketConfigurator : ScriptableObject {
         for (int i = 0; i < clientPackets.Length; i++) {
             psts += $"\npublic struct {Upper(clientPackets[i].PacketName.ToString())}Packet {{";
 
-            psts += $"\n    private int clientId;";
+            psts += $"\n    private int fromClient;";
             psts += "\n";
             for (int x = 0; x < clientPackets[i].PacketVariables.Length; x++) {
                 string varName = Lower(clientPackets[i].PacketVariables[x].PacketName); // Lower case variable name (C# formatting)
@@ -158,14 +158,14 @@ public class PacketConfigurator : ScriptableObject {
 
             // Constructor:
             psts += "\n";
-            string constructorParameters = "int _clientId, ";
+            string constructorParameters = "int _fromClient, ";
             for (int x = 0; x < clientPackets[i].PacketVariables.Length; x++) {
                 constructorParameters += $"{packetTypes[clientPackets[i].PacketVariables[x].PacketType]} _{Lower(clientPackets[i].PacketVariables[x].PacketName)}, ";
             }
             constructorParameters = constructorParameters.Substring(0, constructorParameters.Length - 2);
 
             psts += $"\n    public {Upper(clientPackets[i].PacketName)}Packet({constructorParameters}) {{";
-            psts += "\n        clientId = _clientId;";
+            psts += "\n        fromClient = _fromClient;";
             for (int x = 0; x < clientPackets[i].PacketVariables.Length; x++) {
                 psts += $"\n        {Lower(clientPackets[i].PacketVariables[x].PacketName)} = _{Lower(clientPackets[i].PacketVariables[x].PacketName)};";
             }
@@ -173,7 +173,7 @@ public class PacketConfigurator : ScriptableObject {
             psts += "\n";
 
 
-            psts += "\n    public int ClientId { get => clientId; set => clientId = value; }";
+            psts += "\n    public int FromClient { get => fromClient; set => fromClient = value; }";
             for (int x = 0; x < clientPackets[i].PacketVariables.Length; x++) {
                 string varName = Lower(clientPackets[i].PacketVariables[x].PacketName); // Lower case variable name (C# formatting)
                 string varType = packetTypes[clientPackets[i].PacketVariables[x].PacketType]; // Variable type string
