@@ -33,6 +33,7 @@ public static class PacketHandlers {
     };
 
     public static void WelcomeReceived(Packet _packet) {
+        Debug.Log("Welcome Received");
         WelcomeReceivedPacket welcomeReceivedPacket = new WelcomeReceivedPacket(_packet.PacketId, _packet.ReadInt());
         PacketManager.instance.PacketReceived(_packet, welcomeReceivedPacket);
     }
@@ -90,6 +91,7 @@ public static class PacketSend {
             _packet.Write(_toClient);
             _packet.Write(_welcomeMessage);
 
+            Debug.Log("Send welcome, " + _toClient);
             SendTCPData(_toClient, _packet);
         }
     }

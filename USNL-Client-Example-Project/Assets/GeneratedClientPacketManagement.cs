@@ -33,6 +33,7 @@ public static class PacketHandlers {
     };
 
     public static void Welcome(Packet _packet) {
+        Debug.Log("Welcome Packet Handler");
         WelcomePacket welcomePacket = new WelcomePacket(_packet.PacketId, _packet.ReadString());
         PacketManager.instance.PacketReceived(_packet, welcomePacket);
     }

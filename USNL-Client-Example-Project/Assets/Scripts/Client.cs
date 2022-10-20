@@ -131,6 +131,7 @@ public class Client : MonoBehaviour {
 
             // Read receivedPacket (_data) and create a new Packet type for it and send to a packet handler
             while (_packetLength > 0 && _packetLength <= receivedPacket.UnreadLength()) {
+                Debug.Log("Handle Data");
                 byte[] _packetBytes = receivedPacket.ReadBytes(_packetLength); // Get byte data for packet
 
                 // Create new packet and copy byte data into it and send it to the appropriate packet handler

@@ -56,6 +56,7 @@ public class Client {
 
             stream.BeginRead(receiveBuffer, 0, ServerManager.instance.DataBufferSize, ReceiveCallback, null);
 
+            Debug.Log("Connect Client");
             PacketSend.Welcome(clientId, ServerManager.instance.WelcomeMessage);
 
             client.isConnected = true;
