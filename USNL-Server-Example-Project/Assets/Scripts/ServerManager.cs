@@ -51,11 +51,10 @@ public class ServerManager : MonoBehaviour {
     #region Server Manager
 
     private void OnWelcomeReceivedPacket(WelcomeReceivedPacket _wrp) {
-        if (_wrp.ClientIdCheck != _wrp.FromClient) {
-            Server.clients[_wrp.FromClient].Disconnect();
-            return;
+        Debug.Log($"{Server.clients[_wrp.FromClient].Tcp.socket.Client.RemoteEndPoint} connected successfully and is now Player {_wrp.FromClient}.");
+        if (_wrp.FromClient != _wrp.FromClient) {
+            Debug.Log($"ID: {_wrp.FromClient}) has assumed the wrong client ID ({_wrp.FromClient}.");
         }
-        Debug.Log($"Client Connected of Id {_wrp.ClientIdCheck}.");
     }
 
     #endregion

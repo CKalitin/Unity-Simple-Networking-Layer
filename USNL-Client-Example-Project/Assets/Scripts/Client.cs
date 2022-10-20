@@ -261,9 +261,11 @@ public class Client : MonoBehaviour {
 
     public void ConnectToServer() {
         if (!isConnected) {
+            Debug.Log($"Attempting to Connect to {instance.ip}:{instance.port}");
             tcp.Connect();
             udp.UpdateIP();
-            //udp = new UDP();
+        } else {
+            Debug.Log("Cannot connect to new server, already connected to a server.");
         }
     }
 
