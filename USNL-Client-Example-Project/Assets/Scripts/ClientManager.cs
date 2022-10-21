@@ -10,6 +10,9 @@ public class ClientManager : MonoBehaviour {
     [SerializeField] private string ip = "127.0.0.1";
     [SerializeField] private int port = 26950;
 
+    CallbackManager connectedCallbackManager;
+    CallbackManager disconnectedCallbackManager;
+
     #endregion
 
     #region Core
@@ -21,6 +24,9 @@ public class ClientManager : MonoBehaviour {
             Debug.Log("Client Manager instance already exists, destroying object!");
             Destroy(this);
         }
+
+        connectedCallbackManager = new CallbackManager("OnConnected");
+        disconnectedCallbackManager = new CallbackManager("OnDisconnected");
     }
 
     private void Start() {
@@ -41,6 +47,13 @@ public class ClientManager : MonoBehaviour {
         Client.instance.ClientId = _wp.ClientId;
 
         PacketSend.WelcomeReceived(_wp.ClientId);
+
+        connectedCallbackManager.CallCallbacks();
+    }
+
+    public void DisconnectedFromServer() {
+        Debug.Log("2");
+        disconnectedCallbackManager.CallCallbacks();
     }
 
     #endregion

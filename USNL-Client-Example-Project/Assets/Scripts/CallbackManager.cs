@@ -12,6 +12,10 @@ public class CallbackManager {
         GenerateCallbacks(callbackNames);
     }
 
+    public CallbackManager(string callbackNames) {
+        GenerateCallbacks(new string[] { callbackNames });
+    }
+
     private struct Callback {
         private MethodInfo methodInfo;
         private Type classType;
@@ -35,6 +39,23 @@ public class CallbackManager {
                     callbacks[i].MethodInfo.Invoke(types[x], _parameters);
                 } catch (Exception _ex) {
                     Debug.LogError($"Could not run packet callback function: {callbacks[i].MethodInfo} in class {types[x].GetType()}\n{_ex}");
+                }
+            }
+        }
+    }
+
+    public void CallCallbacks() {
+        object[] _parameters = { };
+
+        // Loop through all callback methods
+        for (int i = 0; i < callbacks.Count; i++) {
+            // Get and Loop through all classes of type of the base call of method[i]
+            List<MonoBehaviour> types = GetObjectsOfType(callbacks[i].ClassType);
+            for (int x = 0; x < types.Count; x++) {
+                try {
+                    callbacks[i].MethodInfo.Invoke(types[x], _parameters);
+                } catch (Exception _ex) {
+                    Debug.LogError($"Could not run packet callback function: ({callbacks[i].MethodInfo}) in class ({types[x].GetType()})\n{_ex}");
                 }
             }
         }

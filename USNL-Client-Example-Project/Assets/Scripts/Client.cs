@@ -83,7 +83,8 @@ public class Client : MonoBehaviour {
 
             instance.udp.Connect(((IPEndPoint)instance.tcp.socket.Client.LocalEndPoint).Port);
 
-            instance.isConnected = true; // TODO: This should be a callback
+            instance.isConnected = true;
+
             Debug.Log($"Connected to Server: {instance.ip}:{instance.port}");
         }
 
@@ -276,6 +277,8 @@ public class Client : MonoBehaviour {
             if (udp.socket != null) {
                 udp.socket.Close();
             }
+
+            ClientManager.instance.DisconnectedFromServer();
 
             isConnected = false;
 

@@ -184,7 +184,7 @@ public class Client {
         isConnected = false;
 
         ThreadManager.ExecuteOnMainThread(() => {
-            //NetworkManager.instance.CallClientDisconnectedCallbacks(_clientId); TODO
+            ServerManager.instance.ClientDisconnected(clientId);
         });
 
         tcp.Disconnect();
