@@ -32,7 +32,7 @@ public static class PacketHandlers {
     };
 
     public static void Welcome(Packet _packet) {
-        _packet.ReadInt(); // This needs to be here for packet reading, idk why it just works.
+_packet.ReadInt(); // This needs to be here for packet reading, idk why it just works.
         WelcomePacket welcomePacket = new WelcomePacket(_packet.ReadString(), _packet.ReadInt());
         PacketManager.instance.PacketReceived(_packet, welcomePacket);
     }

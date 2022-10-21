@@ -33,7 +33,7 @@ public static class PacketHandlers {
     };
 
     public static void WelcomeReceived(Packet _packet) {
-        WelcomeReceivedPacket welcomeReceivedPacket = new WelcomeReceivedPacket(_packet.FromClient, _packet.ReadInt());
+        WelcomeReceivedPacket welcomeReceivedPacket = new WelcomeReceivedPacket(_packet.PacketId, _packet.ReadInt());
         PacketManager.instance.PacketReceived(_packet, welcomeReceivedPacket);
     }
 }

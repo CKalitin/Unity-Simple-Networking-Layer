@@ -5,20 +5,24 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 
-// What to specify in a new packet
-// Name
-// Variables
-// Client or Server
-
-// What Script will create
-// Add script name enum
-// Packet struct
-// Packet Handler
-// Packet Sender
-
 [CreateAssetMenu(fileName = "PacketConfigurator", menuName = "USNL/Packet Configurator", order = 0)]
 public class PacketConfigurator : ScriptableObject {
     #region Variables
+
+    /*** Library Packets (Not for user) ***/
+    private ServerPacketConfig[] libServerPackets = {
+        new ServerPacketConfig(
+            "Welcome",
+            new PacketVariable[] { new PacketVariable("Welcome Message", PacketVarTypes.String), new PacketVariable("Client Id", PacketVarTypes.Int) },
+            ServerPacketTypes.SendToClient,
+            Protocol.TCP)
+    };
+    private ClientPacketConfig[] libClientPackets = {
+        new ClientPacketConfig(
+            "Welcome Received",
+            new PacketVariable[] { new PacketVariable("Client Id Check", PacketVarTypes.Int) },
+            Protocol.TCP)
+    };
 
     [SerializeField] private string generationPath = "Assets/";
     [Space]
@@ -70,33 +74,23 @@ public class PacketConfigurator : ScriptableObject {
         SendToAllClients,
         SendToAllClientsExcept
     }
-    private enum TransmitionProtocol {
+    private enum Protocol {
         TCP,
         UDP
     }
-    
+
     [Serializable]
     private struct PacketVariable {
         [SerializeField] private string packetName;
         [SerializeField] private PacketVarTypes packetType;
 
+        public PacketVariable(string packetName, PacketVarTypes packetType) {
+            this.packetName = packetName;
+            this.packetType = packetType;
+        }
+
         public string PacketName { get => packetName; set => packetName = value; }
         public PacketVarTypes PacketType { get => packetType; set => packetType = value; }
-    }
-
-    [Serializable]
-    private struct ClientPacketConfig {
-        [Tooltip("Can be done in any formatting (eg. 'exampleName' & 'Example Name' both work)")]
-        [SerializeField] private string packetName; // In C# formatting: eg. "examplePacket"
-        [SerializeField] private PacketVariable[] packetVariables;
-        [SerializeField] private TransmitionProtocol protocol;
-        [Space]
-        [Tooltip("This is only for the user.")]
-        [SerializeField] private string notes;
-
-        public string PacketName { get => packetName; set => packetName = value; }
-        public PacketVariable[] PacketVariables { get => packetVariables; set => packetVariables = value; }
-        public TransmitionProtocol Protocol { get => protocol; set => protocol = value; }
     }
 
     [Serializable]
@@ -108,34 +102,68 @@ public class PacketConfigurator : ScriptableObject {
             "SendToAllClients: Send Packet to all clients.\n" +
             "SendToAllClientsExcept: Send Packet to all clients execpt one specified by you.")]
         [SerializeField] private ServerPacketTypes sendType;
-        [SerializeField] private TransmitionProtocol protocol;
+        [SerializeField] private Protocol protocol;
         [Space]
         [Tooltip("This is only for the user.")]
         [SerializeField] private string notes;
 
+        public ServerPacketConfig(string packetName, PacketVariable[] packetVariables, ServerPacketTypes sendType, Protocol protocol) : this() {
+            this.packetName = packetName;
+            this.packetVariables = packetVariables;
+            this.sendType = sendType;
+            this.protocol = protocol;
+        }
+
         public string PacketName { get => packetName; set => packetName = value; }
         public PacketVariable[] PacketVariables { get => packetVariables; set => packetVariables = value; }
         public ServerPacketTypes SendType { get => sendType; set => sendType = value; }
-        public TransmitionProtocol Protocol { get => protocol; set => protocol = value; }
+        public Protocol Protocol { get => protocol; set => protocol = value; }
+    }
+
+    [Serializable]
+    private struct ClientPacketConfig {
+        [Tooltip("Can be done in any formatting (eg. 'exampleName' & 'Example Name' both work)")]
+        [SerializeField] private string packetName; // In C# formatting: eg. "examplePacket"
+        [SerializeField] private PacketVariable[] packetVariables;
+        [SerializeField] private Protocol protocol;
+        [Space]
+        [Tooltip("This is only for the user.")]
+        [SerializeField] private string notes;
+
+        public ClientPacketConfig(string packetName, PacketVariable[] packetVariables, Protocol protocol) : this() {
+            this.packetName = packetName;
+            this.packetVariables = packetVariables;
+            this.protocol = protocol;
+        }
+
+        public string PacketName { get => packetName; set => packetName = value; }
+        public PacketVariable[] PacketVariables { get => packetVariables; set => packetVariables = value; }
+        public Protocol Protocol { get => protocol; set => protocol = value; }
     }
 
     #endregion
-    // UDP OR TCP SERVER PACKETS
-
     public void GenerateClientPacketManagement() {
         string filePathAndName = generationPath + "GeneratedClientPacketManagement" + ".cs"; // The folder where the script is expected to exist
+
+        List<ServerPacketConfig> _serverPackets = new List<ServerPacketConfig>();
+        List<ClientPacketConfig> _clientPackets = new List<ClientPacketConfig>();
+
+        _serverPackets.AddRange(serverPackets);
+        _serverPackets.AddRange(libServerPackets);
+        _clientPackets.AddRange(clientPackets);
+        _clientPackets.AddRange(libClientPackets);
 
         #region Server & Client Packet Enums
 
         string serverPacketsString = "";
-        for (int i = 0; i < serverPackets.Length; i++) {
-            serverPacketsString += $"\n    {Upper(serverPackets[i].PacketName.ToString())},";
+        for (int i = 0; i < _serverPackets.Count; i++) {
+            serverPacketsString += $"\n    {Upper(_serverPackets[i].PacketName.ToString())},";
         }
         serverPacketsString = serverPacketsString.Substring(1, serverPacketsString.Length - 1); // Remove last ", " & first \n
 
         string clientPacketsString = "";
-        for (int i = 0; i < clientPackets.Length; i++) {
-            clientPacketsString += $"\n    {Upper(clientPackets[i].PacketName.ToString())},";
+        for (int i = 0; i < _clientPackets.Count; i++) {
+            clientPacketsString += $"\n    {Upper(_clientPackets[i].PacketName.ToString())},";
         }
         clientPacketsString = clientPacketsString.Substring(1, clientPacketsString.Length - 1); // Remove last ", " & first \n
 
@@ -144,13 +172,13 @@ public class PacketConfigurator : ScriptableObject {
         #region Packet Structs
 
         string psts = ""; // Packet Structs String
-        for (int i = 0; i < serverPackets.Length; i++) {
-            psts += $"\npublic struct {Upper(serverPackets[i].PacketName.ToString())}Packet {{";
+        for (int i = 0; i < _serverPackets.Count; i++) {
+            psts += $"\npublic struct {Upper(_serverPackets[i].PacketName.ToString())}Packet {{";
 
             psts += "";
-            for (int x = 0; x < serverPackets[i].PacketVariables.Length; x++) {
-                string varName = Lower(serverPackets[i].PacketVariables[x].PacketName); // Lower case variable name (C# formatting)
-                string varType = packetTypes[serverPackets[i].PacketVariables[x].PacketType]; // Variable type string
+            for (int x = 0; x < _serverPackets[i].PacketVariables.Length; x++) {
+                string varName = Lower(_serverPackets[i].PacketVariables[x].PacketName); // Lower case variable name (C# formatting)
+                string varType = packetTypes[_serverPackets[i].PacketVariables[x].PacketType]; // Variable type string
                 psts += $"\n    private {varType} {varName};";
             }
 
@@ -158,22 +186,22 @@ public class PacketConfigurator : ScriptableObject {
             // Constructor:
             psts += "\n";
             string constructorParameters = "";
-            for (int x = 0; x < serverPackets[i].PacketVariables.Length; x++) {
-                constructorParameters += $"{packetTypes[serverPackets[i].PacketVariables[x].PacketType]} _{Lower(serverPackets[i].PacketVariables[x].PacketName)}, ";
+            for (int x = 0; x < _serverPackets[i].PacketVariables.Length; x++) {
+                constructorParameters += $"{packetTypes[_serverPackets[i].PacketVariables[x].PacketType]} _{Lower(_serverPackets[i].PacketVariables[x].PacketName)}, ";
             }
             constructorParameters = constructorParameters.Substring(0, constructorParameters.Length - 2);
 
-            psts += $"\n    public {Upper(serverPackets[i].PacketName)}Packet({constructorParameters}) {{";
-            for (int x = 0; x < serverPackets[i].PacketVariables.Length; x++) {
-                psts += $"\n        {Lower(serverPackets[i].PacketVariables[x].PacketName)} = _{Lower(serverPackets[i].PacketVariables[x].PacketName)};";
+            psts += $"\n    public {Upper(_serverPackets[i].PacketName)}Packet({constructorParameters}) {{";
+            for (int x = 0; x < _serverPackets[i].PacketVariables.Length; x++) {
+                psts += $"\n        {Lower(_serverPackets[i].PacketVariables[x].PacketName)} = _{Lower(_serverPackets[i].PacketVariables[x].PacketName)};";
             }
             psts += "\n    }";
             psts += "\n";
 
 
-            for (int x = 0; x < serverPackets[i].PacketVariables.Length; x++) {
-                string varName = Lower(serverPackets[i].PacketVariables[x].PacketName); // Lower case variable name (C# formatting)
-                string varType = packetTypes[serverPackets[i].PacketVariables[x].PacketType]; // Variable type string
+            for (int x = 0; x < _serverPackets[i].PacketVariables.Length; x++) {
+                string varName = Lower(_serverPackets[i].PacketVariables[x].PacketName); // Lower case variable name (C# formatting)
+                string varType = packetTypes[_serverPackets[i].PacketVariables[x].PacketType]; // Variable type string
 
                 psts += $"\n    public {varType} {Upper(varName)} {{ get => {varName}; set => {varName} = value; }}";
             }
@@ -190,23 +218,23 @@ public class PacketConfigurator : ScriptableObject {
         phs = phs.Substring(1, phs.Length - 1);
         phs += "\n    public static List<PacketHandler> packetHandlers = new List<PacketHandler>() {";
         string packetHandlerFunctionsString = "";
-        for (int i = 0; i < serverPackets.Length; i++) {
-            phs += $"\n        {{ {Upper(serverPackets[i].PacketName)} }},";
+        for (int i = 0; i < _serverPackets.Count; i++) {
+            phs += $"\n        {{ {Upper(_serverPackets[i].PacketName)} }},";
         }
         phs += packetHandlerFunctionsString;
         phs += "\n    };";
 
         phs += "\n";
 
-        for (int i = 0; i < serverPackets.Length; i++) {
-            string upPacketName = Upper(serverPackets[i].PacketName);
-            string loPacketName = Lower(serverPackets[i].PacketName);
+        for (int i = 0; i < _serverPackets.Count; i++) {
+            string upPacketName = Upper(_serverPackets[i].PacketName);
+            string loPacketName = Lower(_serverPackets[i].PacketName);
             phs += $"\n    public static void {upPacketName}(Packet _packet) {{";
 
             phs += "\n_packet.ReadInt(); // This needs to be here for packet reading, idk why it just works.";
             string packetParameters = "";
-            for (int x = 0; x < serverPackets[i].PacketVariables.Length; x++) {
-                packetParameters += $"_packet.Read{packetReadTypes[serverPackets[i].PacketVariables[x].PacketType]}(), ";
+            for (int x = 0; x < _serverPackets[i].PacketVariables.Length; x++) {
+                packetParameters += $"_packet.Read{packetReadTypes[_serverPackets[i].PacketVariables[x].PacketType]}(), ";
             }
             packetParameters = packetParameters.Substring(0, packetParameters.Length - 2);
 
@@ -242,24 +270,24 @@ public class PacketConfigurator : ScriptableObject {
         #endregion
         pss += TcpUdpSendFunctionsString;
 
-        for (int i = 0; i < clientPackets.Length; i++) {
+        for (int i = 0; i < _clientPackets.Count; i++) {
             string pas = ""; // Packet arguments (parameters) string
-            for (int x = 0; x < clientPackets[i].PacketVariables.Length; x++) {
-                pas += $"{packetTypes[clientPackets[i].PacketVariables[x].PacketType]} _{Lower(clientPackets[i].PacketVariables[x].PacketName)}, ";
+            for (int x = 0; x < _clientPackets[i].PacketVariables.Length; x++) {
+                pas += $"{packetTypes[_clientPackets[i].PacketVariables[x].PacketType]} _{Lower(_clientPackets[i].PacketVariables[x].PacketName)}, ";
             }
             pas = pas.Substring(0, pas.Length - 2);
 
-            pss += $"\n    public static void {Upper(clientPackets[i].PacketName)}({pas}) {{";
-            pss += $"\n        using (Packet _packet = new Packet((int)ClientPackets.{Upper(clientPackets[i].PacketName)})) {{";
+            pss += $"\n    public static void {Upper(_clientPackets[i].PacketName)}({pas}) {{";
+            pss += $"\n        using (Packet _packet = new Packet((int)ClientPackets.{Upper(_clientPackets[i].PacketName)})) {{";
 
             string pws = ""; // Packet writes
-            for (int x = 0; x < clientPackets[i].PacketVariables.Length; x++) {
-                pws += $"\n            _packet.Write(_{Lower(clientPackets[i].PacketVariables[x].PacketName)});";
+            for (int x = 0; x < _clientPackets[i].PacketVariables.Length; x++) {
+                pws += $"\n            _packet.Write(_{Lower(_clientPackets[i].PacketVariables[x].PacketName)});";
             }
             pss += pws;
             pss += "\n";
 
-            if (clientPackets[i].Protocol == TransmitionProtocol.TCP) {
+            if (_clientPackets[i].Protocol == Protocol.TCP) {
                 pss += "\n            SendTCPData(_packet);";
             } else {
                 pss += "\n            SendUDPData(_packet);";

@@ -13,20 +13,5 @@ MonoBehaviour:
   m_Name: PacketConfigurator
   m_EditorClassIdentifier: 
   generationPath: Assets/
-  serverPackets:
-  - packetName: Welcome
-    packetVariables:
-    - packetName: Welcome Message
-      packetType: 7
-    - packetName: Client Id
-      packetType: 3
-    sendType: 0
-    protocol: 0
-    notes: 
-  clientPackets:
-  - packetName: Welcome Received
-    packetVariables:
-    - packetName: Client Id Check
-      packetType: 3
-    protocol: 0
-    notes: 
+  serverPackets: []
+  clientPackets: []
