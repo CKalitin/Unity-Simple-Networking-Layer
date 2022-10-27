@@ -29,7 +29,6 @@ public class Server {
         Debug.Log("Starting server...");
         InitializeServerData();
 
-        Debug.Log("Setting up TCP & UDP listeners.");
         tcpListener = new TcpListener(IPAddress.Any, Port);
         tcpListener.Start();
         tcpListener.BeginAcceptTcpClient(new AsyncCallback(TCPConnectCallback), null);

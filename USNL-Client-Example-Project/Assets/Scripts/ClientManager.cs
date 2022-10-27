@@ -10,6 +10,10 @@ public class ClientManager : MonoBehaviour {
     [SerializeField] private string ip = "127.0.0.1";
     [SerializeField] private int port = 26950;
 
+    public bool HandleData = true;
+    public bool PacketHandlers = true;
+    public bool PacketManager = true;
+
     CallbackManager connectedCallbackManager;
     CallbackManager disconnectedCallbackManager;
 
@@ -23,6 +27,10 @@ public class ClientManager : MonoBehaviour {
         } else if (instance != this) {
             Debug.Log("Client Manager instance already exists, destroying object!");
             Destroy(this);
+        }
+
+        if (Application.isEditor) {
+            Application.runInBackground = true;
         }
 
         connectedCallbackManager = new CallbackManager("OnConnected");
@@ -52,7 +60,6 @@ public class ClientManager : MonoBehaviour {
     }
 
     public void DisconnectedFromServer() {
-        Debug.Log("2");
         disconnectedCallbackManager.CallCallbacks();
     }
 

@@ -137,8 +137,8 @@ public class Client : MonoBehaviour {
                 // Create new packet and copy byte data into it and send it to the appropriate packet handler
                 ThreadManager.ExecuteOnMainThread(() => {
                     using (Packet _packet = new Packet(_packetBytes)) {
-                        int _packetId = _packet.ReadInt();
-                        PacketHandlers.packetHandlers[_packetId](_packet);
+                        _packet.PacketId = _packet.ReadInt();
+                        if (ClientManager.instance.HandleData) { PacketHandlers.packetHandlers[_packet.PacketId](_packet); }
                     }
                 });
 
@@ -272,6 +272,8 @@ public class Client : MonoBehaviour {
 
     public void Disconnect() {
         if (isConnected) {
+            isConnected = false;
+
             tcp.socket.Close();
 
             if (udp.socket != null) {
@@ -279,8 +281,6 @@ public class Client : MonoBehaviour {
             }
 
             ClientManager.instance.DisconnectedFromServer();
-
-            isConnected = false;
 
             Debug.Log("Disconnected from server.");
         }

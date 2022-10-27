@@ -26,7 +26,7 @@ public class PacketConfiguratorEditor : Editor {
 
         VerticalBreak();
         // This button is used for updating resourceIds at runtime
-        if (GUILayout.Button("Generate Server Packet Management")) {
+        if (GUILayout.Button("Generate Server Packets")) {
             packetConfigurator.GenerateServerPacketManagement();
 
             // This is used to refresh the assets which adds the newly generated enums

@@ -15,7 +15,24 @@ public class PacketConfigurator : ScriptableObject {
             "Welcome",
             new PacketVariable[] { new PacketVariable("Welcome Message", PacketVarTypes.String), new PacketVariable("Client Id", PacketVarTypes.Int) },
             ServerPacketTypes.SendToClient,
-            Protocol.TCP)
+            Protocol.TCP),
+        #region Synced Objects
+        new ServerPacketConfig(
+            "SyncedObjectInstantiate",
+            new PacketVariable[] {new PacketVariable("Synced Object Prefeb Id", PacketVarTypes.Int), new PacketVariable("Synced Object UUID", PacketVarTypes.Int), new PacketVariable("Position", PacketVarTypes.Vector3), new PacketVariable("Rotation", PacketVarTypes.Quaternion), new PacketVariable("Scale", PacketVarTypes.Vector3) },
+            ServerPacketTypes.SendToClient,
+            Protocol.TCP),
+        new ServerPacketConfig(
+            "SyncedObjectDestroy",
+            new PacketVariable[] { new PacketVariable("Synced Object UUID", PacketVarTypes.Int) },
+            ServerPacketTypes.SendToClient,
+            Protocol.TCP),
+        new ServerPacketConfig(
+            "SyncedObjectUpdate",
+            new PacketVariable[] { new PacketVariable("Synced Object UUID", PacketVarTypes.Int), new PacketVariable("Position", PacketVarTypes.Vector3), new PacketVariable("Rotation", PacketVarTypes.Quaternion), new PacketVariable("Scale", PacketVarTypes.Vector3)},
+            ServerPacketTypes.SendToAllClients,
+            Protocol.TCP),
+        #endregion
     };
     private ClientPacketConfig[] libClientPackets = {
         new ClientPacketConfig(
@@ -231,7 +248,6 @@ public class PacketConfigurator : ScriptableObject {
             string loPacketName = Lower(_serverPackets[i].PacketName);
             phs += $"\n    public static void {upPacketName}(Packet _packet) {{";
 
-            phs += "\n_packet.ReadInt(); // This needs to be here for packet reading, idk why it just works.";
             string packetParameters = "";
             for (int x = 0; x < _serverPackets[i].PacketVariables.Length; x++) {
                 packetParameters += $"_packet.Read{packetReadTypes[_serverPackets[i].PacketVariables[x].PacketType]}(), ";
@@ -300,34 +316,34 @@ public class PacketConfigurator : ScriptableObject {
         #endregion
 
         try {
-            using (StreamWriter streamWriter = new StreamWriter(filePathAndName)) {
-
-                streamWriter.Write(
-                    "using System.Collections.Generic;" +
-                    "using UnityEngine;" +
-                    "\n" +
-                    "\n// Sent from Server to Client" +
-                    "\npublic enum ServerPackets {" +
-                    $"\n{serverPacketsString}" +
-                    "\n}" +
-                    "\n" +
-                    "\n// Sent from Client to Server" +
-                    "\npublic enum ClientPackets {" +
-                    $"\n{clientPacketsString}" +
-                    "\n}" +
-                    "\n" +
-                    "\n/*** Packet Structs ***/" +
-                    $"\n{psts}" +
-                    "\n" +
-                    "\npublic static class PacketHandlers {" +
-                    $"\n{phs}" +
-                    "\n}" +
-                    "\n" +
-                    "\npublic static class PacketSend {" +
-                    $"\n{pss}" +
-                    "\n}" +
-                    "\n");
-            }
+            StreamWriter sw = new StreamWriter(filePathAndName);
+            sw.Write(
+                "using System.Collections.Generic;" +
+                "using UnityEngine;" +
+                "\n" +
+                "\n// Sent from Server to Client" +
+                "\npublic enum ServerPackets {" +
+                $"\n{serverPacketsString}" +
+                "\n}" +
+                "\n" +
+                "\n// Sent from Client to Server" +
+                "\npublic enum ClientPackets {" +
+                $"\n{clientPacketsString}" +
+                "\n}" +
+                "\n" +
+                "\n/*** Packet Structs ***/" +
+                $"\n{psts}" +
+                "\n" +
+                "\npublic static class PacketHandlers {" +
+                $"\n{phs}" +
+                "\n}" +
+                "\n" +
+                "\npublic static class PacketSend {" +
+                $"\n{pss}" +
+                "\n}" +
+                "\n");
+            sw.Flush();
+            sw.Close();
         } catch (Exception _ex) {
             Debug.LogError($"Could not save Packet Configuration with error: {_ex}");
         }

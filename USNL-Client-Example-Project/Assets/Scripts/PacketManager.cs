@@ -32,6 +32,7 @@ public class PacketManager : MonoBehaviour {
 
         object[] parameters = new object[] { _packetStruct };
 
+        if (!ClientManager.instance.PacketManager) { return; }
         packetReceivedCallbacks[_packet.PacketId].CallCallbacks(parameters);
     }
 }

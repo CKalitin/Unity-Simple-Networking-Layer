@@ -220,9 +220,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 270393282}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9c00896d5c1f39d499724aa60742c9f3, type: 3}
+  m_Script: {fileID: 11500000, guid: 407d7648944689547a0f98de9dfbc728, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncedObjectsPrefabs: {fileID: 11400000, guid: 774f73ecb3be6a8498ac0afcc29108ef, type: 2}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0

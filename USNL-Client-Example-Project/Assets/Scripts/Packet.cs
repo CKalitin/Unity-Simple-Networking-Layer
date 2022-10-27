@@ -273,7 +273,7 @@ public class Packet : IDisposable {
     /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
     public string ReadString(bool _moveReadPos = true) {
         try {
-            int _length = ReadInt(); // Get the length of the string
+            int _length = ReadInt(_moveReadPos); // Get the length of the string
             string _value = Encoding.ASCII.GetString(readableBuffer, readPos, _length); // Convert the bytes to a string
 
             if (_moveReadPos && _value.Length > 0) {
