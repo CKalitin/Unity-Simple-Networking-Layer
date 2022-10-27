@@ -16,12 +16,16 @@ public class PacketManager : MonoBehaviour {
     }
 
     public void PacketReceived(Packet _packet, object _packetStruct) {
-        Debug.Log($"Packet Received: {Enum.GetName(typeof(ServerPackets), _packet.PacketId)}");
+        //Debug.Log($"Packet Received: {Enum.GetName(typeof(ServerPackets), _packet.PacketId)}");
 
         object[] parameters = new object[] { _packetStruct };
 
-        // Call callback events
         if (!ClientManager.instance.PacketManager) { return; }
-        USNLCallbackEvents.PacketCallbackEvents[_packet.PacketId](_packetStruct);
+
+        // Break out of Packet Handle Thread
+        ThreadManager.ExecuteOnMainThread(() => {
+            // Call callback events
+            USNLCallbackEvents.PacketCallbackEvents[_packet.PacketId](_packetStruct);
+        });
     }
 }

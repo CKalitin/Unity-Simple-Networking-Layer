@@ -68,13 +68,13 @@ public class ScriptGenerator : ScriptableObject {
         output += "\n";
 
         // Standard Callback Functions
-        output += "\n    public static void CallOnConnectedCallbacks(object _param) { OnConnected(_param); }";
-        output += "\n    public static void CallOnDisconnectedCallbacks(object _param) { OnDisconnected(_param); }";
+        output += "\n    public static void CallOnConnectedCallbacks(object _param) { if (OnConnected != null) { OnConnected(_param); } }";
+        output += "\n    public static void CallOnDisconnectedCallbacks(object _param) { if (OnDisconnected != null) { OnDisconnected(_param); } }";
         output += "\n";
 
         // Packet Callback Functions
         for (int i = 0; i < Enum.GetNames(typeof(ServerPackets)).Length; i++) {
-            output += $"\n    public static void CallOn{Enum.GetNames(typeof(ServerPackets))[i]}PacketCallbacks(object _param) {{ On{Enum.GetNames(typeof(ServerPackets))[i]}Packet(_param); }}";
+            output += $"\n    public static void CallOn{Enum.GetNames(typeof(ServerPackets))[i]}PacketCallbacks(object _param) {{ if (On{Enum.GetNames(typeof(ServerPackets))[i]}Packet != null) {{ On{Enum.GetNames(typeof(ServerPackets))[i]}Packet(_param); }} }}";
         }
 
         output += "\n}";

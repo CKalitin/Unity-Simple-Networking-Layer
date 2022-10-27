@@ -159,13 +159,13 @@ public static class USNLCallbackEvents {
     public static event USNLCallbackEvent OnSyncedObjectDestroyPacket;
     public static event USNLCallbackEvent OnSyncedObjectUpdatePacket;
 
-    public static void CallOnConnectedCallbacks(object _param) { OnConnected(_param); }
-    public static void CallOnDisconnectedCallbacks(object _param) { OnDisconnected(_param); }
+    public static void CallOnConnectedCallbacks(object _param) { if (OnConnected != null) { OnConnected(_param); } }
+    public static void CallOnDisconnectedCallbacks(object _param) { if (OnDisconnected != null) { OnDisconnected(_param); } }
 
-    public static void CallOnWelcomePacketCallbacks(object _param) { OnWelcomePacket(_param); }
-    public static void CallOnSyncedObjectInstantiatePacketCallbacks(object _param) { OnSyncedObjectInstantiatePacket(_param); }
-    public static void CallOnSyncedObjectDestroyPacketCallbacks(object _param) { OnSyncedObjectDestroyPacket(_param); }
-    public static void CallOnSyncedObjectUpdatePacketCallbacks(object _param) { OnSyncedObjectUpdatePacket(_param); }
+    public static void CallOnWelcomePacketCallbacks(object _param) { if (OnWelcomePacket != null) { OnWelcomePacket(_param); } }
+    public static void CallOnSyncedObjectInstantiatePacketCallbacks(object _param) { if (OnSyncedObjectInstantiatePacket != null) { OnSyncedObjectInstantiatePacket(_param); } }
+    public static void CallOnSyncedObjectDestroyPacketCallbacks(object _param) { if (OnSyncedObjectDestroyPacket != null) { OnSyncedObjectDestroyPacket(_param); } }
+    public static void CallOnSyncedObjectUpdatePacketCallbacks(object _param) { if (OnSyncedObjectUpdatePacket != null) { OnSyncedObjectUpdatePacket(_param); } }
 }
 
 #endregion

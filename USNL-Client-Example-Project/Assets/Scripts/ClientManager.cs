@@ -51,7 +51,7 @@ public class ClientManager : MonoBehaviour {
 
         PacketSend.WelcomeReceived(_wp.ClientId);
 
-        USNLCallbackEvents.CallOnConnectedCallbacks(new object());
+        USNLCallbackEvents.CallOnConnectedCallbacks(0);
     }
 
     #endregion
@@ -68,7 +68,7 @@ public class ClientManager : MonoBehaviour {
     }
 
     public void DisconnectedFromServer() {
-        USNLCallbackEvents.CallOnDisconnectedCallbacks(new object());
+        USNLCallbackEvents.CallOnDisconnectedCallbacks(0);
     }
 
     #endregion

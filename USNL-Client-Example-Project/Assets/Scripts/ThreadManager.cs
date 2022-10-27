@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 public class ThreadManager : MonoBehaviour {
@@ -7,8 +8,11 @@ public class ThreadManager : MonoBehaviour {
     private static readonly List<Action> executeCopiedOnMainThread = new List<Action>();
     private static bool actionToExecuteOnMainThread = false;
 
+    #region Main Thread
+
     private void Update() {
         UpdateMain();
+        //PacketHandleThreadFunction();
     }
 
     /// <summary>Sets an action to be executed on the main thread.</summary>
@@ -40,4 +44,70 @@ public class ThreadManager : MonoBehaviour {
             }
         }
     }
+
+    #endregion
+
+    #region Secondary Thread
+
+    private static Thread packetHandleThread;
+    private static AutoResetEvent packetHandleAutoResetEvent;
+    private static readonly List<Action> executeOnPacketHandleThread = new List<Action>();
+    private static readonly List<Action> executeOnPacketHandleThreadCopied = new List<Action>();
+    private static bool actionToExecuteOnPacketHandleThread = false;
+
+    public static void StartPacketHandleThread() {
+        // Create new AutoResetEvent that is not updating by default
+        packetHandleAutoResetEvent = new AutoResetEvent(false);
+
+        // Create and Start new Thread
+        packetHandleThread = new Thread(PacketHandleThreadFunction);
+        packetHandleThread.IsBackground = true;
+        packetHandleThread.Priority = System.Threading.ThreadPriority.AboveNormal;
+
+        packetHandleThread.Start();
+    }
+
+    public static void StopPacketHandleThread() {
+        packetHandleAutoResetEvent.Close();
+        packetHandleThread.Abort();
+    }
+
+    private static void PacketHandleThreadFunction() {
+        while (true) {
+            // Pause thread
+            packetHandleAutoResetEvent.WaitOne();
+
+            // If there is an action waiting to be executed on this thread
+            if (actionToExecuteOnPacketHandleThread) {
+                // Clear copied actions list
+                executeOnPacketHandleThreadCopied.Clear();
+
+                // Copy actions into copied actions list
+                lock (executeOnPacketHandleThread) {
+                    executeOnPacketHandleThreadCopied.AddRange(executeOnPacketHandleThread);
+                    executeOnPacketHandleThread.Clear();
+                    actionToExecuteOnPacketHandleThread = false;
+                }
+
+                // Loop through copied actions and execute
+                for (int i = 0; i < executeOnPacketHandleThreadCopied.Count; i++) {
+                    executeOnPacketHandleThreadCopied[i]();
+                }
+            }
+        }
+    }
+
+    public static void ExecuteOnPacketHandleThread(Action _action) {
+        // Add action to list of actions to execute on Packet Handle Thread
+
+        lock (executeOnPacketHandleThread) {
+            executeOnPacketHandleThread.Add(_action);
+            actionToExecuteOnPacketHandleThread = true;
+            
+            // Unpause Packet Handle Thread
+            packetHandleAutoResetEvent.Set();
+        }
+    }
+
+    #endregion
 }

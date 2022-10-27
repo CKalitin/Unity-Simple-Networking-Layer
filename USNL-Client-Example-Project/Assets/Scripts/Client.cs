@@ -66,6 +66,8 @@ public class Client : MonoBehaviour {
                 SendBufferSize = dataBufferSize
             };
 
+            ThreadManager.StartPacketHandleThread();
+
             receiveBuffer = new byte[dataBufferSize];
             socket.BeginConnect(instance.ip, instance.port, ConnectCallback, socket);
         }
@@ -136,7 +138,7 @@ public class Client : MonoBehaviour {
 
                 // Create new packet and copy byte data into it and send it to the appropriate packet handler
                 // Using ThreadManager because functions can't be called here without breaking the TCP listener because this is a callback function, can't start a stack trace here
-                ThreadManager.ExecuteOnMainThread(() => {
+                ThreadManager.ExecuteOnPacketHandleThread(() => {
                     using (Packet _packet = new Packet(_packetBytes)) {
                         _packet.PacketId = _packet.ReadInt();
                         PacketHandlers.packetHandlers[_packet.PacketId](_packet);
@@ -231,7 +233,8 @@ public class Client : MonoBehaviour {
             };
 
             // Send packet to packet handler
-            ThreadManager.ExecuteOnMainThread(() => {
+            // Using ThreadManager because functions can't be called here without breaking the TCP listener because this is a callback function, can't start a stack trace here
+            ThreadManager.ExecuteOnPacketHandleThread(() => {
                 using (Packet _packet = new Packet(_data)) {
                     int _packetId = _packet.ReadInt();
                     PacketHandlers.packetHandlers[_packetId](_packet);
@@ -282,6 +285,8 @@ public class Client : MonoBehaviour {
             }
 
             ClientManager.instance.DisconnectedFromServer();
+
+            ThreadManager.StopPacketHandleThread();
 
             Debug.Log("Disconnected from server.");
         }
