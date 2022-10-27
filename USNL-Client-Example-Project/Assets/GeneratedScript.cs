@@ -1,4 +1,7 @@
-using System.Collections.Generic;using UnityEngine;
+using System.Collections.Generic;
+using UnityEngine;
+
+#region Packets
 
 // Sent from Server to Client
 public enum ServerPackets {
@@ -27,6 +30,7 @@ public struct WelcomePacket {
     public string WelcomeMessage { get => welcomeMessage; set => welcomeMessage = value; }
     public int ClientId { get => clientId; set => clientId = value; }
 }
+
 public struct SyncedObjectInstantiatePacket {
     private int syncedObjectPrefebId;
     private int syncedObjectUUID;
@@ -48,6 +52,7 @@ public struct SyncedObjectInstantiatePacket {
     public Quaternion Rotation { get => rotation; set => rotation = value; }
     public Vector3 Scale { get => scale; set => scale = value; }
 }
+
 public struct SyncedObjectDestroyPacket {
     private int syncedObjectUUID;
 
@@ -57,6 +62,7 @@ public struct SyncedObjectDestroyPacket {
 
     public int SyncedObjectUUID { get => syncedObjectUUID; set => syncedObjectUUID = value; }
 }
+
 public struct SyncedObjectUpdatePacket {
     private int syncedObjectUUID;
     private Vector3 position;
@@ -75,6 +81,7 @@ public struct SyncedObjectUpdatePacket {
     public Quaternion Rotation { get => rotation; set => rotation = value; }
     public Vector3 Scale { get => scale; set => scale = value; }
 }
+
 
 public static class PacketHandlers {
     public delegate void PacketHandler(Packet _packet);
@@ -101,7 +108,6 @@ public static class PacketHandlers {
     }
 
     public static void SyncedObjectUpdate(Packet _packet) {
-        if (!ClientManager.instance.PacketHandlers) { return; }
         SyncedObjectUpdatePacket syncedObjectUpdatePacket = new SyncedObjectUpdatePacket(_packet.ReadInt(), _packet.ReadVector3(), _packet.ReadQuaternion(), _packet.ReadVector3());
         PacketManager.instance.PacketReceived(_packet, syncedObjectUpdatePacket);
     }
@@ -130,3 +136,36 @@ public static class PacketSend {
         }
     }
 }
+
+#endregion Packets
+
+#region Callbacks
+
+public static class USNLCallbackEvents {
+    public delegate void USNLCallbackEvent(object _param);
+
+    public static USNLCallbackEvent[] PacketCallbackEvents = {
+        CallOnWelcomePacketCallbacks,
+        CallOnSyncedObjectInstantiatePacketCallbacks,
+        CallOnSyncedObjectDestroyPacketCallbacks,
+        CallOnSyncedObjectUpdatePacketCallbacks,
+    };
+
+    public static event USNLCallbackEvent OnConnected;
+    public static event USNLCallbackEvent OnDisconnected;
+
+    public static event USNLCallbackEvent OnWelcomePacket;
+    public static event USNLCallbackEvent OnSyncedObjectInstantiatePacket;
+    public static event USNLCallbackEvent OnSyncedObjectDestroyPacket;
+    public static event USNLCallbackEvent OnSyncedObjectUpdatePacket;
+
+    public static void CallOnConnectedCallbacks(object _param) { OnConnected(_param); }
+    public static void CallOnDisconnectedCallbacks(object _param) { OnDisconnected(_param); }
+
+    public static void CallOnWelcomePacketCallbacks(object _param) { OnWelcomePacket(_param); }
+    public static void CallOnSyncedObjectInstantiatePacketCallbacks(object _param) { OnSyncedObjectInstantiatePacket(_param); }
+    public static void CallOnSyncedObjectDestroyPacketCallbacks(object _param) { OnSyncedObjectDestroyPacket(_param); }
+    public static void CallOnSyncedObjectUpdatePacketCallbacks(object _param) { OnSyncedObjectUpdatePacket(_param); }
+}
+
+#endregion

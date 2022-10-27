@@ -14,9 +14,6 @@ public class ClientManager : MonoBehaviour {
     public bool PacketHandlers = true;
     public bool PacketManager = true;
 
-    CallbackManager connectedCallbackManager;
-    CallbackManager disconnectedCallbackManager;
-
     #endregion
 
     #region Core
@@ -32,14 +29,34 @@ public class ClientManager : MonoBehaviour {
         if (Application.isEditor) {
             Application.runInBackground = true;
         }
-
-        connectedCallbackManager = new CallbackManager("OnConnected");
-        disconnectedCallbackManager = new CallbackManager("OnDisconnected");
     }
 
     private void Start() {
         ConnectToServer();
     }
+
+    private void OnEnable() {
+        USNLCallbackEvents.OnWelcomePacket += OnWelcomePacket;
+    }
+
+    private void OnDisable() {
+        USNLCallbackEvents.OnWelcomePacket -= OnWelcomePacket;
+    }
+
+    private void OnWelcomePacket(object _packetObject) {
+        WelcomePacket _wp = (WelcomePacket)_packetObject;
+
+        Debug.Log($"Welcome message from Server: {_wp.WelcomeMessage}, Client Id: {_wp.ClientId}");
+        Client.instance.ClientId = _wp.ClientId;
+
+        PacketSend.WelcomeReceived(_wp.ClientId);
+
+        USNLCallbackEvents.CallOnConnectedCallbacks(new object());
+    }
+
+    #endregion
+
+    #region Functions
 
     private void ConnectToServer() {
         Client.instance.SetIP(ip, port);
@@ -50,17 +67,8 @@ public class ClientManager : MonoBehaviour {
         Client.instance.Disconnect();
     }
 
-    private void OnWelcomePacket(WelcomePacket _wp) {
-        Debug.Log($"Welcome message from Server: {_wp.WelcomeMessage}, Client Id: {_wp.ClientId}");
-        Client.instance.ClientId = _wp.ClientId;
-
-        PacketSend.WelcomeReceived(_wp.ClientId);
-
-        connectedCallbackManager.CallCallbacks();
-    }
-
     public void DisconnectedFromServer() {
-        disconnectedCallbackManager.CallCallbacks();
+        USNLCallbackEvents.CallOnDisconnectedCallbacks(new object());
     }
 
     #endregion

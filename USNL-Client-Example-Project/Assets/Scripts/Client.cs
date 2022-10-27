@@ -135,10 +135,11 @@ public class Client : MonoBehaviour {
                 byte[] _packetBytes = receivedPacket.ReadBytes(_packetLength); // Get byte data for packet
 
                 // Create new packet and copy byte data into it and send it to the appropriate packet handler
+                // Using ThreadManager because functions can't be called here without breaking the TCP listener because this is a callback function, can't start a stack trace here
                 ThreadManager.ExecuteOnMainThread(() => {
                     using (Packet _packet = new Packet(_packetBytes)) {
                         _packet.PacketId = _packet.ReadInt();
-                        if (ClientManager.instance.HandleData) { PacketHandlers.packetHandlers[_packet.PacketId](_packet); }
+                        PacketHandlers.packetHandlers[_packet.PacketId](_packet);
                     }
                 });
 

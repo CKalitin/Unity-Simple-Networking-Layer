@@ -9,6 +9,11 @@ using UnityEngine;
 public class PacketConfigurator : ScriptableObject {
     #region Variables
 
+    [SerializeField] private ScriptGenerator scriptGenerator;
+    [Space]
+    [SerializeField] private ServerPacketConfig[] serverPackets;
+    [SerializeField] private ClientPacketConfig[] clientPackets;
+
     /*** Library Packets (Not for user) ***/
     private ServerPacketConfig[] libServerPackets = {
         new ServerPacketConfig(
@@ -40,11 +45,6 @@ public class PacketConfigurator : ScriptableObject {
             new PacketVariable[] { new PacketVariable("Client Id Check", PacketVarTypes.Int) },
             Protocol.TCP)
     };
-
-    [SerializeField] private string generationPath = "Assets/";
-    [Space]
-    [SerializeField] private ServerPacketConfig[] serverPackets;
-    [SerializeField] private ClientPacketConfig[] clientPackets;
 
     Dictionary<PacketVarTypes, string> packetTypes = new Dictionary<PacketVarTypes, string>()
     { { PacketVarTypes.Byte, "byte"},
@@ -160,8 +160,16 @@ public class PacketConfigurator : ScriptableObject {
 
     #endregion
     public void GenerateClientPacketManagement() {
-        string filePathAndName = generationPath + "GeneratedClientPacketManagement" + ".cs"; // The folder where the script is expected to exist
+        scriptGenerator.GenerateScript();
+    }
 
+    public string GetScriptText() {
+        return GenerateScriptText();
+    }
+
+    #region Script Text
+
+    private string GenerateScriptText() {
         List<ServerPacketConfig> _serverPackets = new List<ServerPacketConfig>();
         List<ClientPacketConfig> _clientPackets = new List<ClientPacketConfig>();
 
@@ -222,7 +230,7 @@ public class PacketConfigurator : ScriptableObject {
 
                 psts += $"\n    public {varType} {Upper(varName)} {{ get => {varName}; set => {varName} = value; }}";
             }
-            psts += "\n}";
+            psts += "\n}\n";
         }
 
         #endregion
@@ -315,38 +323,28 @@ public class PacketConfigurator : ScriptableObject {
 
         #endregion
 
-        try {
-            StreamWriter sw = new StreamWriter(filePathAndName);
-            sw.Write(
-                "using System.Collections.Generic;" +
-                "using UnityEngine;" +
-                "\n" +
-                "\n// Sent from Server to Client" +
-                "\npublic enum ServerPackets {" +
-                $"\n{serverPacketsString}" +
-                "\n}" +
-                "\n" +
-                "\n// Sent from Client to Server" +
-                "\npublic enum ClientPackets {" +
-                $"\n{clientPacketsString}" +
-                "\n}" +
-                "\n" +
-                "\n/*** Packet Structs ***/" +
-                $"\n{psts}" +
-                "\n" +
-                "\npublic static class PacketHandlers {" +
-                $"\n{phs}" +
-                "\n}" +
-                "\n" +
-                "\npublic static class PacketSend {" +
-                $"\n{pss}" +
-                "\n}" +
-                "\n");
-            sw.Flush();
-            sw.Close();
-        } catch (Exception _ex) {
-            Debug.LogError($"Could not save Packet Configuration with error: {_ex}");
-        }
+        // Return this text:
+        return
+            "\n// Sent from Server to Client" +
+            "\npublic enum ServerPackets {" +
+            $"\n{serverPacketsString}" +
+            "\n}" +
+            "\n" +
+            "\n// Sent from Client to Server" +
+            "\npublic enum ClientPackets {" +
+            $"\n{clientPacketsString}" +
+            "\n}" +
+            "\n" +
+            "\n/*** Packet Structs ***/" +
+            $"\n{psts}" +
+            "\n" +
+            "\npublic static class PacketHandlers {" +
+            $"\n{phs}" +
+            "\n}" +
+            "\n" +
+            "\npublic static class PacketSend {" +
+            $"\n{pss}" +
+            "\n}";
     }
 
     private string Upper(string _input) {
@@ -358,4 +356,6 @@ public class PacketConfigurator : ScriptableObject {
         string output = String.Concat(_input.Where(c => !Char.IsWhiteSpace(c))); // Remove whitespace
         return $"{Char.ToLower(output[0])}{output.Substring(1)}";
     }
+
+    #endregion
 }
