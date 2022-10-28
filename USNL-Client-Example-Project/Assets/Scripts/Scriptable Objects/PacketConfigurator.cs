@@ -268,8 +268,6 @@ public class PacketConfigurator : ScriptableObject {
             for (int x = 0; x < _serverPackets[i].PacketVariables.Length; x++) {
                 // If variable is a byte array
                 if (_serverPackets[i].PacketVariables[x].PacketType == PacketVarTypes.ByteArray) {
-                    //phs += $"\n        int {Lower(_serverPackets[i].PacketVariables[x].PacketName)}ArrayLength = _packet.ReadInt();";
-                    // {Lower(_serverPackets[i].PacketVariables[x].PacketName)}ArrayLength parameter TODO DELETE
                     phs += $"\n        {packetTypes[_serverPackets[i].PacketVariables[x].PacketType]} {Lower(_serverPackets[i].PacketVariables[x].PacketName)} = _packet.Read{packetReadTypes[_serverPackets[i].PacketVariables[x].PacketType]}(_packet.ReadInt());";
                 } else {
                     phs += $"\n        {packetTypes[_serverPackets[i].PacketVariables[x].PacketType]} {Lower(_serverPackets[i].PacketVariables[x].PacketName)} = _packet.Read{packetReadTypes[_serverPackets[i].PacketVariables[x].PacketType]}();";
@@ -330,8 +328,13 @@ public class PacketConfigurator : ScriptableObject {
             for (int x = 0; x < _clientPackets[i].PacketVariables.Length; x++) {
                 // If variable is a byte array
                 if (_clientPackets[i].PacketVariables[x].PacketType == PacketVarTypes.ByteArray) {
-                    pws += $"\n            _packet.Write(_{Lower(_clientPackets[i].PacketVariables[x].PacketName)}.Length);";
-                    pws += $"\n            _packet.Write(_{Lower(_clientPackets[i].PacketVariables[x].PacketName)});";
+                    pws += $"\n            if (_{Lower(_clientPackets[i].PacketVariables[x].PacketName)}.Length > 0) {{";
+                    pws += $"\n                _packet.Write(_{Lower(_clientPackets[i].PacketVariables[x].PacketName)}.Length);";
+                    pws += $"\n                _packet.Write(_{Lower(_clientPackets[i].PacketVariables[x].PacketName)});";
+                    pws += $"\n            }} else {{";
+                    pws += $"\n                _packet.Write(0);";
+                    pws += $"\n                _packet.Write(0);";
+                    pws += $"\n            }}";
                 } else {
                     pws += $"\n            _packet.Write(_{Lower(_clientPackets[i].PacketVariables[x].PacketName)});";
                 }

@@ -68,7 +68,7 @@ public static class PacketHandlers {
         byte[] keycodesDown = _packet.ReadBytes(_packet.ReadInt());
         byte[] keycodesUp = _packet.ReadBytes(_packet.ReadInt());
 
-        ClientInputPacket clientInputPacket = new ClientInputPacket(_packet.PacketId, keycodesDown, keycodesUp);
+        ClientInputPacket clientInputPacket = new ClientInputPacket(_packet.FromClient, keycodesDown, keycodesUp);
         PacketManager.instance.PacketReceived(_packet, clientInputPacket);
     }
 }
@@ -173,12 +173,16 @@ public static class USNLCallbackEvents {
         CallOnClientInputPacketCallbacks,
     };
 
+    public static event USNLCallbackEvent OnServerStarted;
+    public static event USNLCallbackEvent OnServerStopped;
     public static event USNLCallbackEvent OnClientConnected;
     public static event USNLCallbackEvent OnClientDisconnected;
 
     public static event USNLCallbackEvent OnWelcomeReceivedPacket;
     public static event USNLCallbackEvent OnClientInputPacket;
 
+    public static void CallOnServerStartedCallbacks(object _param) { if (OnServerStarted != null) { OnServerStarted(_param); } }
+    public static void CallOnServerStoppedCallbacks(object _param) { if (OnServerStopped != null) { OnServerStopped(_param); } }
     public static void CallOnClientConnectedCallbacks(object _param) { if (OnClientConnected != null) { OnClientConnected(_param); } }
     public static void CallOnClientDisconnectedCallbacks(object _param) { if (OnClientDisconnected != null) { OnClientDisconnected(_param); } }
 

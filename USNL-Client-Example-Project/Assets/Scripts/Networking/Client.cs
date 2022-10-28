@@ -236,8 +236,8 @@ public class Client : MonoBehaviour {
             // Using ThreadManager because functions can't be called here without breaking the TCP listener because this is a callback function, can't start a stack trace here
             ThreadManager.ExecuteOnPacketHandleThread(() => {
                 using (Packet _packet = new Packet(_data)) {
-                    int _packetId = _packet.ReadInt();
-                    PacketHandlers.packetHandlers[_packetId](_packet);
+                    _packet.PacketId = _packet.ReadInt();
+                    PacketHandlers.packetHandlers[_packet.PacketId](_packet);
                 }
             });
         }

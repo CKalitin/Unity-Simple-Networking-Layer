@@ -155,7 +155,7 @@ public class Client {
             Server.SendUDPData(endPoint, _packet);
         }
 
-        public void handleData(Packet _packetData) {
+        public void HandleData(Packet _packetData) {
             int _packetLength = _packetData.ReadInt();
             byte[] _packetBytes = _packetData.ReadBytes(_packetLength);
 

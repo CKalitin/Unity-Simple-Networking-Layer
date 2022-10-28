@@ -46,7 +46,6 @@ public class ThreadManager : MonoBehaviour {
 
     #endregion
 
-
     #region Packet Handle Thread
 
     private static Thread packetHandleThread;

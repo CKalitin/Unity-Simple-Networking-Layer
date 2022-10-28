@@ -38,6 +38,10 @@ public class Server {
         udpListener = new UdpClient(Port);
         udpListener.BeginReceive(UDPReceiveCallback, null);
 
+        InputManager.instance.Initialize();
+
+        USNLCallbackEvents.CallOnServerStartedCallbacks(0);
+
         Debug.Log($"Server started on port {Port}.");
     }
 
@@ -52,6 +56,8 @@ public class Server {
         udpListener.Close();
 
         ThreadManager.StopPacketHandleThread();
+
+        USNLCallbackEvents.CallOnServerStoppedCallbacks(0);
 
         Debug.Log("Server stopped.");
     }
@@ -94,7 +100,7 @@ public class Server {
                 }
 
                 if (clients[_clientId].Udp.endPoint.ToString() == _clientEndPoint.ToString()) {
-                    clients[_clientId].Udp.handleData(_packet);
+                    clients[_clientId].Udp.HandleData(_packet);
                 }
             }
         } catch (Exception _ex) {

@@ -272,8 +272,6 @@ public class PacketConfigurator : ScriptableObject {
             for (int x = 0; x < _clientPackets[i].PacketVariables.Length; x++) {
                 // If variable is a byte array
                 if (_clientPackets[i].PacketVariables[x].PacketType == PacketVarTypes.ByteArray) {
-                    //phs += $"\n        int {Lower(_clientPackets[i].PacketVariables[x].PacketName)}ArrayLength = _packet.ReadInt();";
-                    // /*{Lower(_clientPackets[i].PacketVariables[x].PacketName)}ArrayLength parameter TODO DELETE
                     phs += $"\n        {packetTypes[_clientPackets[i].PacketVariables[x].PacketType]} {Lower(_clientPackets[i].PacketVariables[x].PacketName)} = _packet.Read{packetReadTypes[_clientPackets[i].PacketVariables[x].PacketType]}(_packet.ReadInt());";
                 } else {
                     phs += $"\n        {packetTypes[_clientPackets[i].PacketVariables[x].PacketType]} {Lower(_clientPackets[i].PacketVariables[x].PacketName)} = _packet.Read{packetReadTypes[_clientPackets[i].PacketVariables[x].PacketType]}();";
@@ -283,7 +281,7 @@ public class PacketConfigurator : ScriptableObject {
             phs += "\n";
 
             string packetParameters = "";
-            packetParameters += "_packet.PacketId, ";
+            packetParameters += "_packet.FromClient, ";
             for (int x = 0; x < _clientPackets[i].PacketVariables.Length; x++) {
                 packetParameters += $"{Lower(_clientPackets[i].PacketVariables[x].PacketName)}, ";
             }
@@ -369,8 +367,13 @@ public class PacketConfigurator : ScriptableObject {
             string pws = ""; // Packet writes
             for (int x = 0; x < _serverPackets[i].PacketVariables.Length; x++) {
                 if (_serverPackets[i].PacketVariables[x].PacketType == PacketVarTypes.ByteArray) {
-                    pws += $"\n            _packet.Write(_{Lower(_serverPackets[i].PacketVariables[x].PacketName)}.Length);";
-                    pws += $"\n            _packet.Write(_{Lower(_serverPackets[i].PacketVariables[x].PacketName)});";
+                    pws += $"            if (_{Lower(_serverPackets[i].PacketVariables[x].PacketName)}.Length > 0) {{";
+                    pws += $"\n                _packet.Write(_{Lower(_serverPackets[i].PacketVariables[x].PacketName)}.Length);";
+                    pws += $"\n                _packet.Write(_{Lower(_serverPackets[i].PacketVariables[x].PacketName)});";
+                    pws += $"            }} else {{";
+                    pws += $"                _packet.Write(0);";
+                    pws += $"                _packet.Write(0);";
+                    pws += $"            }}";
                 } else {
                     pws += $"\n            _packet.Write(_{Lower(_serverPackets[i].PacketVariables[x].PacketName)});";
                 }

@@ -55,6 +55,8 @@ public class ScriptGenerator : ScriptableObject {
         output += "\n";
 
         // Standard Callback events
+        output += "\n    public static event USNLCallbackEvent OnServerStarted;";
+        output += "\n    public static event USNLCallbackEvent OnServerStopped;";
         output += "\n    public static event USNLCallbackEvent OnClientConnected;";
         output += "\n    public static event USNLCallbackEvent OnClientDisconnected;";
         output += "\n";
@@ -67,6 +69,8 @@ public class ScriptGenerator : ScriptableObject {
         output += "\n";
 
         // Standard Callback Functions
+        output += "\n    public static void CallOnServerStartedCallbacks(object _param) { if (OnServerStarted != null) { OnServerStarted(_param); } }";
+        output += "\n    public static void CallOnServerStoppedCallbacks(object _param) { if (OnServerStopped != null) { OnServerStopped(_param); } }";
         output += "\n    public static void CallOnClientConnectedCallbacks(object _param) { if (OnClientConnected != null) { OnClientConnected(_param); } }";
         output += "\n    public static void CallOnClientDisconnectedCallbacks(object _param) { if (OnClientDisconnected != null) { OnClientDisconnected(_param); } }";
         output += "\n";

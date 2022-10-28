@@ -3,14 +3,53 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class InputManager : MonoBehaviour {
-    List<int> keycodesDown = new List<int>();
-    List<int> keycodesUp = new List<int>();
+    #region Variables
 
-    private void Update() {
-        SendKeycodes();
+    public static InputManager instance;
+
+    [Tooltip("Specify whether the Input Manager should detect input on its own.\nIf you set input yourself, it is wise to disable this.")]
+    [SerializeField] private bool detectInput = true;
+
+    private List<int> keycodesDown = new List<int>();
+    private List<int> keycodesUp = new List<int>();
+
+    private Dictionary<string, KeyCode> buttonNameToKeyCode = new Dictionary<string, KeyCode>() {
+        { "Mouse0", (KeyCode)323},
+        { "Mouse1", (KeyCode)324},
+        { "Mouse2", (KeyCode)325},
+        { "Mouse3", (KeyCode)326},
+        { "Mouse4", (KeyCode)327},
+        { "Mouse5", (KeyCode)328},
+        { "Mouse6", (KeyCode)329},
+    };
+
+
+    public bool DetectInput { get => detectInput; set => detectInput = value; }
+
+    #endregion
+
+    #region Core
+
+    private void Awake() {
+        if (instance == null) {
+            instance = this;
+        } else if (instance != this) {
+            Debug.Log("Input Manager instance already exists, destroying object.");
+            Destroy(this);
+        }
     }
 
+    private void Update() {
+        SendClientInputPacket();
+    }
+
+    #endregion
+
+    #region Input
+
     private void OnGUI() {
+        if (!detectInput) { return; }
+
         if (Event.current.isKey | Event.current.isMouse) {
             if (Event.current.type == EventType.KeyDown) {
                 keycodesDown.Add((int)Event.current.keyCode);
@@ -18,23 +57,23 @@ public class InputManager : MonoBehaviour {
                 keycodesUp.Add((int)Event.current.keyCode);
             } else if (Event.current.type == EventType.MouseDown) {
                 // Convert Mouse Button Code to Key Code
-                // <6 because KeyCode only supports 6 Mouse Buttons while Mouse Button Codes supports 8, add 323 to convert to KeyCode
-                if ((int)Event.current.button < 6) {
+                // <6 because KeyCode only supports 7 Mouse Buttons while Mouse Button Codes supports 8, add 323 to convert to KeyCode
+                if ((int)Event.current.button < 7) {
                     keycodesDown.Add((int)Event.current.button + 323);
                 }
             } else if (Event.current.type == EventType.MouseUp) {
                 // Convert Mouse Button Code to Key Code
-                // <6 because KeyCode only supports 6 Mouse Buttons while Mouse Button Codes supports 8, add 323 to convert to KeyCode
-                if ((int)Event.current.button < 6) {
+                // <6 because KeyCode only supports 7 Mouse Buttons while Mouse Button Codes supports 8, add 323 to convert to KeyCode
+                if ((int)Event.current.button < 7) {
                     keycodesUp.Add((int)Event.current.button + 323);
                 }
             }
         }
     }
 
-    private void SendKeycodes() {
-        if (Client.instance.IsConnected) {
-            // Declare arrays of the length of the keycodes list * 4 because 4 bytes are needed for 1 int
+    private void SendClientInputPacket() {
+        if (Client.instance.IsConnected && (keycodesDown.Count > 0 || keycodesUp.Count > 0)) {
+            // Declare arrays length keycodes * 4 because 4 bytes are needed for 1 int
             byte[] keycodesDownBytes = new byte[keycodesDown.Count * 4];
             byte[] keycodesUpBytes = new byte[keycodesUp.Count * 4];
 
@@ -61,4 +100,26 @@ public class InputManager : MonoBehaviour {
             PacketSend.ClientInput(keycodesDownBytes, keycodesUpBytes);
         }
     }
+
+    #endregion
+
+    #region Set Functions
+
+    private void SetKeyDown(KeyCode _keyCode) {
+        keycodesDown.Add((int)_keyCode);
+    }
+
+    private void SetKeyUp(KeyCode _keyCode) {
+        keycodesUp.Add((int)_keyCode);
+    }
+
+    private void SetMouseButtonDown(string _buttonName) {
+        keycodesDown.Add((int)buttonNameToKeyCode[_buttonName]);
+    }
+
+    private void SetMouseButtonUp(string _buttonName) {
+        keycodesUp.Add((int)buttonNameToKeyCode[_buttonName]);
+    }
+
+    #endregion
 }

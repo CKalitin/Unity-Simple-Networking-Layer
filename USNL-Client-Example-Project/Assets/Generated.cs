@@ -154,10 +154,20 @@ public static class PacketSend {
 
     public static void ClientInput(byte[] _keycodesDown, byte[] _keycodesUp) {
         using (Packet _packet = new Packet((int)ClientPackets.ClientInput)) {
-            _packet.Write(_keycodesDown.Length);
-            _packet.Write(_keycodesDown);
-            _packet.Write(_keycodesUp.Length);
-            _packet.Write(_keycodesUp);
+            if (_keycodesDown.Length > 0) {
+                _packet.Write(_keycodesDown.Length);
+                _packet.Write(_keycodesDown);
+            } else {
+                _packet.Write(0);
+                _packet.Write(0);
+            }
+            if (_keycodesUp.Length > 0) {
+                _packet.Write(_keycodesUp.Length);
+                _packet.Write(_keycodesUp);
+            } else {
+                _packet.Write(0);
+                _packet.Write(0);
+            }
 
             SendTCPData(_packet);
         }
