@@ -5,7 +5,6 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "ScriptGenerator", menuName = "USNL/Script Generator", order = 0)]
 public class ScriptGenerator : ScriptableObject {
     [SerializeField] private PacketConfigurator packetConfigurator;
-    [SerializeField] private SyncedObjectPrefabs syncedObjectPrefabs;
 
     private string generationPath = "Assets/";
 
@@ -34,7 +33,7 @@ public class ScriptGenerator : ScriptableObject {
             "\n";
         #endregion
 
-        StreamWriter sw = new StreamWriter($"{generationPath}GeneratedScript.cs");
+        StreamWriter sw = new StreamWriter($"{generationPath}Generated.cs");
         sw.Write(scriptText);
         sw.Flush();
         sw.Close();

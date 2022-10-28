@@ -159,6 +159,9 @@ public class PacketConfigurator : ScriptableObject {
     }
 
     #endregion
+
+    #region Core Functions
+
     public void GenerateClientPacketManagement() {
         scriptGenerator.GenerateScript();
     }
@@ -166,6 +169,8 @@ public class PacketConfigurator : ScriptableObject {
     public string GetScriptText() {
         return GenerateScriptText();
     }
+
+    #endregion
 
     #region Script Text
 
@@ -323,7 +328,6 @@ public class PacketConfigurator : ScriptableObject {
 
         #endregion
 
-        // Return this text:
         return
             "\n// Sent from Server to Client" +
             "\npublic enum ServerPackets {" +

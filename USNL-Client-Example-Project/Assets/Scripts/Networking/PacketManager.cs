@@ -16,11 +16,7 @@ public class PacketManager : MonoBehaviour {
     }
 
     public void PacketReceived(Packet _packet, object _packetStruct) {
-        //Debug.Log($"Packet Received: {Enum.GetName(typeof(ServerPackets), _packet.PacketId)}");
-
-        object[] parameters = new object[] { _packetStruct };
-
-        if (!ClientManager.instance.PacketManager) { return; }
+        //Debug.Log($"Packet Received: {Enum.GetName(typeof(ServerPackets), _packet.PacketId)}"); TODO DELETE
 
         // Break out of Packet Handle Thread
         ThreadManager.ExecuteOnMainThread(() => {

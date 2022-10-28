@@ -13,9 +13,6 @@ public class ServerManager : MonoBehaviour {
     [Space]
     [SerializeField] private int dataBufferSize = 4096;
 
-    CallbackManager clientConnectedCallbackManager;
-    CallbackManager clientDisconnectedCallbackManager;
-
     public int MaxPlayers { get => maxPlayers; set => maxPlayers = value; }
     public int Port { get => port; set => port = value; }
     public string WelcomeMessage { get => welcomeMessage; set => welcomeMessage = value; }
@@ -37,9 +34,6 @@ public class ServerManager : MonoBehaviour {
             Application.runInBackground = true;
         }
 
-        clientConnectedCallbackManager = new CallbackManager("OnClientConnected");
-        clientDisconnectedCallbackManager = new CallbackManager("OnClientDisconnected");
-
         Debug.LogError("Opened Console.");
     }
 
@@ -54,21 +48,31 @@ public class ServerManager : MonoBehaviour {
         Server.Stop();
     }
 
+    private void OnEnable() {
+        USNLCallbackEvents.OnWelcomeReceivedPacket += OnWelcomeReceivedPacket;
+    }
+
+    private void OnDisable() {
+        USNLCallbackEvents.OnWelcomeReceivedPacket -= OnWelcomeReceivedPacket;
+    }
+
     #endregion
 
     #region Server Manager
 
-    private void OnWelcomeReceivedPacket(WelcomeReceivedPacket _wrp) {
+    private void OnWelcomeReceivedPacket(object _packetObject) {
+        WelcomeReceivedPacket _wrp = (WelcomeReceivedPacket)_packetObject;
+
         Debug.Log($"{Server.clients[_wrp.FromClient].Tcp.socket.Client.RemoteEndPoint} connected successfully and is now Player {_wrp.FromClient}.");
         if (_wrp.FromClient != _wrp.ClientIdCheck) {
             Debug.Log($"ID: ({_wrp.FromClient}) has assumed the wrong client ID ({_wrp.ClientIdCheck}).");
         }
 
-        clientConnectedCallbackManager.CallCallbacks(new object[] { _wrp.FromClient });
+        USNLCallbackEvents.CallOnClientConnectedCallbacks(_wrp.FromClient);
     }
 
     public void ClientDisconnected(int _clientId) {
-        clientDisconnectedCallbackManager.CallCallbacks(new object[] { _clientId });
+        USNLCallbackEvents.CallOnClientDisconnectedCallbacks(_clientId);
     }
 
     #endregion

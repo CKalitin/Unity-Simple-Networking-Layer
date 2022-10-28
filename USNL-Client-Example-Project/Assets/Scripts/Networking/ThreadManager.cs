@@ -4,15 +4,14 @@ using System.Threading;
 using UnityEngine;
 
 public class ThreadManager : MonoBehaviour {
+    #region Main Thread
+
     private static readonly List<Action> executeOnMainThread = new List<Action>();
     private static readonly List<Action> executeCopiedOnMainThread = new List<Action>();
     private static bool actionToExecuteOnMainThread = false;
 
-    #region Main Thread
-
     private void Update() {
         UpdateMain();
-        //PacketHandleThreadFunction();
     }
 
     /// <summary>Sets an action to be executed on the main thread.</summary>
@@ -47,7 +46,7 @@ public class ThreadManager : MonoBehaviour {
 
     #endregion
 
-    #region Secondary Thread
+    #region Packet Handle Thread
 
     private static Thread packetHandleThread;
     private static AutoResetEvent packetHandleAutoResetEvent;

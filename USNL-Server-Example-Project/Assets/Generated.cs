@@ -1,4 +1,7 @@
-using System.Collections.Generic;using UnityEngine;
+using System.Collections.Generic;
+using UnityEngine;
+
+#region Packets
 
 // Sent from Server to Client
 public enum ServerPackets {
@@ -128,3 +131,27 @@ public static class PacketSend {
         }
     }
 }
+
+#endregion Packets
+
+#region Callbacks
+
+public static class USNLCallbackEvents {
+    public delegate void USNLCallbackEvent(object _param);
+
+    public static USNLCallbackEvent[] PacketCallbackEvents = {
+        CallOnWelcomeReceivedPacketCallbacks,
+    };
+
+    public static event USNLCallbackEvent OnClientConnected;
+    public static event USNLCallbackEvent OnClientDisconnected;
+
+    public static event USNLCallbackEvent OnWelcomeReceivedPacket;
+
+    public static void CallOnClientConnectedCallbacks(object _param) { if (OnClientConnected != null) { OnClientConnected(_param); } }
+    public static void CallOnClientDisconnectedCallbacks(object _param) { if (OnClientDisconnected != null) { OnClientDisconnected(_param); } }
+
+    public static void CallOnWelcomeReceivedPacketCallbacks(object _param) { if (OnWelcomeReceivedPacket != null) { OnWelcomeReceivedPacket(_param); } }
+}
+
+#endregion

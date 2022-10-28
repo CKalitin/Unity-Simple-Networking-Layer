@@ -105,7 +105,7 @@ public class Client {
 
             while (_packetLength > 0 && _packetLength <= receivedData.UnreadLength()) {
                 byte[] _packetBytes = receivedData.ReadBytes(_packetLength);
-                ThreadManager.ExecuteOnMainThread(() => {
+                ThreadManager.ExecuteOnPacketHandleThread(() => {
                     using (Packet _packet = new Packet(_packetBytes)) {
                         _packet.PacketId = _packet.ReadInt();
                         _packet.FromClient = clientId;
@@ -160,7 +160,7 @@ public class Client {
             byte[] _packetBytes = _packetData.ReadBytes(_packetLength);
 
 
-            ThreadManager.ExecuteOnMainThread(() => {
+            ThreadManager.ExecuteOnPacketHandleThread(() => {
                 using (Packet _packet = new Packet(_packetBytes)) {
                     _packet.PacketId = _packet.ReadInt();
                     _packet.FromClient = clientId;

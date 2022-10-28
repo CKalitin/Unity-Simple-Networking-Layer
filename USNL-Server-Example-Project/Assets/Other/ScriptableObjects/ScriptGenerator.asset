@@ -9,9 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4c6402f0f3d03e04e8c2aa794053d90e, type: 3}
-  m_Name: PacketConfigurator
+  m_Script: {fileID: 11500000, guid: fd1330b2e584538429b514e513e7b023, type: 3}
+  m_Name: ScriptGenerator
   m_EditorClassIdentifier: 
-  scriptGenerator: {fileID: 11400000, guid: 4c61555409eb819488d9081805f767d3, type: 2}
-  serverPackets: []
-  clientPackets: []
+  packetConfigurator: {fileID: 11400000, guid: c13c69cddf6db0343aba326f795f91b0, type: 2}

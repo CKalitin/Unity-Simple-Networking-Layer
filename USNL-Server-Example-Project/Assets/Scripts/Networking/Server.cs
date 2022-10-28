@@ -29,6 +29,8 @@ public class Server {
         Debug.Log("Starting server...");
         InitializeServerData();
 
+        ThreadManager.StartPacketHandleThread();
+
         tcpListener = new TcpListener(IPAddress.Any, Port);
         tcpListener.Start();
         tcpListener.BeginAcceptTcpClient(new AsyncCallback(TCPConnectCallback), null);
@@ -48,6 +50,8 @@ public class Server {
     public static void Stop() {
         tcpListener.Stop();
         udpListener.Close();
+
+        ThreadManager.StopPacketHandleThread();
 
         Debug.Log("Server stopped.");
     }
@@ -83,10 +87,6 @@ public class Server {
 
             using (Packet _packet = new Packet(_data)) {
                 int _clientId = _packet.ReadInt();
-
-                if (_clientId == 0) {
-                    return;
-                }
 
                 if (clients[_clientId].Udp.endPoint == null) {
                     clients[_clientId].Udp.Connect(_clientEndPoint);

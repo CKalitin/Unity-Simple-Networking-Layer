@@ -3,9 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class SyncedObjectManager : MonoBehaviour {
+    #region Variables
+
     public static SyncedObjectManager instance;
 
     private List<SyncedObject> syncedObjects = new List<SyncedObject>();
+
+    #endregion
+
+    #region Core
 
     private void Awake() {
         if (instance == null) {
@@ -16,14 +22,21 @@ public class SyncedObjectManager : MonoBehaviour {
         }
     }
 
+    private void OnEnable() { USNLCallbackEvents.OnClientConnected += OnClientConnected; }
+    private void OnDisable() { USNLCallbackEvents.OnClientConnected -= OnClientConnected; }
+
+    #endregion
+
+    #region Synced Object Management
+
+    private void OnClientConnected(object _clientIdObject) {
+        SendAllSyncedObjectsToClient((int)_clientIdObject);
+    }
+
     private void SendAllSyncedObjectsToClient(int _toClient) {
         for (int i = 0; i < syncedObjects.Count; i++) {
             PacketSend.SyncedObjectInstantiate(_toClient, syncedObjects[i].PrefabId, syncedObjects[i].SyncedObjectUUID, syncedObjects[i].transform.position, syncedObjects[i].transform.rotation, syncedObjects[i].transform.lossyScale);
         }
-    }
-
-    private void OnClientConnected(int _clientId) {
-        SendAllSyncedObjectsToClient(_clientId);
     }
 
     public void InstantiateSyncedObject(SyncedObject _so) {
@@ -45,4 +58,6 @@ public class SyncedObjectManager : MonoBehaviour {
             }
         }
     }
+
+    #endregion
 }
