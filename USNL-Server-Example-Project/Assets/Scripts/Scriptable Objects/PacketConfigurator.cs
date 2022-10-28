@@ -36,13 +36,17 @@ public class PacketConfigurator : ScriptableObject {
             "SyncedObjectUpdate",
             new PacketVariable[] { new PacketVariable("Synced Object UUID", PacketVarTypes.Int), new PacketVariable("Position", PacketVarTypes.Vector3), new PacketVariable("Rotation", PacketVarTypes.Quaternion), new PacketVariable("Scale", PacketVarTypes.Vector3)},
             ServerPacketTypes.SendToAllClients,
-            Protocol.TCP),
+            Protocol.UDP),
         #endregion
     };
     private ClientPacketConfig[] libClientPackets = {
         new ClientPacketConfig(
             "Welcome Received",
             new PacketVariable[] { new PacketVariable("Client Id Check", PacketVarTypes.Int) },
+            Protocol.TCP),
+        new ClientPacketConfig(
+            "ClientInput",
+            new PacketVariable[] { new PacketVariable("KeycodesDown", PacketVarTypes.ByteArray), new PacketVariable("KeycodesUp", PacketVarTypes.ByteArray)},
             Protocol.TCP)
     };
 
@@ -239,6 +243,7 @@ public class PacketConfigurator : ScriptableObject {
                 psts += $"\n    public {varType} {Upper(varName)} {{ get => {varName}; set => {varName} = value; }}";
             }
             psts += "\n}";
+            psts += "\n";
         }
 
         #endregion
@@ -264,10 +269,23 @@ public class PacketConfigurator : ScriptableObject {
             string loPacketName = Lower(_clientPackets[i].PacketName);
             phs += $"\n    public static void {upPacketName}(Packet _packet) {{";
 
+            for (int x = 0; x < _clientPackets[i].PacketVariables.Length; x++) {
+                // If variable is a byte array
+                if (_clientPackets[i].PacketVariables[x].PacketType == PacketVarTypes.ByteArray) {
+                    //phs += $"\n        int {Lower(_clientPackets[i].PacketVariables[x].PacketName)}ArrayLength = _packet.ReadInt();";
+                    // /*{Lower(_clientPackets[i].PacketVariables[x].PacketName)}ArrayLength parameter TODO DELETE
+                    phs += $"\n        {packetTypes[_clientPackets[i].PacketVariables[x].PacketType]} {Lower(_clientPackets[i].PacketVariables[x].PacketName)} = _packet.Read{packetReadTypes[_clientPackets[i].PacketVariables[x].PacketType]}(_packet.ReadInt());";
+                } else {
+                    phs += $"\n        {packetTypes[_clientPackets[i].PacketVariables[x].PacketType]} {Lower(_clientPackets[i].PacketVariables[x].PacketName)} = _packet.Read{packetReadTypes[_clientPackets[i].PacketVariables[x].PacketType]}();";
+                }
+            }
+
+            phs += "\n";
+
             string packetParameters = "";
             packetParameters += "_packet.PacketId, ";
             for (int x = 0; x < _clientPackets[i].PacketVariables.Length; x++) {
-                packetParameters += $"_packet.Read{packetReadTypes[_clientPackets[i].PacketVariables[x].PacketType]}(), ";
+                packetParameters += $"{Lower(_clientPackets[i].PacketVariables[x].PacketName)}, ";
             }
             packetParameters = packetParameters.Substring(0, packetParameters.Length - 2);
 
@@ -350,7 +368,12 @@ public class PacketConfigurator : ScriptableObject {
 
             string pws = ""; // Packet writes
             for (int x = 0; x < _serverPackets[i].PacketVariables.Length; x++) {
-                pws += $"\n            _packet.Write(_{Lower(_serverPackets[i].PacketVariables[x].PacketName)});";
+                if (_serverPackets[i].PacketVariables[x].PacketType == PacketVarTypes.ByteArray) {
+                    pws += $"\n            _packet.Write(_{Lower(_serverPackets[i].PacketVariables[x].PacketName)}.Length);";
+                    pws += $"\n            _packet.Write(_{Lower(_serverPackets[i].PacketVariables[x].PacketName)});";
+                } else {
+                    pws += $"\n            _packet.Write(_{Lower(_serverPackets[i].PacketVariables[x].PacketName)});";
+                }
             }
             pss += pws;
             pss += "\n";
@@ -383,7 +406,6 @@ public class PacketConfigurator : ScriptableObject {
             "\n" +
             "\n/*** Packet Structs ***/" +
             $"\n{psts}" +
-            "\n" +
             "\npublic static class PacketHandlers {" +
             $"\n{phs}" +
             "\n}" +

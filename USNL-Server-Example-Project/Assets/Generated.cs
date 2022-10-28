@@ -14,6 +14,7 @@ public enum ServerPackets {
 // Sent from Client to Server
 public enum ClientPackets {
     WelcomeReceived,
+    ClientInput,
 }
 
 /*** Packet Structs ***/
@@ -32,15 +33,43 @@ public struct WelcomeReceivedPacket {
     public int ClientIdCheck { get => clientIdCheck; set => clientIdCheck = value; }
 }
 
+public struct ClientInputPacket {
+    private int fromClient;
+
+    private byte[] keycodesDown;
+    private byte[] keycodesUp;
+
+    public ClientInputPacket(int _fromClient, byte[] _keycodesDown, byte[] _keycodesUp) {
+        fromClient = _fromClient;
+        keycodesDown = _keycodesDown;
+        keycodesUp = _keycodesUp;
+    }
+
+    public int FromClient { get => fromClient; set => fromClient = value; }
+    public byte[] KeycodesDown { get => keycodesDown; set => keycodesDown = value; }
+    public byte[] KeycodesUp { get => keycodesUp; set => keycodesUp = value; }
+}
+
 public static class PacketHandlers {
     public delegate void PacketHandler(Packet _packet);
     public static List<PacketHandler> packetHandlers = new List<PacketHandler>() {
         { WelcomeReceived },
+        { ClientInput },
     };
 
     public static void WelcomeReceived(Packet _packet) {
-        WelcomeReceivedPacket welcomeReceivedPacket = new WelcomeReceivedPacket(_packet.PacketId, _packet.ReadInt());
+        int clientIdCheck = _packet.ReadInt();
+
+        WelcomeReceivedPacket welcomeReceivedPacket = new WelcomeReceivedPacket(_packet.PacketId, clientIdCheck);
         PacketManager.instance.PacketReceived(_packet, welcomeReceivedPacket);
+    }
+
+    public static void ClientInput(Packet _packet) {
+        byte[] keycodesDown = _packet.ReadBytes(_packet.ReadInt());
+        byte[] keycodesUp = _packet.ReadBytes(_packet.ReadInt());
+
+        ClientInputPacket clientInputPacket = new ClientInputPacket(_packet.PacketId, keycodesDown, keycodesUp);
+        PacketManager.instance.PacketReceived(_packet, clientInputPacket);
     }
 }
 
@@ -127,7 +156,7 @@ public static class PacketSend {
             _packet.Write(_rotation);
             _packet.Write(_scale);
 
-            SendTCPDataToAll(_packet);
+            SendUDPDataToAll(_packet);
         }
     }
 }
@@ -141,17 +170,20 @@ public static class USNLCallbackEvents {
 
     public static USNLCallbackEvent[] PacketCallbackEvents = {
         CallOnWelcomeReceivedPacketCallbacks,
+        CallOnClientInputPacketCallbacks,
     };
 
     public static event USNLCallbackEvent OnClientConnected;
     public static event USNLCallbackEvent OnClientDisconnected;
 
     public static event USNLCallbackEvent OnWelcomeReceivedPacket;
+    public static event USNLCallbackEvent OnClientInputPacket;
 
     public static void CallOnClientConnectedCallbacks(object _param) { if (OnClientConnected != null) { OnClientConnected(_param); } }
     public static void CallOnClientDisconnectedCallbacks(object _param) { if (OnClientDisconnected != null) { OnClientDisconnected(_param); } }
 
     public static void CallOnWelcomeReceivedPacketCallbacks(object _param) { if (OnWelcomeReceivedPacket != null) { OnWelcomeReceivedPacket(_param); } }
+    public static void CallOnClientInputPacketCallbacks(object _param) { if (OnClientInputPacket != null) { OnClientInputPacket(_param); } }
 }
 
 #endregion

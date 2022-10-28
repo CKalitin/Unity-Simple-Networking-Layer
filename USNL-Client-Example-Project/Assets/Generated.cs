@@ -14,6 +14,7 @@ public enum ServerPackets {
 // Sent from Client to Server
 public enum ClientPackets {
     WelcomeReceived,
+    ClientInput,
 }
 
 /*** Packet Structs ***/
@@ -82,7 +83,6 @@ public struct SyncedObjectUpdatePacket {
     public Vector3 Scale { get => scale; set => scale = value; }
 }
 
-
 public static class PacketHandlers {
     public delegate void PacketHandler(Packet _packet);
     public static List<PacketHandler> packetHandlers = new List<PacketHandler>() {
@@ -93,22 +93,38 @@ public static class PacketHandlers {
     };
 
     public static void Welcome(Packet _packet) {
-        WelcomePacket welcomePacket = new WelcomePacket(_packet.ReadString(), _packet.ReadInt());
+        string welcomeMessage = _packet.ReadString();
+        int clientId = _packet.ReadInt();
+
+        WelcomePacket welcomePacket = new WelcomePacket(welcomeMessage, clientId);
         PacketManager.instance.PacketReceived(_packet, welcomePacket);
     }
 
     public static void SyncedObjectInstantiate(Packet _packet) {
-        SyncedObjectInstantiatePacket syncedObjectInstantiatePacket = new SyncedObjectInstantiatePacket(_packet.ReadInt(), _packet.ReadInt(), _packet.ReadVector3(), _packet.ReadQuaternion(), _packet.ReadVector3());
+        int syncedObjectPrefebId = _packet.ReadInt();
+        int syncedObjectUUID = _packet.ReadInt();
+        Vector3 position = _packet.ReadVector3();
+        Quaternion rotation = _packet.ReadQuaternion();
+        Vector3 scale = _packet.ReadVector3();
+
+        SyncedObjectInstantiatePacket syncedObjectInstantiatePacket = new SyncedObjectInstantiatePacket(syncedObjectPrefebId, syncedObjectUUID, position, rotation, scale);
         PacketManager.instance.PacketReceived(_packet, syncedObjectInstantiatePacket);
     }
 
     public static void SyncedObjectDestroy(Packet _packet) {
-        SyncedObjectDestroyPacket syncedObjectDestroyPacket = new SyncedObjectDestroyPacket(_packet.ReadInt());
+        int syncedObjectUUID = _packet.ReadInt();
+
+        SyncedObjectDestroyPacket syncedObjectDestroyPacket = new SyncedObjectDestroyPacket(syncedObjectUUID);
         PacketManager.instance.PacketReceived(_packet, syncedObjectDestroyPacket);
     }
 
     public static void SyncedObjectUpdate(Packet _packet) {
-        SyncedObjectUpdatePacket syncedObjectUpdatePacket = new SyncedObjectUpdatePacket(_packet.ReadInt(), _packet.ReadVector3(), _packet.ReadQuaternion(), _packet.ReadVector3());
+        int syncedObjectUUID = _packet.ReadInt();
+        Vector3 position = _packet.ReadVector3();
+        Quaternion rotation = _packet.ReadQuaternion();
+        Vector3 scale = _packet.ReadVector3();
+
+        SyncedObjectUpdatePacket syncedObjectUpdatePacket = new SyncedObjectUpdatePacket(syncedObjectUUID, position, rotation, scale);
         PacketManager.instance.PacketReceived(_packet, syncedObjectUpdatePacket);
     }
 }
@@ -131,6 +147,17 @@ public static class PacketSend {
     public static void WelcomeReceived(int _clientIdCheck) {
         using (Packet _packet = new Packet((int)ClientPackets.WelcomeReceived)) {
             _packet.Write(_clientIdCheck);
+
+            SendTCPData(_packet);
+        }
+    }
+
+    public static void ClientInput(byte[] _keycodesDown, byte[] _keycodesUp) {
+        using (Packet _packet = new Packet((int)ClientPackets.ClientInput)) {
+            _packet.Write(_keycodesDown.Length);
+            _packet.Write(_keycodesDown);
+            _packet.Write(_keycodesUp.Length);
+            _packet.Write(_keycodesUp);
 
             SendTCPData(_packet);
         }
