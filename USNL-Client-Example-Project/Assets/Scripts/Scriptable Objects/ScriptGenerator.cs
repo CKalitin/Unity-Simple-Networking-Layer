@@ -8,6 +8,12 @@ public class ScriptGenerator : ScriptableObject {
 
     private string generationPath = "Assets/";
 
+    // Custom Callbacks for library functions (Specified by me)
+    private string[] libCallbacks = {
+        "OnConnected",
+        "OnDisconnected"
+    };
+
     public void GenerateScript() {
         string scriptText = "";
 
@@ -55,8 +61,9 @@ public class ScriptGenerator : ScriptableObject {
         output += "\n";
 
         // Standard Callback events
-        output += "\n    public static event USNLCallbackEvent OnConnected;";
-        output += "\n    public static event USNLCallbackEvent OnDisconnected;";
+        for (int i = 0; i < libCallbacks.Length; i++) {
+            output += $"\n    public static event USNLCallbackEvent {libCallbacks[i]};";
+        }
         output += "\n";
 
         // Packet Callback events
@@ -67,8 +74,9 @@ public class ScriptGenerator : ScriptableObject {
         output += "\n";
 
         // Standard Callback Functions
-        output += "\n    public static void CallOnConnectedCallbacks(object _param) { if (OnConnected != null) { OnConnected(_param); } }";
-        output += "\n    public static void CallOnDisconnectedCallbacks(object _param) { if (OnDisconnected != null) { OnDisconnected(_param); } }";
+        for (int i = 0; i < libCallbacks.Length; i++) {
+            output += $"\n    public static void Call{libCallbacks[i]}Callbacks(object _param) {{ if ({libCallbacks[i]} != null) {{ {libCallbacks[i]}(_param); }} }}";
+        }
         output += "\n";
 
         // Packet Callback Functions

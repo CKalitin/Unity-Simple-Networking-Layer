@@ -9,12 +9,14 @@ public enum ServerPackets {
     SyncedObjectInstantiate,
     SyncedObjectDestroy,
     SyncedObjectUpdate,
+    Ping,
 }
 
 // Sent from Client to Server
 public enum ClientPackets {
     WelcomeReceived,
     ClientInput,
+    Ping,
 }
 
 /*** Packet Structs ***/
@@ -83,6 +85,16 @@ public struct SyncedObjectUpdatePacket {
     public Vector3 Scale { get => scale; set => scale = value; }
 }
 
+public struct PingPacket {
+    private bool sendPingBack;
+
+    public PingPacket(bool _sendPingBack) {
+        sendPingBack = _sendPingBack;
+    }
+
+    public bool SendPingBack { get => sendPingBack; set => sendPingBack = value; }
+}
+
 public static class PacketHandlers {
     public delegate void PacketHandler(Packet _packet);
     public static List<PacketHandler> packetHandlers = new List<PacketHandler>() {
@@ -90,6 +102,7 @@ public static class PacketHandlers {
         { SyncedObjectInstantiate },
         { SyncedObjectDestroy },
         { SyncedObjectUpdate },
+        { Ping },
     };
 
     public static void Welcome(Packet _packet) {
@@ -127,6 +140,13 @@ public static class PacketHandlers {
         SyncedObjectUpdatePacket syncedObjectUpdatePacket = new SyncedObjectUpdatePacket(syncedObjectUUID, position, rotation, scale);
         PacketManager.instance.PacketReceived(_packet, syncedObjectUpdatePacket);
     }
+
+    public static void Ping(Packet _packet) {
+        bool sendPingBack = _packet.ReadBool();
+
+        PingPacket pingPacket = new PingPacket(sendPingBack);
+        PacketManager.instance.PacketReceived(_packet, pingPacket);
+    }
 }
 
 public static class PacketSend {
@@ -134,6 +154,7 @@ public static class PacketSend {
         _packet.WriteLength();
         if (Client.instance.IsConnected) {
             Client.instance.Tcp.SendData(_packet);
+            NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length());
         }
     }
 
@@ -141,6 +162,7 @@ public static class PacketSend {
         _packet.WriteLength();
         if (Client.instance.IsConnected) {
             Client.instance.Udp.SendData(_packet);
+            NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length());
         }
     }
 
@@ -172,6 +194,14 @@ public static class PacketSend {
             SendTCPData(_packet);
         }
     }
+
+    public static void Ping(bool _sendPingBack) {
+        using (Packet _packet = new Packet((int)ClientPackets.Ping)) {
+            _packet.Write(_sendPingBack);
+
+            SendTCPData(_packet);
+        }
+    }
 }
 
 #endregion Packets
@@ -186,6 +216,7 @@ public static class USNLCallbackEvents {
         CallOnSyncedObjectInstantiatePacketCallbacks,
         CallOnSyncedObjectDestroyPacketCallbacks,
         CallOnSyncedObjectUpdatePacketCallbacks,
+        CallOnPingPacketCallbacks,
     };
 
     public static event USNLCallbackEvent OnConnected;
@@ -195,6 +226,7 @@ public static class USNLCallbackEvents {
     public static event USNLCallbackEvent OnSyncedObjectInstantiatePacket;
     public static event USNLCallbackEvent OnSyncedObjectDestroyPacket;
     public static event USNLCallbackEvent OnSyncedObjectUpdatePacket;
+    public static event USNLCallbackEvent OnPingPacket;
 
     public static void CallOnConnectedCallbacks(object _param) { if (OnConnected != null) { OnConnected(_param); } }
     public static void CallOnDisconnectedCallbacks(object _param) { if (OnDisconnected != null) { OnDisconnected(_param); } }
@@ -203,6 +235,7 @@ public static class USNLCallbackEvents {
     public static void CallOnSyncedObjectInstantiatePacketCallbacks(object _param) { if (OnSyncedObjectInstantiatePacket != null) { OnSyncedObjectInstantiatePacket(_param); } }
     public static void CallOnSyncedObjectDestroyPacketCallbacks(object _param) { if (OnSyncedObjectDestroyPacket != null) { OnSyncedObjectDestroyPacket(_param); } }
     public static void CallOnSyncedObjectUpdatePacketCallbacks(object _param) { if (OnSyncedObjectUpdatePacket != null) { OnSyncedObjectUpdatePacket(_param); } }
+    public static void CallOnPingPacketCallbacks(object _param) { if (OnPingPacket != null) { OnPingPacket(_param); } }
 }
 
 #endregion

@@ -38,6 +38,11 @@ public class PacketConfigurator : ScriptableObject {
             ServerPacketTypes.SendToAllClients,
             Protocol.UDP),
         #endregion
+        new ServerPacketConfig(
+            "Ping",
+            new PacketVariable[] { new PacketVariable("Send Ping Back", PacketVarTypes.Bool) },
+            ServerPacketTypes.SendToClient,
+            Protocol.TCP)
     };
     private ClientPacketConfig[] libClientPackets = {
         new ClientPacketConfig(
@@ -47,6 +52,10 @@ public class PacketConfigurator : ScriptableObject {
         new ClientPacketConfig(
             "ClientInput",
             new PacketVariable[] { new PacketVariable("KeycodesDown", PacketVarTypes.ByteArray), new PacketVariable("KeycodesUp", PacketVarTypes.ByteArray)},
+            Protocol.TCP),
+        new ClientPacketConfig(
+            "Ping",
+            new PacketVariable[] { new PacketVariable("Send Ping Back", PacketVarTypes.Bool) },
             Protocol.TCP)
     };
 
@@ -285,7 +294,6 @@ public class PacketConfigurator : ScriptableObject {
 
             phs += $"\n        {upPacketName}Packet {loPacketName}Packet = new {upPacketName}Packet({packetParameters});";
             phs += $"\n        PacketManager.instance.PacketReceived(_packet, {loPacketName}Packet);";
-            phs += $"\n        PacketManager.instance.PacketReceived(_packet, clientInputPacket); ";
 
             phs += "\n    }";
             phs += "\n";

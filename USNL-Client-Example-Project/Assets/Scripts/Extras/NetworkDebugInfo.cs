@@ -1,8 +1,11 @@
 using System;
 using System.Collections;
+using System.Net.NetworkInformation;
 using UnityEngine;
 
 public class NetworkDebugInfo : MonoBehaviour {
+    #region Variables
+
     public static NetworkDebugInfo instance;
 
     [Header("Bytes")]
@@ -18,6 +21,16 @@ public class NetworkDebugInfo : MonoBehaviour {
     [Space]
     [SerializeField] private int totalPacketsSentPerSecond;
     [SerializeField] private int totalPacketsReceivedPerSecond;
+
+    [Header("Ping")]
+    [SerializeField] private int pingMs;
+    [SerializeField] private long pingMsLong;
+    [SerializeField] private int unityPingMs;
+    [SerializeField] private int packetPingMs;
+    [Space]
+    [SerializeField] private bool trackPing = true;
+
+    private float packetPingSentTime = -1; // Seconds since startup when ping packet was sent
 
     // Too much memory? - adding a clear function, nvm it's just some ints
     // Index is packet Id
@@ -36,6 +49,10 @@ public class NetworkDebugInfo : MonoBehaviour {
     private int[] tempPacketsSentPerSecond = new int[Enum.GetNames(typeof(ClientPackets)).Length];
     private int[] tempPacketsReceivedPerSecond = new int[Enum.GetNames(typeof(ServerPackets)).Length];
 
+    #endregion
+
+    #region Core
+
     private void Awake() {
         if (instance == null) {
             instance = this;
@@ -46,11 +63,31 @@ public class NetworkDebugInfo : MonoBehaviour {
     }
 
     private void Start() {
-        StartCoroutine(InfoPerSecondCoroutine());
+        StartCoroutine(BytesAndPacketsPerSecondCoroutine());
     }
 
-    private IEnumerator InfoPerSecondCoroutine() {
+    private void OnEnable() {
+        USNLCallbackEvents.OnPingPacket += OnPingPacketReceived;
+        USNLCallbackEvents.OnDisconnected += OnDisconnected;
+    }
+
+    private void OnDisable() {
+        USNLCallbackEvents.OnPingPacket -= OnPingPacketReceived;
+        USNLCallbackEvents.OnDisconnected -= OnDisconnected;
+    }
+
+    #endregion
+
+    #region Bytes and Packets
+
+    private IEnumerator BytesAndPacketsPerSecondCoroutine() {
         while (true) {
+            if (trackPing && Client.instance.IsConnected) {
+                PingReply();
+                StartCoroutine(UnityPing());
+                SendPingPacket();
+            }
+
             // Clear existing data
             bytesSentPerSecond = 0;
             bytesReceivedPerSecond = 0;
@@ -96,7 +133,6 @@ public class NetworkDebugInfo : MonoBehaviour {
         }
     }
 
-    // , int _packetsSent TODO DELETE
     public void PacketSent(int _packetId, int _bytesLength) {
         totalBytesSent += _bytesLength;
 
@@ -114,4 +150,73 @@ public class NetworkDebugInfo : MonoBehaviour {
         tempPacketsReceivedPerSecond[_packetId]++;
         totalPacketsReceived++;
     }
+
+    #endregion
+
+    #region Ping
+
+    private void PingReply() {
+        System.Net.NetworkInformation.Ping pingSender = new System.Net.NetworkInformation.Ping();
+        PingReply pingReply = pingSender.Send(Client.instance.ip, 5000);
+
+        Debug.Log("Before");
+
+        if (pingReply.Status == IPStatus.Success) {
+            pingMs = (int)pingReply.RoundtripTime;
+            pingMsLong = pingReply.RoundtripTime;
+        } else {
+            pingMs = -1;
+        }
+
+        Debug.Log("After");
+    }
+
+    private IEnumerator UnityPing() {
+        UnityEngine.Ping ping = new UnityEngine.Ping(Client.instance.ip);
+
+        float timeout = 0;
+        while (!ping.isDone) {
+            yield return new WaitForEndOfFrame();
+
+            timeout += Time.deltaTime;
+
+            if (timeout > 5000) { yield break; }
+        }
+
+        if (ping.isDone) {
+            unityPingMs = ping.time;
+        } else {
+            unityPingMs = -1;
+        }
+    }
+
+    private void SendPingPacket() {
+        // If packet has been received packetPingSentTime will be -1
+        if (packetPingSentTime < 0) {
+            packetPingSentTime = Time.realtimeSinceStartup;
+            PacketSend.Ping(true);
+        } else {
+            Debug.Log("Packet RTT/ping is greater than 1000ms");
+        }
+    }
+
+    private void OnPingPacketReceived(object _packetObject) {
+        PingPacket pingPacket = (PingPacket)_packetObject;
+
+        // If this is to determine Server -> Client ping time, send packet back, don't get total ping time on Client
+        if (pingPacket.SendPingBack) {
+            PacketSend.Ping(false);
+            return;
+        }
+
+        Debug.Log(Mathf.RoundToInt((Time.realtimeSinceStartup - packetPingSentTime) * 1000));
+        packetPingMs = Mathf.RoundToInt((Time.realtimeSinceStartup - packetPingSentTime) * 1000); // Round to ms (*1000), instead of seconds
+        packetPingSentTime = -1;
+    }
+
+    private void OnDisconnected(object _object) {
+        packetPingSentTime = -1; // Reset Packet Ping Sent Time so SendPingPacket() works
+    }
+
+    #endregion
 }

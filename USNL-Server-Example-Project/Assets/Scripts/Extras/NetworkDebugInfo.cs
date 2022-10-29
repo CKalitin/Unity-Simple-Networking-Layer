@@ -3,6 +3,8 @@ using System.Collections;
 using UnityEngine;
 
 public class NetworkDebugInfo : MonoBehaviour {
+    #region Variables
+
     public static NetworkDebugInfo instance;
 
     [Header("Bytes")]
@@ -36,6 +38,10 @@ public class NetworkDebugInfo : MonoBehaviour {
     private int[] tempPacketsSentPerSecond = new int[Enum.GetNames(typeof(ServerPackets)).Length];
     private int[] tempPacketsReceivedPerSecond = new int[Enum.GetNames(typeof(ClientPackets)).Length];
 
+    #endregion
+
+    #region Core
+
     private void Awake() {
         if (instance == null) {
             instance = this;
@@ -46,10 +52,17 @@ public class NetworkDebugInfo : MonoBehaviour {
     }
 
     private void Start() {
-        StartCoroutine(InfoPerSecondCoroutine());
+        StartCoroutine(BytesAndPacketsPerSecondCoroutine());
     }
 
-    private IEnumerator InfoPerSecondCoroutine() {
+    private void OnEnable() { USNLCallbackEvents.OnPingPacket += OnPingPacketReceived; }
+    private void OnDisable() { USNLCallbackEvents.OnPingPacket -= OnPingPacketReceived; }
+
+    #endregion
+
+    #region Bytes and Packets
+
+    private IEnumerator BytesAndPacketsPerSecondCoroutine() {
         while (true) {
             // Clear existing data
             bytesSentPerSecond = 0;
@@ -96,7 +109,6 @@ public class NetworkDebugInfo : MonoBehaviour {
         }   
     }
 
-    // , int _packetsSent TODO DELETE
     public void PacketSent(int _packetId, int _bytesLength) {
         totalBytesSent += _bytesLength;
 
@@ -114,4 +126,20 @@ public class NetworkDebugInfo : MonoBehaviour {
         tempPacketsReceivedPerSecond[_packetId]++;
         totalPacketsReceived++;
     }
+
+    #endregion
+
+    #region Ping
+
+    private void OnPingPacketReceived(object _packetObject) {
+        PingPacket _pingPacket = (PingPacket)_packetObject;
+
+        // If this is to determine Client -> Server ping time, send packet back
+        if (_pingPacket.SendPingBack) {
+            PacketSend.Ping(_pingPacket.FromClient, false);
+            return;
+        }
+    }
+
+    #endregion
 }

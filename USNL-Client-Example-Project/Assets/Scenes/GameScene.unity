@@ -262,6 +262,11 @@ MonoBehaviour:
   totalPacketsReceived: 0
   totalPacketsSentPerSecond: 0
   totalPacketsReceivedPerSecond: 0
+  pingMs: 0
+  pingMsLong: 0
+  unityPingMs: 0
+  packetPingMs: 0
+  trackPing: 1
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0

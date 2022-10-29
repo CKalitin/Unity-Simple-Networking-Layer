@@ -9,12 +9,14 @@ public enum ServerPackets {
     SyncedObjectInstantiate,
     SyncedObjectDestroy,
     SyncedObjectUpdate,
+    Ping,
 }
 
 // Sent from Client to Server
 public enum ClientPackets {
     WelcomeReceived,
     ClientInput,
+    Ping,
 }
 
 /*** Packet Structs ***/
@@ -50,11 +52,26 @@ public struct ClientInputPacket {
     public byte[] KeycodesUp { get => keycodesUp; set => keycodesUp = value; }
 }
 
+public struct PingPacket {
+    private int fromClient;
+
+    private bool sendPingBack;
+
+    public PingPacket(int _fromClient, bool _sendPingBack) {
+        fromClient = _fromClient;
+        sendPingBack = _sendPingBack;
+    }
+
+    public int FromClient { get => fromClient; set => fromClient = value; }
+    public bool SendPingBack { get => sendPingBack; set => sendPingBack = value; }
+}
+
 public static class PacketHandlers {
     public delegate void PacketHandler(Packet _packet);
     public static List<PacketHandler> packetHandlers = new List<PacketHandler>() {
         { WelcomeReceived },
         { ClientInput },
+        { Ping },
     };
 
     public static void WelcomeReceived(Packet _packet) {
@@ -72,6 +89,13 @@ public static class PacketHandlers {
 
         ClientInputPacket clientInputPacket = new ClientInputPacket(_packet.FromClient, keycodesDown, keycodesUp);
         PacketManager.instance.PacketReceived(_packet, clientInputPacket);
+    }
+
+    public static void Ping(Packet _packet) {
+        bool sendPingBack = _packet.ReadBool();
+
+        PingPacket pingPacket = new PingPacket(_packet.FromClient, sendPingBack);
+        PacketManager.instance.PacketReceived(_packet, pingPacket);
     }
 }
 
@@ -167,6 +191,14 @@ public static class PacketSend {
             SendUDPDataToAll(_packet);
         }
     }
+
+    public static void Ping(int _toClient, bool _sendPingBack) {
+        using (Packet _packet = new Packet((int)ServerPackets.Ping)) {
+            _packet.Write(_sendPingBack);
+
+            SendTCPData(_toClient, _packet);
+        }
+    }
 }
 
 #endregion Packets
@@ -179,6 +211,7 @@ public static class USNLCallbackEvents {
     public static USNLCallbackEvent[] PacketCallbackEvents = {
         CallOnWelcomeReceivedPacketCallbacks,
         CallOnClientInputPacketCallbacks,
+        CallOnPingPacketCallbacks,
     };
 
     public static event USNLCallbackEvent OnServerStarted;
@@ -188,6 +221,7 @@ public static class USNLCallbackEvents {
 
     public static event USNLCallbackEvent OnWelcomeReceivedPacket;
     public static event USNLCallbackEvent OnClientInputPacket;
+    public static event USNLCallbackEvent OnPingPacket;
 
     public static void CallOnServerStartedCallbacks(object _param) { if (OnServerStarted != null) { OnServerStarted(_param); } }
     public static void CallOnServerStoppedCallbacks(object _param) { if (OnServerStopped != null) { OnServerStopped(_param); } }
@@ -196,6 +230,7 @@ public static class USNLCallbackEvents {
 
     public static void CallOnWelcomeReceivedPacketCallbacks(object _param) { if (OnWelcomeReceivedPacket != null) { OnWelcomeReceivedPacket(_param); } }
     public static void CallOnClientInputPacketCallbacks(object _param) { if (OnClientInputPacket != null) { OnClientInputPacket(_param); } }
+    public static void CallOnPingPacketCallbacks(object _param) { if (OnPingPacket != null) { OnPingPacket(_param); } }
 }
 
 #endregion
