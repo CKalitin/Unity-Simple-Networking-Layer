@@ -13,11 +13,11 @@
 [Rr]ecordings/
 
 # Keep Scriptable Object meta files
-*.meta
-!*asset.meta
-
+# Keep ALL META FILES
+#*.meta
+#!*asset.meta
 # Keep script all meta files
-!*.cs.meta
+#!*.cs.meta
 
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta
