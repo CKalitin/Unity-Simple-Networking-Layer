@@ -88,6 +88,7 @@ public class Packet : IDisposable {
             readPos -= 4; // "Unread" the last read int
         }
     }
+
     #endregion
 
     #region Write Data

@@ -66,9 +66,9 @@ public static class PacketHandlers {
 
     public static void ClientInput(Packet _packet) {
         byte[] keycodesDown = _packet.ReadBytes(_packet.ReadInt());
-if (keycodesDown.Length <= 0) { _packet.ReadInt(); }
+        if (keycodesDown.Length <= 0) { _packet.ReadInt(); }
         byte[] keycodesUp = _packet.ReadBytes(_packet.ReadInt());
-if (keycodesUp.Length <= 0) { _packet.ReadInt(); }
+        if (keycodesUp.Length <= 0) { _packet.ReadInt(); }
 
         ClientInputPacket clientInputPacket = new ClientInputPacket(_packet.FromClient, keycodesDown, keycodesUp);
         PacketManager.instance.PacketReceived(_packet, clientInputPacket);
@@ -81,12 +81,14 @@ public static class PacketSend {
     private static void SendTCPData(int _toClient, Packet _packet) {
         _packet.WriteLength();
         Server.clients[_toClient].Tcp.SendData(_packet);
+            if (Server.clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
     }
 
     private static void SendTCPDataToAll(Packet _packet) {
         _packet.WriteLength();
         for (int i = 0; i < Server.MaxClients; i++) {
             Server.clients[i].Tcp.SendData(_packet);
+            if (Server.clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
         }
     }
 
@@ -95,6 +97,7 @@ public static class PacketSend {
         for (int i = 0; i < Server.MaxClients; i++) {
             if (i != _excpetClient) {
                 Server.clients[i].Tcp.SendData(_packet);
+                if (Server.clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
             }
         }
     }
@@ -102,12 +105,14 @@ public static class PacketSend {
     private static void SendUDPData(int _toClient, Packet _packet) {
         _packet.WriteLength();
         Server.clients[_toClient].Udp.SendData(_packet);
+        if (Server.clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
     }
 
     private static void SendUDPDataToAll(Packet _packet) {
         _packet.WriteLength();
         for (int i = 0; i < Server.MaxClients; i++) {
             Server.clients[i].Udp.SendData(_packet);
+            if (Server.clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
         }
     }
 
@@ -116,6 +121,7 @@ public static class PacketSend {
         for (int i = 0; i < Server.MaxClients; i++) {
             if (i != _excpetClient) {
                 Server.clients[i].Udp.SendData(_packet);
+                if (Server.clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
             }
         }
     }

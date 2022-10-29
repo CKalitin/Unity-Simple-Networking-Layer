@@ -269,7 +269,7 @@ public class PacketConfigurator : ScriptableObject {
                 // If variable is a byte array
                 if (_serverPackets[i].PacketVariables[x].PacketType == PacketVarTypes.ByteArray) {
                     phs += $"\n        {packetTypes[_serverPackets[i].PacketVariables[x].PacketType]} {Lower(_serverPackets[i].PacketVariables[x].PacketName)} = _packet.Read{packetReadTypes[_serverPackets[i].PacketVariables[x].PacketType]}(_packet.ReadInt());";
-                    phs += $"\nif ({Lower(_serverPackets[i].PacketVariables[x].PacketName)}.Length <= 0) {{ _packet.ReadInt(); }}";
+                    phs += $"\n        if ({Lower(_serverPackets[i].PacketVariables[x].PacketName)}.Length <= 0) {{ _packet.ReadInt(); }}";
                 } else {
                     phs += $"\n        {packetTypes[_serverPackets[i].PacketVariables[x].PacketType]} {Lower(_serverPackets[i].PacketVariables[x].PacketName)} = _packet.Read{packetReadTypes[_serverPackets[i].PacketVariables[x].PacketType]}();";
                 }
@@ -285,6 +285,7 @@ public class PacketConfigurator : ScriptableObject {
 
             phs += $"\n        {upPacketName}Packet {loPacketName}Packet = new {upPacketName}Packet({packetParameters});";
             phs += $"\n        PacketManager.instance.PacketReceived(_packet, {loPacketName}Packet);";
+            phs += $"\n        PacketManager.instance.PacketReceived(_packet, clientInputPacket); ";
 
             phs += "\n    }";
             phs += "\n";
@@ -302,6 +303,7 @@ public class PacketConfigurator : ScriptableObject {
                 "\n        _packet.WriteLength();" +
                 "\n        if (Client.instance.IsConnected) {" +
                 "\n            Client.instance.Tcp.SendData(_packet);" +
+                "\n            NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length());" +
                 "\n        }" +
                 "\n    }" +
                 "\n" +
@@ -309,6 +311,7 @@ public class PacketConfigurator : ScriptableObject {
                 "\n        _packet.WriteLength();" +
                 "\n        if (Client.instance.IsConnected) {" +
                 "\n            Client.instance.Udp.SendData(_packet);" +
+                "\n            NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length());" +
                 "\n        }" +
                 "\n    }" +
                 "\n";

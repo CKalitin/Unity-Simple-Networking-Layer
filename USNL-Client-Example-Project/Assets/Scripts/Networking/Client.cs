@@ -142,6 +142,7 @@ public class Client : MonoBehaviour {
                     using (Packet _packet = new Packet(_packetBytes)) {
                         _packet.PacketId = _packet.ReadInt();
                         PacketHandlers.packetHandlers[_packet.PacketId](_packet);
+                        NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length());
                     }
                 });
 
@@ -238,6 +239,7 @@ public class Client : MonoBehaviour {
                 using (Packet _packet = new Packet(_data)) {
                     _packet.PacketId = _packet.ReadInt();
                     PacketHandlers.packetHandlers[_packet.PacketId](_packet);
+                    NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length());
                 }
             });
         }

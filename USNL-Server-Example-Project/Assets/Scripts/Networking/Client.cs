@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
@@ -110,6 +109,7 @@ public class Client {
                         _packet.PacketId = _packet.ReadInt();
                         _packet.FromClient = clientId;
                         PacketHandlers.packetHandlers[_packet.PacketId](_packet);
+                        NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length());
                     }
                 });
 
@@ -165,6 +165,7 @@ public class Client {
                     _packet.PacketId = _packet.ReadInt();
                     _packet.FromClient = clientId;
                     PacketHandlers.packetHandlers[_packet.PacketId](_packet);
+                    NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length());
                 }
             });
         }

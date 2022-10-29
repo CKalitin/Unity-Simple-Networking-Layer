@@ -273,7 +273,7 @@ public class PacketConfigurator : ScriptableObject {
                 // If variable is a byte array
                 if (_clientPackets[i].PacketVariables[x].PacketType == PacketVarTypes.ByteArray) {
                     phs += $"\n        {packetTypes[_clientPackets[i].PacketVariables[x].PacketType]} {Lower(_clientPackets[i].PacketVariables[x].PacketName)} = _packet.Read{packetReadTypes[_clientPackets[i].PacketVariables[x].PacketType]}(_packet.ReadInt());";
-                    phs += $"\nif ({Lower(_clientPackets[i].PacketVariables[x].PacketName)}.Length <= 0) {{ _packet.ReadInt(); }}";
+                    phs += $"\n        if ({Lower(_clientPackets[i].PacketVariables[x].PacketName)}.Length <= 0) {{ _packet.ReadInt(); }}";
                 } else {
                     phs += $"\n        {packetTypes[_clientPackets[i].PacketVariables[x].PacketType]} {Lower(_clientPackets[i].PacketVariables[x].PacketName)} = _packet.Read{packetReadTypes[_clientPackets[i].PacketVariables[x].PacketType]}();";
                 }
@@ -309,12 +309,14 @@ public class PacketConfigurator : ScriptableObject {
             "\n    private static void SendTCPData(int _toClient, Packet _packet) {" +
             "\n        _packet.WriteLength();" +
             "\n        Server.clients[_toClient].Tcp.SendData(_packet);" +
+            "\n            if (Server.clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
             "\n    }" +
             "\n" +
             "\n    private static void SendTCPDataToAll(Packet _packet) {" +
             "\n        _packet.WriteLength();" +
             "\n        for (int i = 0; i < Server.MaxClients; i++) {" +
             "\n            Server.clients[i].Tcp.SendData(_packet);" +
+            "\n            if (Server.clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
             "\n        }" +
             "\n    }" +
             "\n" +
@@ -323,6 +325,7 @@ public class PacketConfigurator : ScriptableObject {
             "\n        for (int i = 0; i < Server.MaxClients; i++) {" +
             "\n            if (i != _excpetClient) {" +
             "\n                Server.clients[i].Tcp.SendData(_packet);" +
+            "\n                if (Server.clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
             "\n            }" +
             "\n        }" +
             "\n    }" +
@@ -330,12 +333,14 @@ public class PacketConfigurator : ScriptableObject {
             "\n    private static void SendUDPData(int _toClient, Packet _packet) {" +
             "\n        _packet.WriteLength();" +
             "\n        Server.clients[_toClient].Udp.SendData(_packet);" +
+            "\n        if (Server.clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
             "\n    }" +
             "\n" +
             "\n    private static void SendUDPDataToAll(Packet _packet) {" +
             "\n        _packet.WriteLength();" +
             "\n        for (int i = 0; i < Server.MaxClients; i++) {" +
             "\n            Server.clients[i].Udp.SendData(_packet);" +
+            "\n            if (Server.clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
             "\n        }" +
             "\n    }" +
             "\n" +
@@ -344,6 +349,7 @@ public class PacketConfigurator : ScriptableObject {
             "\n        for (int i = 0; i < Server.MaxClients; i++) {" +
             "\n            if (i != _excpetClient) {" +
             "\n                Server.clients[i].Udp.SendData(_packet);" +
+            "\n                if (Server.clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
             "\n            }" +
             "\n        }" +
             "\n    }" +
@@ -386,11 +392,12 @@ public class PacketConfigurator : ScriptableObject {
             if (_serverPackets[i].Protocol == Protocol.UDP) { protocolString = "UDP"; }
             if (_serverPackets[i].SendType == ServerPacketTypes.SendToClient) {
                 pss += $"\n            Send{protocolString}Data(_toClient, _packet);";
-            } else if (_serverPackets[i].SendType == ServerPacketTypes.SendToClient) {
+            } else if (_serverPackets[i].SendType == ServerPacketTypes.SendToAllClientsExcept) {
                 pss += $"\n            Send{protocolString}DataToAll(_exceptClient, _packet);";
             } else {
                 pss += $"\n            Send{protocolString}DataToAll(_packet);";
             }
+
             pss += "\n        }\n    }\n"; // Close functions and using
         }
         pss = pss.Substring(0, pss.Length - 1); // Remove last /n

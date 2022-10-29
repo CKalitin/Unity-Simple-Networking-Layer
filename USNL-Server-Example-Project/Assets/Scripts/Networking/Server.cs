@@ -62,6 +62,16 @@ public class Server {
         Debug.Log("Server stopped.");
     }
 
+    public static int GetConnectedClients() {
+        int result = 0;
+        for (int i = 0; i < clients.Count; i++) {
+            if (clients[i].IsConnected) {
+                result++;
+            }
+        }
+        return result;
+    }
+
     #endregion
 
     #region TCP & UDP
