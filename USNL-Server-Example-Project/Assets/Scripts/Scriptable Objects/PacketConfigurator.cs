@@ -273,6 +273,7 @@ public class PacketConfigurator : ScriptableObject {
                 // If variable is a byte array
                 if (_clientPackets[i].PacketVariables[x].PacketType == PacketVarTypes.ByteArray) {
                     phs += $"\n        {packetTypes[_clientPackets[i].PacketVariables[x].PacketType]} {Lower(_clientPackets[i].PacketVariables[x].PacketName)} = _packet.Read{packetReadTypes[_clientPackets[i].PacketVariables[x].PacketType]}(_packet.ReadInt());";
+                    phs += $"\nif ({Lower(_clientPackets[i].PacketVariables[x].PacketName)}.Length <= 0) {{ _packet.ReadInt(); }}";
                 } else {
                     phs += $"\n        {packetTypes[_clientPackets[i].PacketVariables[x].PacketType]} {Lower(_clientPackets[i].PacketVariables[x].PacketName)} = _packet.Read{packetReadTypes[_clientPackets[i].PacketVariables[x].PacketType]}();";
                 }

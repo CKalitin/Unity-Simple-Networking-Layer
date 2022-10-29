@@ -51,9 +51,9 @@ public class InputManager : MonoBehaviour {
         if (!detectInput) { return; }
 
         if (Event.current.isKey | Event.current.isMouse) {
-            if (Event.current.type == EventType.KeyDown) {
+            if (Event.current.type == EventType.KeyDown && Event.current.keyCode != KeyCode.None) {
                 keycodesDown.Add((int)Event.current.keyCode);
-            } else if (Event.current.type == EventType.KeyUp) {
+            } else if (Event.current.type == EventType.KeyUp && Event.current.keyCode != KeyCode.None) {
                 keycodesUp.Add((int)Event.current.keyCode);
             } else if (Event.current.type == EventType.MouseDown) {
                 // Convert Mouse Button Code to Key Code

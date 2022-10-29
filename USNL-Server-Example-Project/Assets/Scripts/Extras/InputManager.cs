@@ -39,7 +39,6 @@ public struct ClientInput {
 
     public bool GetKeyDown(KeyCode _keyCode) {
         if (keycodesDown.Contains(_keyCode)) {
-            Debug.Log($"{_keyCode} Down");
             return true;
         }
         return false;
@@ -47,7 +46,6 @@ public struct ClientInput {
 
     public bool GetKeyUp(KeyCode _keyCode) {
         if (keycodesUp.Contains(_keyCode)) {
-            Debug.Log($"{_keyCode} Up");
             return true;
         }
         return false;
@@ -55,7 +53,6 @@ public struct ClientInput {
 
     public bool GetKey(KeyCode _keyCode) {
         if (keycodesPressed.Contains(_keyCode)) {
-            Debug.Log($"{_keyCode} Pressed");
             return true;
         }
         return false;
@@ -63,7 +60,6 @@ public struct ClientInput {
 
     public bool GetMouseButtonDown(string _buttonName) {
         if (keycodesDown.Contains(buttonNameToKeyCode[_buttonName])) {
-            Debug.Log($"{buttonNameToKeyCode[_buttonName]} Down");
             return true;
         }
         return false;
@@ -71,7 +67,6 @@ public struct ClientInput {
 
     public bool GetMouseButtonUp(string _buttonName) {
         if (keycodesUp.Contains(buttonNameToKeyCode[_buttonName])) {
-            Debug.Log($"{buttonNameToKeyCode[_buttonName]} Up");
             return true;
         }
         return false;
@@ -79,7 +74,6 @@ public struct ClientInput {
 
     public bool GetMouseButton(string _buttonName) {
         if (keycodesPressed.Contains(buttonNameToKeyCode[_buttonName])) {
-            Debug.Log($"{buttonNameToKeyCode[_buttonName]} Pressed");
             return true;
         }
         return false;
@@ -149,7 +143,6 @@ public class InputManager : MonoBehaviour {
 
     private void HandleClientInputPackets() {
         for (int i = 0; i < receivedClientInputPackets.Count; i++) {
-
             modifiedClientInputs.Add(clientInputs[receivedClientInputPackets[i].FromClient]);
 
             KeyCode[] keycodesDown = new KeyCode[receivedClientInputPackets[i].KeycodesDown.Length / 4];
@@ -159,10 +152,10 @@ public class InputManager : MonoBehaviour {
 
             for (int x = 0; x < receivedClientInputPackets[i].KeycodesDown.Length; x++) {
                 // Get 4 bytes for the keycode and increment i so next loop will be in the right position to read 4 more new bytes
-                byte[] keycodeBytes = { receivedClientInputPackets[i].KeycodesDown[x], receivedClientInputPackets[i].KeycodesDown[x++], receivedClientInputPackets[i].KeycodesDown[x++], receivedClientInputPackets[i].KeycodesDown[x++] };
+                byte[] keycodeBytes = { receivedClientInputPackets[i].KeycodesDown[x], receivedClientInputPackets[i].KeycodesDown[++x], receivedClientInputPackets[i].KeycodesDown[++x], receivedClientInputPackets[i].KeycodesDown[++x] };
 
-                // If the system architecture is little-endian (that is, little end first), reverse the byte array.
-                if (BitConverter.IsLittleEndian)
+                // If the system architecture is little-endian (that is, little end first), reverse the byte array. this broke it so i added !
+                if (!BitConverter.IsLittleEndian)
                     Array.Reverse(keycodeBytes);
 
                 // Get int KeyCode and cast to type KeyCode
@@ -171,10 +164,10 @@ public class InputManager : MonoBehaviour {
 
             for (int x = 0; x < receivedClientInputPackets[i].KeycodesUp.Length; x++) {
                 // Get 4 bytes for the keycode and increment i so next loop will be in the right position to read 4 more new bytes
-                byte[] keycodeBytes = { receivedClientInputPackets[i].KeycodesUp[x], receivedClientInputPackets[i].KeycodesUp[x++], receivedClientInputPackets[i].KeycodesUp[x++], receivedClientInputPackets[i].KeycodesUp[x++] };
+                byte[] keycodeBytes = { receivedClientInputPackets[i].KeycodesUp[x], receivedClientInputPackets[i].KeycodesUp[++x], receivedClientInputPackets[i].KeycodesUp[++x], receivedClientInputPackets[i].KeycodesUp[++x] };
 
-                // If the system architecture is little-endian (that is, little end first), reverse the byte array.
-                if (BitConverter.IsLittleEndian)
+                // If the system architecture is little-endian (that is, little end first), reverse the byte array. this broke it so i added !
+                if (!BitConverter.IsLittleEndian)
                     Array.Reverse(keycodeBytes);
 
                 // Get int KeyCode and cast to type KeyCode
@@ -184,14 +177,12 @@ public class InputManager : MonoBehaviour {
             // Apply KeyCodes Down and Up to Client Input
 
             for (int x = 0; x < keycodesDown.Length; x++) {
-                Debug.Log($"KeyCode Down: {keycodesDown[x]}");
                 // If key is already pressed, continue
                 clientInputs[receivedClientInputPackets[i].FromClient].KeycodesDown.Add(keycodesDown[x]);
                 clientInputs[receivedClientInputPackets[i].FromClient].KeycodesPressed.Add(keycodesDown[x]);
             }
 
             for (int x = 0; x < keycodesUp.Length; x++) {
-                Debug.Log($"KeyCode Up: {keycodesUp[x]}");
                 clientInputs[receivedClientInputPackets[i].FromClient].KeycodesUp.Add(keycodesUp[x]);
                 clientInputs[receivedClientInputPackets[i].FromClient].KeycodesPressed.Remove(keycodesUp[x]);
             }

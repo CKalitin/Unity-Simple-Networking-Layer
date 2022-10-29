@@ -60,13 +60,15 @@ public static class PacketHandlers {
     public static void WelcomeReceived(Packet _packet) {
         int clientIdCheck = _packet.ReadInt();
 
-        WelcomeReceivedPacket welcomeReceivedPacket = new WelcomeReceivedPacket(_packet.PacketId, clientIdCheck);
+        WelcomeReceivedPacket welcomeReceivedPacket = new WelcomeReceivedPacket(_packet.FromClient, clientIdCheck);
         PacketManager.instance.PacketReceived(_packet, welcomeReceivedPacket);
     }
 
     public static void ClientInput(Packet _packet) {
         byte[] keycodesDown = _packet.ReadBytes(_packet.ReadInt());
+if (keycodesDown.Length <= 0) { _packet.ReadInt(); }
         byte[] keycodesUp = _packet.ReadBytes(_packet.ReadInt());
+if (keycodesUp.Length <= 0) { _packet.ReadInt(); }
 
         ClientInputPacket clientInputPacket = new ClientInputPacket(_packet.FromClient, keycodesDown, keycodesUp);
         PacketManager.instance.PacketReceived(_packet, clientInputPacket);
