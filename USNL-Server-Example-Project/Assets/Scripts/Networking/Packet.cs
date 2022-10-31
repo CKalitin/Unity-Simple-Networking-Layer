@@ -46,7 +46,7 @@ public class Packet : IDisposable {
     /// <summary>Sets the packet's content and prepares it to be read.</summary>
     /// <param name="_data">The bytes to add to the packet.</param>
     public void SetBytes(byte[] _data) {
-        Write(_data);
+        Write(_data, false);
         readableBuffer = buffer.ToArray();
     }
 
@@ -96,11 +96,6 @@ public class Packet : IDisposable {
     /// <param name="_value">The byte to add.</param>
     public void Write(byte _value) {
         buffer.Add(_value);
-    }
-    /// <summary>Adds an array of bytes to the packet.</summary>
-    /// <param name="_value">The byte array to add.</param>
-    public void Write(byte[] _value) {
-        buffer.AddRange(_value);
     }
     /// <summary>Adds a short to the packet.</summary>
     /// <param name="_value">The short to add.</param>
@@ -154,6 +149,113 @@ public class Packet : IDisposable {
         Write(_value.z);
         Write(_value.w);
     }
+    /// <summary>Adds an array of bytes to the packet.</summary>
+    /// <param name="_value">The byte array to add.</param>
+    public void Write(byte[] _value, bool _writeLength = true) {
+        if (_writeLength) { Write(_value.Length); }
+        buffer.AddRange(_value);
+    }
+    /// <summary>Adds an array of shorts to the packet.</summary>
+    /// <param name="_value">The short array to add.</param>
+    public void Write(short[] _value) {
+        byte[] bytes = new byte[_value.Length * sizeof(short)];
+
+        for (int i = 0; i < _value.Length; i++) {
+            byte[] addBytes = BitConverter.GetBytes(_value[i]);
+            for (int x = 0; x < addBytes.Length; x++) {
+                bytes[i * sizeof(short) + x] = addBytes[x];
+            }
+        }
+
+        Write(_value.Length);
+        buffer.AddRange(bytes);
+    }
+    /// <summary>Adds an array of ints to the packet.</summary>
+    /// <param name="_value">The int array to add.</param>
+    public void Write(int[] _value) {
+        byte[] bytes = new byte[_value.Length * sizeof(int)];
+
+        for (int i = 0; i < _value.Length; i++) {
+            byte[] addBytes = BitConverter.GetBytes(_value[i]);
+            for (int x = 0; x < addBytes.Length; x++) {
+                bytes[i * sizeof(int) + x] = addBytes[x];
+            }
+        }
+
+        Write(_value.Length);
+        buffer.AddRange(bytes);
+    }
+    /// <summary>Adds an array of longs to the packet.</summary>
+    /// <param name="_value">The long array to add.</param>
+    public void Write(long[] _value) {
+        byte[] bytes = new byte[_value.Length * sizeof(long)];
+
+        for (int i = 0; i < _value.Length; i++) {
+            byte[] addBytes = BitConverter.GetBytes(_value[i]);
+            for (int x = 0; x < addBytes.Length; x++) {
+                bytes[i * sizeof(long) + x] = addBytes[x];
+            }
+        }
+
+        Write(_value.Length);
+        buffer.AddRange(bytes);
+    }
+    /// <summary>Adds an array of floats to the packet.</summary>
+    /// <param name="_value">The float array to add.</param>
+    public void Write(float[] _value) {
+        byte[] bytes = new byte[_value.Length * sizeof(float)];
+
+        for (int i = 0; i < _value.Length; i++) {
+            byte[] addBytes = BitConverter.GetBytes(_value[i]);
+            for (int x = 0; x < addBytes.Length; x++) {
+                bytes[i * sizeof(float) + x] = addBytes[x];
+            }
+        }
+
+        Write(_value.Length);
+        buffer.AddRange(bytes);
+    }
+    /// <summary>Adds an array of bools to the packet.</summary>
+    /// <param name="_value">The bool array to add.</param>
+    public void Write(bool[] _value) {
+        Write(_value.Length);
+        Debug.Log($"bl {_value.Length}");
+        for (int i = 0; i < _value.Length; i++) {
+            Write(_value[i]);
+        }
+    }
+    /// <summary>Adds an array of strings to the packet.</summary>
+    /// <param name="_value">The string array to add.</param>
+    public void Write(string[] _value) {
+        Write(_value.Length);
+        for (int i = 0; i < _value.Length; i++) {
+            Write(_value[i]);
+        }
+    }
+    /// <summary>Adds an array of Vector2s to the packet.</summary>
+    /// <param name="_value">The Vector2 array to add.</param>
+    public void Write(Vector2[] _value) {
+        Write(_value.Length);
+        for (int i = 0; i < _value.Length; i++) {
+            Write(_value[i]);
+        }
+    }
+    /// <summary>Adds an array of Vector3s to the packet.</summary>
+    /// <param name="_value">The Vector3 array to add.</param>
+    public void Write(Vector3[] _value) {
+        Write(_value.Length);
+        for (int i = 0; i < _value.Length; i++) {
+            Write(_value[i]);
+        }
+    }
+    /// <summary>Adds an array of Quaternions to the packet.</summary>
+    /// <param name="_value">The Quaternion array to add.</param>
+    public void Write(Quaternion[] _value) {
+        Write(_value.Length);
+        for (int i = 0; i < _value.Length; i++) {
+            Write(_value[i]);
+        }
+    }
     #endregion
 
     #region Read Data
@@ -170,23 +272,6 @@ public class Packet : IDisposable {
             return _value; // Return the byte
         } else {
             throw new Exception("Could not read value of type 'byte'!");
-        }
-    }
-
-    /// <summary>Reads an array of bytes from the packet.</summary>
-    /// <param name="_length">The length of the byte array.</param>
-    /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
-    public byte[] ReadBytes(int _length, bool _moveReadPos = true) {
-        if (buffer.Count > readPos) {
-            // If there are unread bytes
-            byte[] _value = buffer.GetRange(readPos, _length).ToArray(); // Get the bytes at readPos' position with a range of _length
-            if (_moveReadPos) {
-                // If _moveReadPos is true
-                readPos += _length; // Increase readPos by _length
-            }
-            return _value; // Return the bytes
-        } else {
-            throw new Exception("Could not read value of type 'byte[]'!");
         }
     }
 
@@ -298,6 +383,201 @@ public class Packet : IDisposable {
     public Quaternion ReadQuaternion(bool _moveReadPos = true) {
         return new Quaternion(ReadFloat(_moveReadPos), ReadFloat(_moveReadPos), ReadFloat(_moveReadPos), ReadFloat(_moveReadPos));
     }
+
+    /// <summary>Reads an array of bytes from the packet.</summary>
+    /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+    public byte[] ReadBytes(bool _moveReadPos = true) {
+        int _length = ReadInt();
+
+        if (buffer.Count > readPos) {
+            // If there are unread bytes
+            byte[] _value = buffer.GetRange(readPos, _length).ToArray(); // Get the bytes at readPos' position with a range of _length
+            if (_moveReadPos) {
+                readPos += _length; // Increase readPos by _length
+            }
+            return _value; // Return the bytes
+        } else {
+            throw new Exception("Could not read value of type 'byte[]'!");
+        }
+    }
+
+    /// <summary>Reads an array of bytes from the packet.</summary>
+    /// <param name="_length">The length of the byte array.</param>
+    /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+    public byte[] ReadBytes(int _length, bool _moveReadPos = true) {
+        if (buffer.Count > readPos) {
+            // If there are unread bytes
+            byte[] _value = buffer.GetRange(readPos, _length).ToArray(); // Get the bytes at readPos' position with a range of _length
+            if (_moveReadPos) {
+                readPos += _length; // Increase readPos by _length
+            }
+            return _value; // Return the bytes
+        } else {
+            throw new Exception("Could not read value of type 'byte[]'!");
+        }
+    }
+    /// <summary>Reads an array of shorts from the packet.</summary>
+    /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+    public short[] ReadShorts(bool _moveReadPos = true) {
+        int _length = ReadInt(_moveReadPos);
+        if (_length <= 0) { return new short[] { }; } // Length is 0, return empty array
+
+        // If there are unread bytes
+        if (buffer.Count > readPos) {
+            short[] _value = new short[_length];
+            for (int i = 0; i < _length; i++) {
+                _value[i] = ReadShort(_moveReadPos);
+            }
+            return _value; // Return the bytes
+        } else {
+            throw new Exception("Could not read value of type 'short[]'!");
+        }
+    }
+
+    /// <summary>Reads an array of ints from the packet.</summary>
+    /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+    public int[] ReadInts(bool _moveReadPos = true) {
+        int _length = ReadInt(_moveReadPos);
+        if (_length <= 0) { return new int[] { }; } // Length is 0, return empty array
+
+        // If there are unread bytes
+        if (buffer.Count > readPos) {
+            int[] _value = new int[_length];
+            for (int i = 0; i < _length; i++) {
+                _value[i] = ReadInt(_moveReadPos);
+            }
+            return _value; // Return the bytes
+        } else {
+            throw new Exception("Could not read value of type 'int[]'!");
+        }
+    }
+
+    /// <summary>Reads an array of longs from the packet.</summary>
+    /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+    public long[] ReadLongs(bool _moveReadPos = true) {
+        int _length = ReadInt(_moveReadPos);
+        if (_length <= 0) { return new long[] { }; } // Length is 0, return empty array
+
+        // If there are unread bytes
+        if (buffer.Count > readPos) {
+            long[] _value = new long[_length];
+            for (int i = 0; i < _length; i++) {
+                _value[i] = ReadLong(_moveReadPos);
+            }
+            return _value; // Return the bytes
+        } else {
+            throw new Exception("Could not read value of type 'int[]'!");
+        }
+    }
+
+    /// <summary>Reads an array of floats from the packet.</summary>
+    /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+    public float[] ReadFloats(bool _moveReadPos = true) {
+        int _length = ReadInt(_moveReadPos);
+        if (_length <= 0) { return new float[] { }; } // Length is 0, return empty array
+
+        // If there are unread bytes
+        if (buffer.Count > readPos) {
+            float[] _value = new float[_length];
+            for (int i = 0; i < _length; i++) {
+                _value[i] = ReadFloat(_moveReadPos);
+            }
+            return _value; // Return the bytes
+        } else {
+            throw new Exception("Could not read value of type 'int[]'!");
+        }
+    }
+
+    /// <summary>Reads an array of bools from the packet.</summary>
+    /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+    public bool[] ReadBools(bool _moveReadPos = true) {
+        int _length = ReadInt(_moveReadPos);
+        if (_length <= 0) { return new bool[] { }; } // Length is 0, return empty array
+
+        // If there are unread bytes
+        if (buffer.Count > readPos) {
+            bool[] _value = new bool[_length];
+            for (int i = 0; i < _length; i++) {
+                _value[i] = ReadBool(_moveReadPos);
+            }
+            return _value; // Return the bytes
+        } else {
+            throw new Exception("Could not read value of type 'int[]'!");
+        }
+    }
+
+    /// <summary>Reads an array of strings from the packet.</summary>
+    /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+    public string[] ReadStrings(bool _moveReadPos = true) {
+        int _length = ReadInt(_moveReadPos);
+        if (_length <= 0) { return new string[] { }; } // Length is 0, return empty array
+
+        // If there are unread bytes
+        if (buffer.Count > readPos) {
+            string[] _value = new string[_length];
+            for (int i = 0; i < _length; i++) {
+                _value[i] = ReadString(_moveReadPos);
+            }
+            return _value; // Return the bytes
+        } else {
+            throw new Exception("Could not read value of type 'int[]'!");
+        }
+    }
+
+    /// <summary>Reads an array of Vector2s from the packet.</summary>
+    /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+    public Vector2[] ReadVector2s(bool _moveReadPos = true) {
+        int _length = ReadInt(_moveReadPos);
+        if (_length <= 0) { return new Vector2[] { }; } // Length is 0, return empty array
+
+        // If there are unread bytes
+        if (buffer.Count > readPos) {
+            Vector2[] _value = new Vector2[_length];
+            for (int i = 0; i < _length; i++) {
+                _value[i] = ReadVector2(_moveReadPos);
+            }
+            return _value; // Return the bytes
+        } else {
+            throw new Exception("Could not read value of type 'int[]'!");
+        }
+    }
+
+    /// <summary>Reads an array of Vector3s from the packet.</summary>
+    /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+    public Vector3[] ReadVector3s(bool _moveReadPos = true) {
+        int _length = ReadInt(_moveReadPos);
+        if (_length <= 0) { return new Vector3[] { }; } // Length is 0, return empty array
+
+        // If there are unread bytes
+        if (buffer.Count > readPos) {
+            Vector3[] _value = new Vector3[_length];
+            for (int i = 0; i < _length; i++) {
+                _value[i] = ReadVector3(_moveReadPos);
+            }
+            return _value; // Return the bytes
+        } else {
+            throw new Exception("Could not read value of type 'int[]'!");
+        }
+    }
+
+    /// <summary>Reads an array of Quaternions from the packet.</summary>
+    /// <param name="_moveReadPos">Whether or not to move the buffer's read position.</param>
+    public Quaternion[] ReadQuaternions(bool _moveReadPos = true) {
+        int _length = ReadInt(_moveReadPos);
+        if (_length <= 0) { return new Quaternion[] { }; } // Length is 0, return empty array
+
+        // If there are unread bytes
+        if (buffer.Count > readPos) {
+            Quaternion[] _value = new Quaternion[_length];
+            for (int i = 0; i < _length; i++) {
+                _value[i] = ReadQuaternion(_moveReadPos);
+            }
+            return _value; // Return the bytes
+        } else {
+            throw new Exception("Could not read value of type 'int[]'!");
+        }
+    }
+
 
     #endregion
 

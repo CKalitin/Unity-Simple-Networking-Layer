@@ -57,7 +57,7 @@ public class Client : MonoBehaviour {
         public TcpClient socket;
 
         private NetworkStream stream;
-        private Packet receivedPacket;
+        private Packet receivedData;
         private byte[] receiveBuffer;
 
         public void Connect() {
@@ -79,7 +79,7 @@ public class Client : MonoBehaviour {
 
             stream = socket.GetStream();
 
-            receivedPacket = new Packet();
+            receivedData = new Packet();
 
             stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
 
@@ -112,7 +112,7 @@ public class Client : MonoBehaviour {
                 byte[] _data = new byte[_byteLength];
                 Array.Copy(receiveBuffer, _data, _byteLength);
 
-                receivedPacket.Reset(HandleData(_data));
+                receivedData.Reset(HandleData(_data));
                 stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
             } catch {
                 Disconnect();
@@ -122,19 +122,19 @@ public class Client : MonoBehaviour {
         private bool HandleData(byte[] _data) {
             int _packetLength = 0;
 
-            receivedPacket.SetBytes(_data);
+            receivedData.SetBytes(_data);
 
             // If packet ID is invalid
-            if (receivedPacket.UnreadLength() >= 4) {
-                _packetLength = receivedPacket.ReadInt();
+            if (receivedData.UnreadLength() >= 4) {
+                _packetLength = receivedData.ReadInt();
                 if (_packetLength <= 0) {
                     return true;
                 }
             }
 
             // Read receivedPacket (_data) and create a new Packet type for it and send to a packet handler
-            while (_packetLength > 0 && _packetLength <= receivedPacket.UnreadLength()) {
-                byte[] _packetBytes = receivedPacket.ReadBytes(_packetLength); // Get byte data for packet
+            while (_packetLength > 0 && _packetLength <= receivedData.UnreadLength()) {
+                byte[] _packetBytes = receivedData.ReadBytes(_packetLength); // Get byte data for packet
 
                 // Create new packet and copy byte data into it and send it to the appropriate packet handler
                 // Using ThreadManager because functions can't be called here without breaking the TCP listener because this is a callback function, can't start a stack trace here
@@ -148,8 +148,8 @@ public class Client : MonoBehaviour {
 
                 // Check if packet ID is invalid again? idk what this is
                 _packetLength = 0;
-                if (receivedPacket.UnreadLength() >= 4) {
-                    _packetLength = receivedPacket.ReadInt();
+                if (receivedData.UnreadLength() >= 4) {
+                    _packetLength = receivedData.ReadInt();
                     if (_packetLength <= 0) {
                         return true;
                     }
@@ -166,7 +166,7 @@ public class Client : MonoBehaviour {
             instance.Disconnect();
 
             stream = null;
-            receivedPacket = null;
+            receivedData = null;
             receiveBuffer = null;
             socket = null;
         }

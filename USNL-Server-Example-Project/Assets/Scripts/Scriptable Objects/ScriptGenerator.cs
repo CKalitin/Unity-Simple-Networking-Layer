@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
@@ -49,6 +50,12 @@ public class ScriptGenerator : ScriptableObject {
     }
 
     private string GenerateUSNLCallbackEventsText() {
+        List<PacketConfigurator.ClientPacketConfig> _clientPackets = new List<PacketConfigurator.ClientPacketConfig>();
+
+        _clientPackets.AddRange(packetConfigurator.LibClientPackets);
+        _clientPackets.AddRange(packetConfigurator.ClientPackets);
+
+
         // Function declaration
         string output = "#region Callbacks\n" +
             "\npublic static class USNLCallbackEvents {" +
@@ -57,8 +64,8 @@ public class ScriptGenerator : ScriptableObject {
 
         // Packet Callback Events for Packet Handling
         output += "\n    public static USNLCallbackEvent[] PacketCallbackEvents = {";
-        for (int i = 0; i < Enum.GetNames(typeof(ClientPackets)).Length; i++) {
-            output += $"\n        CallOn{Enum.GetNames(typeof(ClientPackets))[i]}PacketCallbacks,";
+        for (int i = 0; i < _clientPackets.Count; i++) {
+            output += $"\n        CallOn{Upper(_clientPackets[i].PacketName)}PacketCallbacks,";
         }
         output += "\n    };";
         output += "\n";
@@ -70,8 +77,8 @@ public class ScriptGenerator : ScriptableObject {
         output += "\n";
 
         // Packet Callback events
-        for (int i = 0; i < Enum.GetNames(typeof(ClientPackets)).Length; i++) {
-            output += $"\n    public static event USNLCallbackEvent On{Enum.GetNames(typeof(ClientPackets))[i]}Packet;";
+        for (int i = 0; i < _clientPackets.Count; i++) {
+            output += $"\n    public static event USNLCallbackEvent On{Upper(_clientPackets[i].PacketName)}Packet;";
         }
 
         output += "\n";
@@ -83,8 +90,8 @@ public class ScriptGenerator : ScriptableObject {
         output += "\n";
 
         // Packet Callback Functions
-        for (int i = 0; i < Enum.GetNames(typeof(ClientPackets)).Length; i++) {
-            output += $"\n    public static void CallOn{Enum.GetNames(typeof(ClientPackets))[i]}PacketCallbacks(object _param) {{ if (On{Enum.GetNames(typeof(ClientPackets))[i]}Packet != null) {{ On{Enum.GetNames(typeof(ClientPackets))[i]}Packet(_param); }} }}";
+        for (int i = 0; i < _clientPackets.Count; i++) {
+            output += $"\n    public static void CallOn{Upper(_clientPackets[i].PacketName)}PacketCallbacks(object _param) {{ if (On{Upper(_clientPackets[i].PacketName)}Packet != null) {{ On{Upper(_clientPackets[i].PacketName)}Packet(_param); }} }}";
         }
 
         output += "\n}";

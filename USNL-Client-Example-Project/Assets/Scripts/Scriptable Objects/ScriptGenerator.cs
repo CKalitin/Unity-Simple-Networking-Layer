@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "ScriptGenerator", menuName = "USNL/Script Generator", order = 0)]
@@ -46,6 +48,11 @@ public class ScriptGenerator : ScriptableObject {
     }
 
     private string GenerateUSNLCallbackEventsText() {
+        List<PacketConfigurator.ServerPacketConfig> _serverPackets = new List<PacketConfigurator.ServerPacketConfig>();
+
+        _serverPackets.AddRange(packetConfigurator.LibServerPackets);
+        _serverPackets.AddRange(packetConfigurator.ServerPackets);
+
         // Function declaration
         string output = "#region Callbacks\n" +
             "\npublic static class USNLCallbackEvents {" +
@@ -54,8 +61,8 @@ public class ScriptGenerator : ScriptableObject {
 
         // Packet Callback Events for Packet Handling
         output += "\n    public static USNLCallbackEvent[] PacketCallbackEvents = {";
-        for (int i = 0; i < Enum.GetNames(typeof(ServerPackets)).Length; i++) {
-            output += $"\n        CallOn{Enum.GetNames(typeof(ServerPackets))[i]}PacketCallbacks,";
+        for (int i = 0; i < _serverPackets.Count; i++) {
+            output += $"\n        CallOn{Upper(_serverPackets[i].PacketName)}PacketCallbacks,";
         }
         output += "\n    };";
         output += "\n";
@@ -67,8 +74,8 @@ public class ScriptGenerator : ScriptableObject {
         output += "\n";
 
         // Packet Callback events
-        for (int i = 0; i < Enum.GetNames(typeof(ServerPackets)).Length; i++) {
-            output += $"\n    public static event USNLCallbackEvent On{Enum.GetNames(typeof(ServerPackets))[i]}Packet;";
+        for (int i = 0; i < _serverPackets.Count; i++) {
+            output += $"\n    public static event USNLCallbackEvent On{Upper(_serverPackets[i].PacketName)}Packet;";
         }
 
         output += "\n";
@@ -80,8 +87,8 @@ public class ScriptGenerator : ScriptableObject {
         output += "\n";
 
         // Packet Callback Functions
-        for (int i = 0; i < Enum.GetNames(typeof(ServerPackets)).Length; i++) {
-            output += $"\n    public static void CallOn{Enum.GetNames(typeof(ServerPackets))[i]}PacketCallbacks(object _param) {{ if (On{Enum.GetNames(typeof(ServerPackets))[i]}Packet != null) {{ On{Enum.GetNames(typeof(ServerPackets))[i]}Packet(_param); }} }}";
+        for (int i = 0; i < _serverPackets.Count; i++) {
+            output += $"\n    public static void CallOn{Upper(_serverPackets[i].PacketName)}PacketCallbacks(object _param) {{ if (On{Upper(_serverPackets[i].PacketName)}Packet != null) {{ On{Upper(_serverPackets[i].PacketName)}Packet(_param); }} }}";
         }
 
         output += "\n}";
@@ -89,5 +96,15 @@ public class ScriptGenerator : ScriptableObject {
         output += "\n#endregion";
 
         return output;
+    }
+
+    private string Upper(string _input) {
+        string output = String.Concat(_input.Where(c => !Char.IsWhiteSpace(c))); // Remove whitespace
+        return $"{Char.ToUpper(output[0])}{output.Substring(1)}";
+    }
+
+    private string Lower(string _input) {
+        string output = String.Concat(_input.Where(c => !Char.IsWhiteSpace(c))); // Remove whitespace
+        return $"{Char.ToLower(output[0])}{output.Substring(1)}";
     }
 }

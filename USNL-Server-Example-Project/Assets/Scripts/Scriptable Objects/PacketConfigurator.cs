@@ -59,9 +59,8 @@ public class PacketConfigurator : ScriptableObject {
             Protocol.TCP)
     };
 
-    Dictionary<PacketVarTypes, string> packetTypes = new Dictionary<PacketVarTypes, string>() 
+    Dictionary<PacketVarTypes, string> packetTypes = new Dictionary<PacketVarTypes, string>()
     { { PacketVarTypes.Byte, "byte"},
-    { PacketVarTypes.ByteArray, "byte[]"},
     { PacketVarTypes.Short, "short"},
     { PacketVarTypes.Int, "int"},
     { PacketVarTypes.Long, "long"},
@@ -70,11 +69,20 @@ public class PacketConfigurator : ScriptableObject {
     { PacketVarTypes.String, "string"},
     { PacketVarTypes.Vector2, "Vector2"},
     { PacketVarTypes.Vector3, "Vector3"},
-    { PacketVarTypes.Quaternion, "Quaternion"}
+    { PacketVarTypes.Quaternion, "Quaternion"},
+    { PacketVarTypes.ByteArray, "byte[]"},
+    { PacketVarTypes.ShortArray, "short[]"},
+    { PacketVarTypes.IntArray, "int[]"},
+    { PacketVarTypes.LongArray, "long[]"},
+    { PacketVarTypes.FloatArray, "float[]"},
+    { PacketVarTypes.BoolArray, "bool[]"},
+    { PacketVarTypes.StringArray, "string[]"},
+    { PacketVarTypes.Vector2Array, "Vector2[]"},
+    { PacketVarTypes.Vector3Array, "Vector3[]"},
+    { PacketVarTypes.QuaternionArray, "Quaternion[]"},
     };
     Dictionary<PacketVarTypes, string> packetReadTypes = new Dictionary<PacketVarTypes, string>()
     { { PacketVarTypes.Byte, "Byte"},
-    { PacketVarTypes.ByteArray, "Bytes"},
     { PacketVarTypes.Short, "Short"},
     { PacketVarTypes.Int, "Int"},
     { PacketVarTypes.Long, "Long"},
@@ -83,12 +91,24 @@ public class PacketConfigurator : ScriptableObject {
     { PacketVarTypes.String, "String"},
     { PacketVarTypes.Vector2, "Vector2"},
     { PacketVarTypes.Vector3, "Vector3"},
-    { PacketVarTypes.Quaternion, "Quaternion"}
+    { PacketVarTypes.Quaternion, "Quaternion"},
+    { PacketVarTypes.ByteArray, "Bytes"},
+    { PacketVarTypes.ShortArray, "Shorts"},
+    { PacketVarTypes.IntArray, "Ints"},
+    { PacketVarTypes.LongArray, "Longs"},
+    { PacketVarTypes.FloatArray, "Floats"},
+    { PacketVarTypes.BoolArray, "Bools"},
+    { PacketVarTypes.StringArray, "Strings"},
+    { PacketVarTypes.Vector2Array, "Vector2s"},
+    { PacketVarTypes.Vector3Array, "Vector3s"},
+    { PacketVarTypes.QuaternionArray, "Quaternions"}
     };
 
-    private enum PacketVarTypes {
+    public ClientPacketConfig[] ClientPackets { get => clientPackets; set => clientPackets = value; }
+    public ClientPacketConfig[] LibClientPackets { get => libClientPackets; set => libClientPackets = value; }
+
+    public enum PacketVarTypes {
         Byte,
-        ByteArray,
         Short,
         Int,
         Long,
@@ -97,20 +117,30 @@ public class PacketConfigurator : ScriptableObject {
         String,
         Vector2,
         Vector3,
-        Quaternion
+        Quaternion,
+        ByteArray,
+        ShortArray,
+        IntArray,
+        LongArray,
+        FloatArray,
+        BoolArray,
+        StringArray,
+        Vector2Array,
+        Vector3Array,
+        QuaternionArray
     }
-    private enum ServerPacketTypes {
+    public enum ServerPacketTypes {
         SendToClient,
         SendToAllClients,
         SendToAllClientsExcept
     }
-    private enum Protocol {
+    public enum Protocol {
         TCP,
         UDP
     }
 
     [Serializable]
-    private struct PacketVariable {
+    public struct PacketVariable {
         [SerializeField] private string packetName;
         [SerializeField] private PacketVarTypes packetType;
 
@@ -124,7 +154,7 @@ public class PacketConfigurator : ScriptableObject {
     }
 
     [Serializable]
-    private struct ServerPacketConfig {
+    public struct ServerPacketConfig {
         [Tooltip("Can be done in any formatting (eg. 'exampleName' & 'Example Name' both work)")]
         [SerializeField] private string packetName;
         [SerializeField] private PacketVariable[] packetVariables;
@@ -151,7 +181,7 @@ public class PacketConfigurator : ScriptableObject {
     }
 
     [Serializable]
-    private struct ClientPacketConfig {
+    public struct ClientPacketConfig {
         [Tooltip("Can be done in any formatting (eg. 'exampleName' & 'Example Name' both work)")]
         [SerializeField] private string packetName; // In C# formatting: eg. "examplePacket"
         [SerializeField] private PacketVariable[] packetVariables;
@@ -191,10 +221,10 @@ public class PacketConfigurator : ScriptableObject {
         List<ServerPacketConfig> _serverPackets = new List<ServerPacketConfig>();
         List<ClientPacketConfig> _clientPackets = new List<ClientPacketConfig>();
 
-        _serverPackets.AddRange(serverPackets);
         _serverPackets.AddRange(libServerPackets);
-        _clientPackets.AddRange(clientPackets);
+        _serverPackets.AddRange(serverPackets);
         _clientPackets.AddRange(libClientPackets);
+        _clientPackets.AddRange(clientPackets);
 
         #region Server & Client Packet Enums
 
@@ -279,13 +309,7 @@ public class PacketConfigurator : ScriptableObject {
             phs += $"\n    public static void {upPacketName}(Packet _packet) {{";
 
             for (int x = 0; x < _clientPackets[i].PacketVariables.Length; x++) {
-                // If variable is a byte array
-                if (_clientPackets[i].PacketVariables[x].PacketType == PacketVarTypes.ByteArray) {
-                    phs += $"\n        {packetTypes[_clientPackets[i].PacketVariables[x].PacketType]} {Lower(_clientPackets[i].PacketVariables[x].PacketName)} = _packet.Read{packetReadTypes[_clientPackets[i].PacketVariables[x].PacketType]}(_packet.ReadInt());";
-                    phs += $"\n        if ({Lower(_clientPackets[i].PacketVariables[x].PacketName)}.Length <= 0) {{ _packet.ReadInt(); }}";
-                } else {
-                    phs += $"\n        {packetTypes[_clientPackets[i].PacketVariables[x].PacketType]} {Lower(_clientPackets[i].PacketVariables[x].PacketName)} = _packet.Read{packetReadTypes[_clientPackets[i].PacketVariables[x].PacketType]}();";
-                }
+                phs += $"\n        {packetTypes[_clientPackets[i].PacketVariables[x].PacketType]} {Lower(_clientPackets[i].PacketVariables[x].PacketName)} = _packet.Read{packetReadTypes[_clientPackets[i].PacketVariables[x].PacketType]}();";
             }
 
             phs += "\n";
@@ -382,17 +406,7 @@ public class PacketConfigurator : ScriptableObject {
 
             string pws = ""; // Packet writes
             for (int x = 0; x < _serverPackets[i].PacketVariables.Length; x++) {
-                if (_serverPackets[i].PacketVariables[x].PacketType == PacketVarTypes.ByteArray) {
-                    pws += $"            if (_{Lower(_serverPackets[i].PacketVariables[x].PacketName)}.Length > 0) {{";
-                    pws += $"\n                _packet.Write(_{Lower(_serverPackets[i].PacketVariables[x].PacketName)}.Length);";
-                    pws += $"\n                _packet.Write(_{Lower(_serverPackets[i].PacketVariables[x].PacketName)});";
-                    pws += $"            }} else {{";
-                    pws += $"                _packet.Write(0);";
-                    pws += $"                _packet.Write(0);";
-                    pws += $"            }}";
-                } else {
-                    pws += $"\n            _packet.Write(_{Lower(_serverPackets[i].PacketVariables[x].PacketName)});";
-                }
+                pws += $"\n            _packet.Write(_{Lower(_serverPackets[i].PacketVariables[x].PacketName)});";
             }
             pss += pws;
             pss += "\n";

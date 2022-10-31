@@ -13,5 +13,94 @@ MonoBehaviour:
   m_Name: PacketConfigurator
   m_EditorClassIdentifier: 
   scriptGenerator: {fileID: 11400000, guid: 5d86aa3f56b798c4b9bace2b3f774998, type: 2}
-  serverPackets: []
-  clientPackets: []
+  serverPackets:
+  - packetName: Variables Test
+    packetVariables:
+    - packetName: VarByte
+      packetType: 0
+    - packetName: VarShort
+      packetType: 1
+    - packetName: VarInt
+      packetType: 2
+    - packetName: VarLong
+      packetType: 3
+    - packetName: VarFloat
+      packetType: 4
+    - packetName: VarBool
+      packetType: 5
+    - packetName: VarString
+      packetType: 6
+    - packetName: VarVec2
+      packetType: 7
+    - packetName: VarVec3
+      packetType: 8
+    - packetName: VarQuat
+      packetType: 9
+    - packetName: VarArrayByte
+      packetType: 10
+    - packetName: VarArrayShort
+      packetType: 11
+    - packetName: VarArrayInt
+      packetType: 12
+    - packetName: VarArrayLong
+      packetType: 13
+    - packetName: VarArrayFloat
+      packetType: 14
+    - packetName: VarArrayBool
+      packetType: 15
+    - packetName: VarArrayString
+      packetType: 16
+    - packetName: VarArrayVec2
+      packetType: 17
+    - packetName: VarArrayVec3
+      packetType: 18
+    - packetName: VarArrayQuat
+      packetType: 19
+    sendType: 0
+    protocol: 0
+    notes: 
+  clientPackets:
+  - packetName: Variables Test
+    packetVariables:
+    - packetName: VarByte
+      packetType: 0
+    - packetName: VarShort
+      packetType: 1
+    - packetName: VarInt
+      packetType: 2
+    - packetName: VarLong
+      packetType: 3
+    - packetName: VarFloat
+      packetType: 4
+    - packetName: VarBool
+      packetType: 5
+    - packetName: VarString
+      packetType: 6
+    - packetName: VarVec2
+      packetType: 7
+    - packetName: VarVec3
+      packetType: 8
+    - packetName: VarQuat
+      packetType: 9
+    - packetName: VarArrayByte
+      packetType: 10
+    - packetName: VarArrayShort
+      packetType: 11
+    - packetName: VarArrayInt
+      packetType: 12
+    - packetName: VarArrayLong
+      packetType: 13
+    - packetName: VarArrayFloat
+      packetType: 14
+    - packetName: VarArrayBool
+      packetType: 15
+    - packetName: VarArrayString
+      packetType: 16
+    - packetName: VarArrayVec2
+      packetType: 17
+    - packetName: VarArrayVec3
+      packetType: 18
+    - packetName: VarArrayQuat
+      packetType: 19
+    protocol: 0
+    notes: 
