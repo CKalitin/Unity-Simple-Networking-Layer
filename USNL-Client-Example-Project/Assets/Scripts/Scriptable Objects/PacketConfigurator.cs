@@ -21,6 +21,11 @@ public class PacketConfigurator : ScriptableObject {
             new PacketVariable[] { new PacketVariable("Welcome Message", PacketVarTypes.String), new PacketVariable("Client Id", PacketVarTypes.Int) },
             ServerPacketTypes.SendToClient,
             Protocol.TCP),
+        new ServerPacketConfig(
+            "Ping",
+            new PacketVariable[] { new PacketVariable("Send Ping Back", PacketVarTypes.Bool) },
+            ServerPacketTypes.SendToClient,
+            Protocol.TCP),
         #region Synced Objects
         new ServerPacketConfig(
             "SyncedObjectInstantiate",
@@ -33,16 +38,36 @@ public class PacketConfigurator : ScriptableObject {
             ServerPacketTypes.SendToClient,
             Protocol.TCP),
         new ServerPacketConfig(
-            "SyncedObjectUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUID", PacketVarTypes.Int), new PacketVariable("Position", PacketVarTypes.Vector3), new PacketVariable("Rotation", PacketVarTypes.Quaternion), new PacketVariable("Scale", PacketVarTypes.Vector3)},
+            "SyncedObjectVec2PosUpdate",
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Positions", PacketVarTypes.Vector2Array) },
+            ServerPacketTypes.SendToAllClients,
+            Protocol.UDP),
+        new ServerPacketConfig(
+            "SyncedObjectVec3PosUpdate",
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Positions", PacketVarTypes.Vector3Array) },
+            ServerPacketTypes.SendToAllClients,
+            Protocol.UDP),
+        new ServerPacketConfig(
+            "SyncedObjectRotZUpdate",
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Rotations", PacketVarTypes.FloatArray) },
+            ServerPacketTypes.SendToAllClients,
+            Protocol.UDP),
+        new ServerPacketConfig(
+            "SyncedObjectRotUpdate",
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Rotations", PacketVarTypes.QuaternionArray) },
+            ServerPacketTypes.SendToAllClients,
+            Protocol.UDP),
+        new ServerPacketConfig(
+            "SyncedObjectVec2ScaleUpdate",
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Scales", PacketVarTypes.Vector2Array) },
+            ServerPacketTypes.SendToAllClients,
+            Protocol.UDP),
+        new ServerPacketConfig(
+            "SyncedObjectVec3ScaleUpdate",
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Scales", PacketVarTypes.Vector3Array) },
             ServerPacketTypes.SendToAllClients,
             Protocol.UDP),
         #endregion
-        new ServerPacketConfig(
-            "Ping",
-            new PacketVariable[] { new PacketVariable("Send Ping Back", PacketVarTypes.Bool) },
-            ServerPacketTypes.SendToClient,
-            Protocol.TCP)
     };
     private ClientPacketConfig[] libClientPackets = {
         new ClientPacketConfig(
@@ -50,13 +75,13 @@ public class PacketConfigurator : ScriptableObject {
             new PacketVariable[] { new PacketVariable("Client Id Check", PacketVarTypes.Int) },
             Protocol.TCP),
         new ClientPacketConfig(
+            "Ping",
+            new PacketVariable[] { new PacketVariable("Send Ping Back", PacketVarTypes.Bool) },
+            Protocol.TCP),
+        new ClientPacketConfig(
             "ClientInput",
             new PacketVariable[] { new PacketVariable("KeycodesDown", PacketVarTypes.ByteArray), new PacketVariable("KeycodesUp", PacketVarTypes.ByteArray)},
             Protocol.TCP),
-        new ClientPacketConfig(
-            "Ping",
-            new PacketVariable[] { new PacketVariable("Send Ping Back", PacketVarTypes.Bool) },
-            Protocol.TCP)
     };
 
     Dictionary<PacketVarTypes, string> packetTypes = new Dictionary<PacketVarTypes, string>()
@@ -380,6 +405,8 @@ public class PacketConfigurator : ScriptableObject {
         #endregion
 
         return
+            "\n#region Packet Enums" +
+            "\n" +
             "\n// Sent from Server to Client" +
             "\npublic enum ServerPackets {" +
             $"\n{serverPacketsString}" +
@@ -390,15 +417,27 @@ public class PacketConfigurator : ScriptableObject {
             $"\n{clientPacketsString}" +
             "\n}" +
             "\n" +
-            "\n/*** Packet Structs ***/" +
+            "\n#endregion" +
+            "\n" +
+            "\n#region Packet Structs" +
             $"\n{psts}" +
+            "\n#endregion" +
+            "\n" +
+            "\n#region Packet Handlers" +
+            "\n" +
             "\npublic static class PacketHandlers {" +
             $"\n{phs}" +
             "\n}" +
             "\n" +
+            "\n#endregion" +
+            "\n" +
+            "\n#region Packet Send" +
+            "\n" +
             "\npublic static class PacketSend {" +
             $"\n{pss}" +
-            "\n}";
+            "\n}" +
+            "\n" +
+            $"\n#endregion";
     }
 
     private string Upper(string _input) {

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class SyncedObjectManager : MonoBehaviour {
+    #region Core
+
     [SerializeField] private SyncedObjectPrefabs syncedObjectsPrefabs;
 
     private Dictionary<int, Transform> syncedObjects = new Dictionary<int, Transform>();
@@ -10,14 +12,28 @@ public class SyncedObjectManager : MonoBehaviour {
     private void OnEnable() {
         USNLCallbackEvents.OnSyncedObjectInstantiatePacket += OnSyncedObjectInstantiatePacket;
         USNLCallbackEvents.OnSyncedObjectDestroyPacket += OnSyncedObjectDestroyPacket;
-        USNLCallbackEvents.OnSyncedObjectUpdatePacket += OnSyncedObjectUpdatePacket;
+        USNLCallbackEvents.OnSyncedObjectVec2PosUpdatePacket += OnSyncedObjectVec2PosUpdatePacket;
+        USNLCallbackEvents.OnSyncedObjectVec3PosUpdatePacket += OnSyncedObjectVec3PosUpdatePacket;
+        USNLCallbackEvents.OnSyncedObjectRotZUpdatePacket += OnSyncedObjectRotZUpdatePacket;
+        USNLCallbackEvents.OnSyncedObjectRotUpdatePacket += OnSyncedObjectRotUpdatePacket;
+        USNLCallbackEvents.OnSyncedObjectVec2ScaleUpdatePacket += OnSyncedObjectVec2ScaleUpdatePacket;
+        USNLCallbackEvents.OnSyncedObjectVec3ScaleUpdatePacket += OnSyncedObjectVec3ScaleUpdatePacket;
     }
 
     private void OnDisable() {
         USNLCallbackEvents.OnSyncedObjectInstantiatePacket -= OnSyncedObjectInstantiatePacket;
         USNLCallbackEvents.OnSyncedObjectDestroyPacket -= OnSyncedObjectDestroyPacket;
-        USNLCallbackEvents.OnSyncedObjectUpdatePacket -= OnSyncedObjectUpdatePacket;
+        USNLCallbackEvents.OnSyncedObjectVec2PosUpdatePacket -= OnSyncedObjectVec2PosUpdatePacket;
+        USNLCallbackEvents.OnSyncedObjectVec3PosUpdatePacket -= OnSyncedObjectVec3PosUpdatePacket;
+        USNLCallbackEvents.OnSyncedObjectRotZUpdatePacket -= OnSyncedObjectRotZUpdatePacket;
+        USNLCallbackEvents.OnSyncedObjectRotUpdatePacket -= OnSyncedObjectRotUpdatePacket;
+        USNLCallbackEvents.OnSyncedObjectVec2ScaleUpdatePacket -= OnSyncedObjectVec2ScaleUpdatePacket;
+        USNLCallbackEvents.OnSyncedObjectVec3ScaleUpdatePacket -= OnSyncedObjectVec3ScaleUpdatePacket;
     }
+
+    #endregion
+
+    #region Synced Objects
 
     private void OnSyncedObjectInstantiatePacket(object _packetObject) {
         SyncedObjectInstantiatePacket _packet = (SyncedObjectInstantiatePacket)_packetObject;
@@ -39,13 +55,65 @@ public class SyncedObjectManager : MonoBehaviour {
         syncedObjects.Remove(_packet.SyncedObjectUUID);
     }
 
-    private void OnSyncedObjectUpdatePacket(object _packetObject) {
-        SyncedObjectUpdatePacket _packet = (SyncedObjectUpdatePacket)_packetObject;
+    private void OnSyncedObjectVec2PosUpdatePacket(object _packetObject) {
+        SyncedObjectVec2PosUpdatePacket _packet = (SyncedObjectVec2PosUpdatePacket)_packetObject;
 
-        if (syncedObjects.ContainsKey(_packet.SyncedObjectUUID)) {
-            syncedObjects[_packet.SyncedObjectUUID].position = _packet.Position;
-            syncedObjects[_packet.SyncedObjectUUID].rotation = _packet.Rotation;
-            syncedObjects[_packet.SyncedObjectUUID].localScale = _packet.Scale;
+        for (int i = 0; i < _packet.SyncedObjectUUIDs.Length; i++) {
+            if (syncedObjects.ContainsKey(_packet.SyncedObjectUUIDs[i])) {
+                syncedObjects[_packet.SyncedObjectUUIDs[i]].position = new Vector3(_packet.Positions[i].x, _packet.Positions[i].y, syncedObjects[_packet.SyncedObjectUUIDs[i]].position.z);
+            }
         }
     }
+
+    private void OnSyncedObjectVec3PosUpdatePacket(object _packetObject) {
+        SyncedObjectVec3PosUpdatePacket _packet = (SyncedObjectVec3PosUpdatePacket)_packetObject;
+
+        for (int i = 0; i < _packet.SyncedObjectUUIDs.Length; i++) {
+            if (syncedObjects.ContainsKey(_packet.SyncedObjectUUIDs[i])) {
+                syncedObjects[_packet.SyncedObjectUUIDs[i]].position = _packet.Positions[i];
+            }
+        }
+    }
+
+    private void OnSyncedObjectRotZUpdatePacket(object _packetObject) {
+        SyncedObjectRotZUpdatePacket _packet = (SyncedObjectRotZUpdatePacket)_packetObject;
+
+        for (int i = 0; i < _packet.SyncedObjectUUIDs.Length; i++) {
+            if (syncedObjects.ContainsKey(_packet.SyncedObjectUUIDs[i])) {
+                syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation = new Quaternion(syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation.x, syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation.y, _packet.Rotations[i], syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation.w);
+            }
+        }
+    }
+
+    private void OnSyncedObjectRotUpdatePacket(object _packetObject) {
+        SyncedObjectRotUpdatePacket _packet = (SyncedObjectRotUpdatePacket)_packetObject;
+
+        for (int i = 0; i < _packet.SyncedObjectUUIDs.Length; i++) {
+            if (syncedObjects.ContainsKey(_packet.SyncedObjectUUIDs[i])) {
+                syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation = _packet.Rotations[i];
+            }
+        }
+    }
+
+    private void OnSyncedObjectVec2ScaleUpdatePacket(object _packetObject) {
+        SyncedObjectVec2ScaleUpdatePacket _packet = (SyncedObjectVec2ScaleUpdatePacket)_packetObject;
+
+        for (int i = 0; i < _packet.SyncedObjectUUIDs.Length; i++) {
+            if (syncedObjects.ContainsKey(_packet.SyncedObjectUUIDs[i])) {
+                syncedObjects[_packet.SyncedObjectUUIDs[i]].localScale = new Vector3(_packet.Scales[i].x, _packet.Scales[i].y, syncedObjects[_packet.SyncedObjectUUIDs[i]].localScale.z);
+            }
+        }
+    }
+
+    private void OnSyncedObjectVec3ScaleUpdatePacket(object _packetObject) {
+        SyncedObjectVec2ScaleUpdatePacket _packet = (SyncedObjectVec2ScaleUpdatePacket)_packetObject;
+
+        for (int i = 0; i < _packet.SyncedObjectUUIDs.Length; i++) {
+            if (syncedObjects.ContainsKey(_packet.SyncedObjectUUIDs[i])) {
+                syncedObjects[_packet.SyncedObjectUUIDs[i]].localScale = _packet.Scales[i];
+            }
+        }
+    }
+
+    #endregion
 }

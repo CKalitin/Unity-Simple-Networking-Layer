@@ -3356,7 +3356,6 @@ GameObject:
   - component: {fileID: 1974716060}
   - component: {fileID: 1974716062}
   - component: {fileID: 1974716063}
-  - component: {fileID: 1974716064}
   m_Layer: 0
   m_Name: Game Management
   m_TagString: Untagged
@@ -3431,6 +3430,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f66b23eb677635438bb46cee4a7e90d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  vector2Mode: 1
+  minPosChange: 0.001
+  minRotChange: 0.001
+  minScaleChange: 0.001
 --- !u!114 &1974716062
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3463,18 +3466,6 @@ MonoBehaviour:
   totalPacketsReceived: 0
   totalPacketsSentPerSecond: 0
   totalPacketsReceivedPerSecond: 0
---- !u!114 &1974716064
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1974716055}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4ada4b00df96884093a2301777c4937, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &1980683614
 PrefabInstance:
   m_ObjectHideFlags: 0
