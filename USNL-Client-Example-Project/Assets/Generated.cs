@@ -88,79 +88,97 @@ public struct SyncedObjectDestroyPacket {
 public struct SyncedObjectVec2PosUpdatePacket {
     private int[] syncedObjectUUIDs;
     private Vector2[] positions;
+    private Vector2[] interpolatePositions;
 
-    public SyncedObjectVec2PosUpdatePacket(int[] _syncedObjectUUIDs, Vector2[] _positions) {
+    public SyncedObjectVec2PosUpdatePacket(int[] _syncedObjectUUIDs, Vector2[] _positions, Vector2[] _interpolatePositions) {
         syncedObjectUUIDs = _syncedObjectUUIDs;
         positions = _positions;
+        interpolatePositions = _interpolatePositions;
     }
 
     public int[] SyncedObjectUUIDs { get => syncedObjectUUIDs; set => syncedObjectUUIDs = value; }
     public Vector2[] Positions { get => positions; set => positions = value; }
+    public Vector2[] InterpolatePositions { get => interpolatePositions; set => interpolatePositions = value; }
 }
 
 public struct SyncedObjectVec3PosUpdatePacket {
     private int[] syncedObjectUUIDs;
     private Vector3[] positions;
+    private Vector3[] interpolatePositions;
 
-    public SyncedObjectVec3PosUpdatePacket(int[] _syncedObjectUUIDs, Vector3[] _positions) {
+    public SyncedObjectVec3PosUpdatePacket(int[] _syncedObjectUUIDs, Vector3[] _positions, Vector3[] _interpolatePositions) {
         syncedObjectUUIDs = _syncedObjectUUIDs;
         positions = _positions;
+        interpolatePositions = _interpolatePositions;
     }
 
     public int[] SyncedObjectUUIDs { get => syncedObjectUUIDs; set => syncedObjectUUIDs = value; }
     public Vector3[] Positions { get => positions; set => positions = value; }
+    public Vector3[] InterpolatePositions { get => interpolatePositions; set => interpolatePositions = value; }
 }
 
 public struct SyncedObjectRotZUpdatePacket {
     private int[] syncedObjectUUIDs;
     private float[] rotations;
+    private float[] interpolateRotations;
 
-    public SyncedObjectRotZUpdatePacket(int[] _syncedObjectUUIDs, float[] _rotations) {
+    public SyncedObjectRotZUpdatePacket(int[] _syncedObjectUUIDs, float[] _rotations, float[] _interpolateRotations) {
         syncedObjectUUIDs = _syncedObjectUUIDs;
         rotations = _rotations;
+        interpolateRotations = _interpolateRotations;
     }
 
     public int[] SyncedObjectUUIDs { get => syncedObjectUUIDs; set => syncedObjectUUIDs = value; }
     public float[] Rotations { get => rotations; set => rotations = value; }
+    public float[] InterpolateRotations { get => interpolateRotations; set => interpolateRotations = value; }
 }
 
 public struct SyncedObjectRotUpdatePacket {
     private int[] syncedObjectUUIDs;
-    private Quaternion[] rotations;
+    private Vector3[] rotations;
+    private Vector3[] interpolateRotations;
 
-    public SyncedObjectRotUpdatePacket(int[] _syncedObjectUUIDs, Quaternion[] _rotations) {
+    public SyncedObjectRotUpdatePacket(int[] _syncedObjectUUIDs, Vector3[] _rotations, Vector3[] _interpolateRotations) {
         syncedObjectUUIDs = _syncedObjectUUIDs;
         rotations = _rotations;
+        interpolateRotations = _interpolateRotations;
     }
 
     public int[] SyncedObjectUUIDs { get => syncedObjectUUIDs; set => syncedObjectUUIDs = value; }
-    public Quaternion[] Rotations { get => rotations; set => rotations = value; }
+    public Vector3[] Rotations { get => rotations; set => rotations = value; }
+    public Vector3[] InterpolateRotations { get => interpolateRotations; set => interpolateRotations = value; }
 }
 
 public struct SyncedObjectVec2ScaleUpdatePacket {
     private int[] syncedObjectUUIDs;
     private Vector2[] scales;
+    private Vector2[] interpolateScales;
 
-    public SyncedObjectVec2ScaleUpdatePacket(int[] _syncedObjectUUIDs, Vector2[] _scales) {
+    public SyncedObjectVec2ScaleUpdatePacket(int[] _syncedObjectUUIDs, Vector2[] _scales, Vector2[] _interpolateScales) {
         syncedObjectUUIDs = _syncedObjectUUIDs;
         scales = _scales;
+        interpolateScales = _interpolateScales;
     }
 
     public int[] SyncedObjectUUIDs { get => syncedObjectUUIDs; set => syncedObjectUUIDs = value; }
     public Vector2[] Scales { get => scales; set => scales = value; }
+    public Vector2[] InterpolateScales { get => interpolateScales; set => interpolateScales = value; }
 }
 
 public struct SyncedObjectVec3ScaleUpdatePacket {
     private int[] syncedObjectUUIDs;
     private Vector3[] scales;
+    private Vector3[] interpolateScales;
 
-    public SyncedObjectVec3ScaleUpdatePacket(int[] _syncedObjectUUIDs, Vector3[] _scales) {
+    public SyncedObjectVec3ScaleUpdatePacket(int[] _syncedObjectUUIDs, Vector3[] _scales, Vector3[] _interpolateScales) {
         syncedObjectUUIDs = _syncedObjectUUIDs;
         scales = _scales;
+        interpolateScales = _interpolateScales;
     }
 
     public int[] SyncedObjectUUIDs { get => syncedObjectUUIDs; set => syncedObjectUUIDs = value; }
     public Vector3[] Scales { get => scales; set => scales = value; }
+    public Vector3[] InterpolateScales { get => interpolateScales; set => interpolateScales = value; }
 }
 
 #endregion
@@ -218,48 +236,54 @@ public static class PacketHandlers {
     public static void SyncedObjectVec2PosUpdate(Packet _packet) {
         int[] syncedObjectUUIDs = _packet.ReadInts();
         Vector2[] positions = _packet.ReadVector2s();
+        Vector2[] interpolatePositions = _packet.ReadVector2s();
 
-        SyncedObjectVec2PosUpdatePacket syncedObjectVec2PosUpdatePacket = new SyncedObjectVec2PosUpdatePacket(syncedObjectUUIDs, positions);
+        SyncedObjectVec2PosUpdatePacket syncedObjectVec2PosUpdatePacket = new SyncedObjectVec2PosUpdatePacket(syncedObjectUUIDs, positions, interpolatePositions);
         PacketManager.instance.PacketReceived(_packet, syncedObjectVec2PosUpdatePacket);
     }
 
     public static void SyncedObjectVec3PosUpdate(Packet _packet) {
         int[] syncedObjectUUIDs = _packet.ReadInts();
         Vector3[] positions = _packet.ReadVector3s();
+        Vector3[] interpolatePositions = _packet.ReadVector3s();
 
-        SyncedObjectVec3PosUpdatePacket syncedObjectVec3PosUpdatePacket = new SyncedObjectVec3PosUpdatePacket(syncedObjectUUIDs, positions);
+        SyncedObjectVec3PosUpdatePacket syncedObjectVec3PosUpdatePacket = new SyncedObjectVec3PosUpdatePacket(syncedObjectUUIDs, positions, interpolatePositions);
         PacketManager.instance.PacketReceived(_packet, syncedObjectVec3PosUpdatePacket);
     }
 
     public static void SyncedObjectRotZUpdate(Packet _packet) {
         int[] syncedObjectUUIDs = _packet.ReadInts();
         float[] rotations = _packet.ReadFloats();
+        float[] interpolateRotations = _packet.ReadFloats();
 
-        SyncedObjectRotZUpdatePacket syncedObjectRotZUpdatePacket = new SyncedObjectRotZUpdatePacket(syncedObjectUUIDs, rotations);
+        SyncedObjectRotZUpdatePacket syncedObjectRotZUpdatePacket = new SyncedObjectRotZUpdatePacket(syncedObjectUUIDs, rotations, interpolateRotations);
         PacketManager.instance.PacketReceived(_packet, syncedObjectRotZUpdatePacket);
     }
 
     public static void SyncedObjectRotUpdate(Packet _packet) {
         int[] syncedObjectUUIDs = _packet.ReadInts();
-        Quaternion[] rotations = _packet.ReadQuaternions();
+        Vector3[] rotations = _packet.ReadVector3s();
+        Vector3[] interpolateRotations = _packet.ReadVector3s();
 
-        SyncedObjectRotUpdatePacket syncedObjectRotUpdatePacket = new SyncedObjectRotUpdatePacket(syncedObjectUUIDs, rotations);
+        SyncedObjectRotUpdatePacket syncedObjectRotUpdatePacket = new SyncedObjectRotUpdatePacket(syncedObjectUUIDs, rotations, interpolateRotations);
         PacketManager.instance.PacketReceived(_packet, syncedObjectRotUpdatePacket);
     }
 
     public static void SyncedObjectVec2ScaleUpdate(Packet _packet) {
         int[] syncedObjectUUIDs = _packet.ReadInts();
         Vector2[] scales = _packet.ReadVector2s();
+        Vector2[] interpolateScales = _packet.ReadVector2s();
 
-        SyncedObjectVec2ScaleUpdatePacket syncedObjectVec2ScaleUpdatePacket = new SyncedObjectVec2ScaleUpdatePacket(syncedObjectUUIDs, scales);
+        SyncedObjectVec2ScaleUpdatePacket syncedObjectVec2ScaleUpdatePacket = new SyncedObjectVec2ScaleUpdatePacket(syncedObjectUUIDs, scales, interpolateScales);
         PacketManager.instance.PacketReceived(_packet, syncedObjectVec2ScaleUpdatePacket);
     }
 
     public static void SyncedObjectVec3ScaleUpdate(Packet _packet) {
         int[] syncedObjectUUIDs = _packet.ReadInts();
         Vector3[] scales = _packet.ReadVector3s();
+        Vector3[] interpolateScales = _packet.ReadVector3s();
 
-        SyncedObjectVec3ScaleUpdatePacket syncedObjectVec3ScaleUpdatePacket = new SyncedObjectVec3ScaleUpdatePacket(syncedObjectUUIDs, scales);
+        SyncedObjectVec3ScaleUpdatePacket syncedObjectVec3ScaleUpdatePacket = new SyncedObjectVec3ScaleUpdatePacket(syncedObjectUUIDs, scales, interpolateScales);
         PacketManager.instance.PacketReceived(_packet, syncedObjectVec3ScaleUpdatePacket);
     }
 }
@@ -301,7 +325,7 @@ public static class PacketSend {
         }
     }
 
-    public static void ClientInput(byte[] _keycodesDown, byte[] _keycodesUp) {
+    public static void ClientInput(int[] _keycodesDown, int[] _keycodesUp) {
         using (Packet _packet = new Packet((int)ClientPackets.ClientInput)) {
             _packet.Write(_keycodesDown);
             _packet.Write(_keycodesUp);

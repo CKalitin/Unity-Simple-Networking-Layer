@@ -74,7 +74,7 @@ public class Client {
             try {
                 int _byteLength = stream.EndRead(_result);
                 if (_byteLength <= 0) {
-                    Server.clients[clientId].Disconnect();
+                    Server.Clients[clientId].Disconnect();
                     return;
                 }
 
@@ -85,7 +85,7 @@ public class Client {
                 stream.BeginRead(receiveBuffer, 0, ServerManager.instance.DataBufferSize, ReceiveCallback, null);
             } catch (Exception _ex) {
                 Debug.Log($"Error recieving TCP data: {_ex}");
-                Server.clients[clientId].Disconnect();
+                Server.Clients[clientId].Disconnect();
             }
         }
 

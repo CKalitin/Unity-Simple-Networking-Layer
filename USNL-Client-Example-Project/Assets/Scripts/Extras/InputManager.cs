@@ -13,6 +13,9 @@ public class InputManager : MonoBehaviour {
     private List<int> keycodesDown = new List<int>();
     private List<int> keycodesUp = new List<int>();
 
+    // Event.keyDown is really keyPressed, so use this list to convert to keyDown
+    private List<int> localKeycodesDown = new List<int>();
+
     private Dictionary<string, KeyCode> buttonNameToKeyCode = new Dictionary<string, KeyCode>() {
         { "Mouse0", (KeyCode)323},
         { "Mouse1", (KeyCode)324},
@@ -22,7 +25,6 @@ public class InputManager : MonoBehaviour {
         { "Mouse5", (KeyCode)328},
         { "Mouse6", (KeyCode)329},
     };
-
 
     public bool DetectInput { get => detectInput; set => detectInput = value; }
 
@@ -52,9 +54,13 @@ public class InputManager : MonoBehaviour {
 
         if (Event.current.isKey | Event.current.isMouse) {
             if (Event.current.type == EventType.KeyDown && Event.current.keyCode != KeyCode.None) {
-                keycodesDown.Add((int)Event.current.keyCode);
+                if (!localKeycodesDown.Contains((int)Event.current.keyCode)) {
+                    keycodesDown.Add((int)Event.current.keyCode);
+                    localKeycodesDown.Add((int)Event.current.keyCode);
+                }
             } else if (Event.current.type == EventType.KeyUp && Event.current.keyCode != KeyCode.None) {
                 keycodesUp.Add((int)Event.current.keyCode);
+                localKeycodesDown.Remove((int)Event.current.keyCode);
             } else if (Event.current.type == EventType.MouseDown) {
                 // Convert Mouse Button Code to Key Code
                 // <6 because KeyCode only supports 7 Mouse Buttons while Mouse Button Codes supports 8, add 323 to convert to KeyCode
@@ -73,31 +79,11 @@ public class InputManager : MonoBehaviour {
 
     private void SendClientInputPacket() {
         if (Client.instance.IsConnected && (keycodesDown.Count > 0 || keycodesUp.Count > 0)) {
-            // Declare arrays length keycodes * 4 because 4 bytes are needed for 1 int
-            byte[] keycodesDownBytes = new byte[keycodesDown.Count * 4];
-            byte[] keycodesUpBytes = new byte[keycodesUp.Count * 4];
-
-            // Convert keycodesDown and Up to byte list
-            for (int i = 0; i < keycodesDown.Count; i++) {
-                byte[] values = BitConverter.GetBytes(keycodesDown[i]);
-                keycodesDownBytes[i] = values[0];
-                keycodesDownBytes[i + 1] = values[1];
-                keycodesDownBytes[i + 2] = values[2];
-                keycodesDownBytes[i + 3] = values[3];
-            }
-            for (int i = 0; i < keycodesUp.Count; i++) {
-                byte[] values = BitConverter.GetBytes(keycodesUp[i]);
-                keycodesUpBytes[i] = values[0];
-                keycodesUpBytes[i + 1] = values[1];
-                keycodesUpBytes[i + 2] = values[2];
-                keycodesUpBytes[i + 3] = values[3];
-            }
+            PacketSend.ClientInput(keycodesDown.ToArray(), keycodesUp.ToArray());
 
             // Clear lists to allow for new values and no duplicates next time this function is run
             keycodesDown.Clear();
             keycodesUp.Clear();
-
-            PacketSend.ClientInput(keycodesDownBytes, keycodesUpBytes);
         }
     }
 

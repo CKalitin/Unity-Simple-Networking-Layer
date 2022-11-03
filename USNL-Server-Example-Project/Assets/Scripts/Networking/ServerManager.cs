@@ -63,7 +63,7 @@ public class ServerManager : MonoBehaviour {
     private void OnWelcomeReceivedPacket(object _packetObject) {
         WelcomeReceivedPacket _wrp = (WelcomeReceivedPacket)_packetObject;
 
-        Debug.Log($"{Server.clients[_wrp.FromClient].Tcp.socket.Client.RemoteEndPoint} connected successfully and is now Player {_wrp.FromClient}.");
+        Debug.Log($"{Server.Clients[_wrp.FromClient].Tcp.socket.Client.RemoteEndPoint} connected successfully and is now Player {_wrp.FromClient}.");
         if (_wrp.FromClient != _wrp.ClientIdCheck) {
             Debug.Log($"ID: ({_wrp.FromClient}) has assumed the wrong client ID ({_wrp.ClientIdCheck}).");
         }

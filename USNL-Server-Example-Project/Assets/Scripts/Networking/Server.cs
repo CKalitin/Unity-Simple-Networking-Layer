@@ -13,7 +13,9 @@ public class Server {
 
     public static int Port { get; private set; }
 
-    public static List<Client> clients = new List<Client>();
+    public static List<Client> Clients = new List<Client>();
+
+    public static bool ServerActive = false;
 
     private static TcpListener tcpListener;
     private static UdpClient udpListener;
@@ -40,6 +42,8 @@ public class Server {
 
         InputManager.instance.Initialize();
 
+        ServerActive = true;
+
         USNLCallbackEvents.CallOnServerStartedCallbacks(0);
 
         Debug.Log($"Server started on port {Port}.");
@@ -47,7 +51,7 @@ public class Server {
 
     private static void InitializeServerData() {
         for (int i = 0; i <= MaxClients; i++) {
-            clients.Add(new Client(i));
+            Clients.Add(new Client(i));
         }
     }
 
@@ -57,6 +61,8 @@ public class Server {
 
         ThreadManager.StopPacketHandleThread();
 
+        ServerActive = false;
+
         USNLCallbackEvents.CallOnServerStoppedCallbacks(0);
 
         Debug.Log("Server stopped.");
@@ -64,8 +70,8 @@ public class Server {
 
     public static int GetConnectedClients() {
         int result = 0;
-        for (int i = 0; i < clients.Count; i++) {
-            if (clients[i].IsConnected) {
+        for (int i = 0; i < Clients.Count; i++) {
+            if (Clients[i].IsConnected) {
                 result++;
             }
         }
@@ -82,8 +88,8 @@ public class Server {
         Debug.Log($"Incoming connection from {_client.Client.RemoteEndPoint}...");
 
         for (int i = 0; i <= MaxClients; i++) {
-            if (clients[i].Tcp.socket == null) {
-                clients[i].Tcp.Connect(_client);
+            if (Clients[i].Tcp.socket == null) {
+                Clients[i].Tcp.Connect(_client);
                 return;
             }
         }
@@ -104,13 +110,13 @@ public class Server {
             using (Packet _packet = new Packet(_data)) {
                 int _clientId = _packet.ReadInt();
 
-                if (clients[_clientId].Udp.endPoint == null) {
-                    clients[_clientId].Udp.Connect(_clientEndPoint);
+                if (Clients[_clientId].Udp.endPoint == null) {
+                    Clients[_clientId].Udp.Connect(_clientEndPoint);
                     return;
                 }
 
-                if (clients[_clientId].Udp.endPoint.ToString() == _clientEndPoint.ToString()) {
-                    clients[_clientId].Udp.HandleData(_packet);
+                if (Clients[_clientId].Udp.endPoint.ToString() == _clientEndPoint.ToString()) {
+                    Clients[_clientId].Udp.HandleData(_packet);
                 }
             }
         } catch (Exception _ex) {

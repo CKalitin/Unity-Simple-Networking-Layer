@@ -145,46 +145,14 @@ public class InputManager : MonoBehaviour {
         for (int i = 0; i < receivedClientInputPackets.Count; i++) {
             modifiedClientInputs.Add(clientInputs[receivedClientInputPackets[i].FromClient]);
 
-            KeyCode[] keycodesDown = new KeyCode[receivedClientInputPackets[i].KeycodesDown.Length / 4];
-            KeyCode[] keycodesUp = new KeyCode[receivedClientInputPackets[i].KeycodesUp.Length / 4];
-
-            // Convert Byte keycodes in packet to int keycodes
-
             for (int x = 0; x < receivedClientInputPackets[i].KeycodesDown.Length; x++) {
-                // Get 4 bytes for the keycode and increment i so next loop will be in the right position to read 4 more new bytes
-                byte[] keycodeBytes = { receivedClientInputPackets[i].KeycodesDown[x], receivedClientInputPackets[i].KeycodesDown[++x], receivedClientInputPackets[i].KeycodesDown[++x], receivedClientInputPackets[i].KeycodesDown[++x] };
-
-                // If the system architecture is little-endian (that is, little end first), reverse the byte array. this broke it so i added !
-                if (!BitConverter.IsLittleEndian)
-                    Array.Reverse(keycodeBytes);
-
-                // Get int KeyCode and cast to type KeyCode
-                keycodesDown[i / 4] = (KeyCode)BitConverter.ToInt32(keycodeBytes, 0);
+                clientInputs[receivedClientInputPackets[i].FromClient].KeycodesDown.Add((KeyCode)receivedClientInputPackets[i].KeycodesDown[x]);
+                clientInputs[receivedClientInputPackets[i].FromClient].KeycodesPressed.Add((KeyCode)receivedClientInputPackets[i].KeycodesDown[x]);
             }
 
             for (int x = 0; x < receivedClientInputPackets[i].KeycodesUp.Length; x++) {
-                // Get 4 bytes for the keycode and increment i so next loop will be in the right position to read 4 more new bytes
-                byte[] keycodeBytes = { receivedClientInputPackets[i].KeycodesUp[x], receivedClientInputPackets[i].KeycodesUp[++x], receivedClientInputPackets[i].KeycodesUp[++x], receivedClientInputPackets[i].KeycodesUp[++x] };
-
-                // If the system architecture is little-endian (that is, little end first), reverse the byte array. this broke it so i added !
-                if (!BitConverter.IsLittleEndian)
-                    Array.Reverse(keycodeBytes);
-
-                // Get int KeyCode and cast to type KeyCode
-                keycodesUp[i / 4] = (KeyCode)BitConverter.ToInt32(keycodeBytes, 0);
-            }
-
-            // Apply KeyCodes Down and Up to Client Input
-
-            for (int x = 0; x < keycodesDown.Length; x++) {
-                // If key is already pressed, continue
-                clientInputs[receivedClientInputPackets[i].FromClient].KeycodesDown.Add(keycodesDown[x]);
-                clientInputs[receivedClientInputPackets[i].FromClient].KeycodesPressed.Add(keycodesDown[x]);
-            }
-
-            for (int x = 0; x < keycodesUp.Length; x++) {
-                clientInputs[receivedClientInputPackets[i].FromClient].KeycodesUp.Add(keycodesUp[x]);
-                clientInputs[receivedClientInputPackets[i].FromClient].KeycodesPressed.Remove(keycodesUp[x]);
+                clientInputs[receivedClientInputPackets[i].FromClient].KeycodesUp.Add((KeyCode)receivedClientInputPackets[i].KeycodesUp[x]);
+                clientInputs[receivedClientInputPackets[i].FromClient].KeycodesPressed.Remove((KeyCode)receivedClientInputPackets[i].KeycodesUp[x]);
             }
         }
         receivedClientInputPackets.Clear();

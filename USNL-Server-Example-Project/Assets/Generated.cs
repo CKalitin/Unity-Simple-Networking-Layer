@@ -61,18 +61,18 @@ public struct PingPacket {
 public struct ClientInputPacket {
     private int fromClient;
 
-    private byte[] keycodesDown;
-    private byte[] keycodesUp;
+    private int[] keycodesDown;
+    private int[] keycodesUp;
 
-    public ClientInputPacket(int _fromClient, byte[] _keycodesDown, byte[] _keycodesUp) {
+    public ClientInputPacket(int _fromClient, int[] _keycodesDown, int[] _keycodesUp) {
         fromClient = _fromClient;
         keycodesDown = _keycodesDown;
         keycodesUp = _keycodesUp;
     }
 
     public int FromClient { get => fromClient; set => fromClient = value; }
-    public byte[] KeycodesDown { get => keycodesDown; set => keycodesDown = value; }
-    public byte[] KeycodesUp { get => keycodesUp; set => keycodesUp = value; }
+    public int[] KeycodesDown { get => keycodesDown; set => keycodesDown = value; }
+    public int[] KeycodesUp { get => keycodesUp; set => keycodesUp = value; }
 }
 
 #endregion
@@ -102,8 +102,8 @@ public static class PacketHandlers {
     }
 
     public static void ClientInput(Packet _packet) {
-        byte[] keycodesDown = _packet.ReadBytes();
-        byte[] keycodesUp = _packet.ReadBytes();
+        int[] keycodesDown = _packet.ReadInts();
+        int[] keycodesUp = _packet.ReadInts();
 
         ClientInputPacket clientInputPacket = new ClientInputPacket(_packet.FromClient, keycodesDown, keycodesUp);
         PacketManager.instance.PacketReceived(_packet, clientInputPacket);
@@ -119,15 +119,15 @@ public static class PacketSend {
 
     private static void SendTCPData(int _toClient, Packet _packet) {
         _packet.WriteLength();
-        Server.clients[_toClient].Tcp.SendData(_packet);
-            if (Server.clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+        Server.Clients[_toClient].Tcp.SendData(_packet);
+            if (Server.Clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
     }
 
     private static void SendTCPDataToAll(Packet _packet) {
         _packet.WriteLength();
         for (int i = 0; i < Server.MaxClients; i++) {
-            Server.clients[i].Tcp.SendData(_packet);
-            if (Server.clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+            Server.Clients[i].Tcp.SendData(_packet);
+            if (Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
         }
     }
 
@@ -135,23 +135,23 @@ public static class PacketSend {
         _packet.WriteLength();
         for (int i = 0; i < Server.MaxClients; i++) {
             if (i != _excpetClient) {
-                Server.clients[i].Tcp.SendData(_packet);
-                if (Server.clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+                Server.Clients[i].Tcp.SendData(_packet);
+                if (Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
             }
         }
     }
 
     private static void SendUDPData(int _toClient, Packet _packet) {
         _packet.WriteLength();
-        Server.clients[_toClient].Udp.SendData(_packet);
-        if (Server.clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+        Server.Clients[_toClient].Udp.SendData(_packet);
+        if (Server.Clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
     }
 
     private static void SendUDPDataToAll(Packet _packet) {
         _packet.WriteLength();
         for (int i = 0; i < Server.MaxClients; i++) {
-            Server.clients[i].Udp.SendData(_packet);
-            if (Server.clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+            Server.Clients[i].Udp.SendData(_packet);
+            if (Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
         }
     }
 
@@ -159,8 +159,8 @@ public static class PacketSend {
         _packet.WriteLength();
         for (int i = 0; i < Server.MaxClients; i++) {
             if (i != _excpetClient) {
-                Server.clients[i].Udp.SendData(_packet);
-                if (Server.clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+                Server.Clients[i].Udp.SendData(_packet);
+                if (Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
             }
         }
     }
@@ -204,55 +204,61 @@ public static class PacketSend {
         }
     }
 
-    public static void SyncedObjectVec2PosUpdate(int[] _syncedObjectUUIDs, Vector2[] _positions) {
+    public static void SyncedObjectVec2PosUpdate(int[] _syncedObjectUUIDs, Vector2[] _positions, Vector2[] _interpolatePositions) {
         using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectVec2PosUpdate)) {
             _packet.Write(_syncedObjectUUIDs);
             _packet.Write(_positions);
+            _packet.Write(_interpolatePositions);
 
             SendUDPDataToAll(_packet);
         }
     }
 
-    public static void SyncedObjectVec3PosUpdate(int[] _syncedObjectUUIDs, Vector3[] _positions) {
+    public static void SyncedObjectVec3PosUpdate(int[] _syncedObjectUUIDs, Vector3[] _positions, Vector3[] _interpolatePositions) {
         using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectVec3PosUpdate)) {
             _packet.Write(_syncedObjectUUIDs);
             _packet.Write(_positions);
+            _packet.Write(_interpolatePositions);
 
             SendUDPDataToAll(_packet);
         }
     }
 
-    public static void SyncedObjectRotZUpdate(int[] _syncedObjectUUIDs, float[] _rotations) {
+    public static void SyncedObjectRotZUpdate(int[] _syncedObjectUUIDs, float[] _rotations, float[] _interpolateRotations) {
         using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectRotZUpdate)) {
             _packet.Write(_syncedObjectUUIDs);
             _packet.Write(_rotations);
+            _packet.Write(_interpolateRotations);
 
             SendUDPDataToAll(_packet);
         }
     }
 
-    public static void SyncedObjectRotUpdate(int[] _syncedObjectUUIDs, Quaternion[] _rotations) {
+    public static void SyncedObjectRotUpdate(int[] _syncedObjectUUIDs, Vector3[] _rotations, Vector3[] _interpolateRotations) {
         using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectRotUpdate)) {
             _packet.Write(_syncedObjectUUIDs);
             _packet.Write(_rotations);
+            _packet.Write(_interpolateRotations);
 
             SendUDPDataToAll(_packet);
         }
     }
 
-    public static void SyncedObjectVec2ScaleUpdate(int[] _syncedObjectUUIDs, Vector2[] _scales) {
+    public static void SyncedObjectVec2ScaleUpdate(int[] _syncedObjectUUIDs, Vector2[] _scales, Vector2[] _interpolateScales) {
         using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectVec2ScaleUpdate)) {
             _packet.Write(_syncedObjectUUIDs);
             _packet.Write(_scales);
+            _packet.Write(_interpolateScales);
 
             SendUDPDataToAll(_packet);
         }
     }
 
-    public static void SyncedObjectVec3ScaleUpdate(int[] _syncedObjectUUIDs, Vector3[] _scales) {
+    public static void SyncedObjectVec3ScaleUpdate(int[] _syncedObjectUUIDs, Vector3[] _scales, Vector3[] _interpolateScales) {
         using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectVec3ScaleUpdate)) {
             _packet.Write(_syncedObjectUUIDs);
             _packet.Write(_scales);
+            _packet.Write(_interpolateScales);
 
             SendUDPDataToAll(_packet);
         }

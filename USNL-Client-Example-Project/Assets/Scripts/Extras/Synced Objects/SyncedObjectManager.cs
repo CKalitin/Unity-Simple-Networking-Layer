@@ -5,9 +5,25 @@ using UnityEngine;
 public class SyncedObjectManager : MonoBehaviour {
     #region Core
 
+    public static SyncedObjectManager instance;
+
     [SerializeField] private SyncedObjectPrefabs syncedObjectsPrefabs;
+    [Space]
+    [Tooltip("Client-side Interpolation processing.\nThis mode does not support rotation interpolation.")]
+    [SerializeField] private bool localInterpolation;
 
     private Dictionary<int, Transform> syncedObjects = new Dictionary<int, Transform>();
+
+    public bool LocalInterpolation { get => localInterpolation; set => localInterpolation = value; }
+
+    private void Awake() {
+        if (instance == null) {
+            instance = this;
+        } else if (instance != this) {
+            Debug.Log("Synced Object Manager instance already exists, destroying object!");
+            Destroy(this);
+        }
+    }
 
     private void OnEnable() {
         USNLCallbackEvents.OnSyncedObjectInstantiatePacket += OnSyncedObjectInstantiatePacket;
@@ -61,6 +77,7 @@ public class SyncedObjectManager : MonoBehaviour {
         for (int i = 0; i < _packet.SyncedObjectUUIDs.Length; i++) {
             if (syncedObjects.ContainsKey(_packet.SyncedObjectUUIDs[i])) {
                 syncedObjects[_packet.SyncedObjectUUIDs[i]].position = new Vector3(_packet.Positions[i].x, _packet.Positions[i].y, syncedObjects[_packet.SyncedObjectUUIDs[i]].position.z);
+                syncedObjects[_packet.SyncedObjectUUIDs[i]].GetComponent<SyncedObject>().PositionUpdate(_packet.Positions[i], _packet.InterpolatePositions[i]);
             }
         }
     }
@@ -71,6 +88,7 @@ public class SyncedObjectManager : MonoBehaviour {
         for (int i = 0; i < _packet.SyncedObjectUUIDs.Length; i++) {
             if (syncedObjects.ContainsKey(_packet.SyncedObjectUUIDs[i])) {
                 syncedObjects[_packet.SyncedObjectUUIDs[i]].position = _packet.Positions[i];
+                syncedObjects[_packet.SyncedObjectUUIDs[i]].GetComponent<SyncedObject>().PositionUpdate(_packet.Positions[i], _packet.InterpolatePositions[i]);
             }
         }
     }
@@ -80,7 +98,8 @@ public class SyncedObjectManager : MonoBehaviour {
 
         for (int i = 0; i < _packet.SyncedObjectUUIDs.Length; i++) {
             if (syncedObjects.ContainsKey(_packet.SyncedObjectUUIDs[i])) {
-                syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation = new Quaternion(syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation.x, syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation.y, _packet.Rotations[i], syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation.w);
+                syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation = Quaternion.RotateTowards(syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation, Quaternion.Euler(new Vector3(syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation.x, syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation.y, _packet.Rotations[i])), 999999f);
+                syncedObjects[_packet.SyncedObjectUUIDs[i]].GetComponent<SyncedObject>().RotationUpdate(new Vector3(syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation.x, syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation.y, _packet.Rotations[i]), new Vector3(syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation.x, syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation.y, _packet.InterpolateRotations[i]));
             }
         }
     }
@@ -90,7 +109,8 @@ public class SyncedObjectManager : MonoBehaviour {
 
         for (int i = 0; i < _packet.SyncedObjectUUIDs.Length; i++) {
             if (syncedObjects.ContainsKey(_packet.SyncedObjectUUIDs[i])) {
-                syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation = _packet.Rotations[i];
+                syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation = Quaternion.RotateTowards(syncedObjects[_packet.SyncedObjectUUIDs[i]].rotation, Quaternion.Euler(_packet.Rotations[i]), 999999f);
+                syncedObjects[_packet.SyncedObjectUUIDs[i]].GetComponent<SyncedObject>().RotationUpdate(_packet.Rotations[i], _packet.InterpolateRotations[i]);
             }
         }
     }
@@ -101,6 +121,7 @@ public class SyncedObjectManager : MonoBehaviour {
         for (int i = 0; i < _packet.SyncedObjectUUIDs.Length; i++) {
             if (syncedObjects.ContainsKey(_packet.SyncedObjectUUIDs[i])) {
                 syncedObjects[_packet.SyncedObjectUUIDs[i]].localScale = new Vector3(_packet.Scales[i].x, _packet.Scales[i].y, syncedObjects[_packet.SyncedObjectUUIDs[i]].localScale.z);
+                syncedObjects[_packet.SyncedObjectUUIDs[i]].GetComponent<SyncedObject>().ScaleUpdate(_packet.Scales[i], _packet.InterpolateScales[i]);
             }
         }
     }
@@ -111,6 +132,7 @@ public class SyncedObjectManager : MonoBehaviour {
         for (int i = 0; i < _packet.SyncedObjectUUIDs.Length; i++) {
             if (syncedObjects.ContainsKey(_packet.SyncedObjectUUIDs[i])) {
                 syncedObjects[_packet.SyncedObjectUUIDs[i]].localScale = _packet.Scales[i];
+                syncedObjects[_packet.SyncedObjectUUIDs[i]].GetComponent<SyncedObject>().ScaleUpdate(_packet.Scales[i], _packet.InterpolateScales[i]);
             }
         }
     }

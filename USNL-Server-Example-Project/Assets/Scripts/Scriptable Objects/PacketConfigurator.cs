@@ -39,32 +39,32 @@ public class PacketConfigurator : ScriptableObject {
             Protocol.TCP),
         new ServerPacketConfig(
             "SyncedObjectVec2PosUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Positions", PacketVarTypes.Vector2Array) },
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Positions", PacketVarTypes.Vector2Array), new PacketVariable("InterpolatePositions", PacketVarTypes.Vector2Array) },
             ServerPacketTypes.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectVec3PosUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Positions", PacketVarTypes.Vector3Array) },
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Positions", PacketVarTypes.Vector3Array), new PacketVariable("InterpolatePositions", PacketVarTypes.Vector3Array) },
             ServerPacketTypes.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectRotZUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Rotations", PacketVarTypes.FloatArray) },
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Rotations", PacketVarTypes.FloatArray), new PacketVariable("InterpolateRotations", PacketVarTypes.FloatArray) },
             ServerPacketTypes.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectRotUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Rotations", PacketVarTypes.QuaternionArray) },
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Rotations", PacketVarTypes.Vector3Array), new PacketVariable("InterpolateRotations", PacketVarTypes.Vector3Array) },
             ServerPacketTypes.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectVec2ScaleUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Scales", PacketVarTypes.Vector2Array) },
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Scales", PacketVarTypes.Vector2Array), new PacketVariable("InterpolateScales", PacketVarTypes.Vector2Array) },
             ServerPacketTypes.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectVec3ScaleUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Scales", PacketVarTypes.Vector3Array) },
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Scales", PacketVarTypes.Vector3Array), new PacketVariable("InterpolateScales", PacketVarTypes.Vector3Array) },
             ServerPacketTypes.SendToAllClients,
             Protocol.UDP),
         #endregion
@@ -80,7 +80,7 @@ public class PacketConfigurator : ScriptableObject {
             Protocol.TCP),
         new ClientPacketConfig(
             "ClientInput",
-            new PacketVariable[] { new PacketVariable("KeycodesDown", PacketVarTypes.ByteArray), new PacketVariable("KeycodesUp", PacketVarTypes.ByteArray)},
+            new PacketVariable[] { new PacketVariable("KeycodesDown", PacketVarTypes.IntArray), new PacketVariable("KeycodesUp", PacketVarTypes.IntArray) },
             Protocol.TCP),
     };
 
@@ -366,15 +366,15 @@ public class PacketConfigurator : ScriptableObject {
             "\n" +
             "\n    private static void SendTCPData(int _toClient, Packet _packet) {" +
             "\n        _packet.WriteLength();" +
-            "\n        Server.clients[_toClient].Tcp.SendData(_packet);" +
-            "\n            if (Server.clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
+            "\n        Server.Clients[_toClient].Tcp.SendData(_packet);" +
+            "\n            if (Server.Clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
             "\n    }" +
             "\n" +
             "\n    private static void SendTCPDataToAll(Packet _packet) {" +
             "\n        _packet.WriteLength();" +
             "\n        for (int i = 0; i < Server.MaxClients; i++) {" +
-            "\n            Server.clients[i].Tcp.SendData(_packet);" +
-            "\n            if (Server.clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
+            "\n            Server.Clients[i].Tcp.SendData(_packet);" +
+            "\n            if (Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
             "\n        }" +
             "\n    }" +
             "\n" +
@@ -382,23 +382,23 @@ public class PacketConfigurator : ScriptableObject {
             "\n        _packet.WriteLength();" +
             "\n        for (int i = 0; i < Server.MaxClients; i++) {" +
             "\n            if (i != _excpetClient) {" +
-            "\n                Server.clients[i].Tcp.SendData(_packet);" +
-            "\n                if (Server.clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
+            "\n                Server.Clients[i].Tcp.SendData(_packet);" +
+            "\n                if (Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
             "\n            }" +
             "\n        }" +
             "\n    }" +
             "\n" +
             "\n    private static void SendUDPData(int _toClient, Packet _packet) {" +
             "\n        _packet.WriteLength();" +
-            "\n        Server.clients[_toClient].Udp.SendData(_packet);" +
-            "\n        if (Server.clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
+            "\n        Server.Clients[_toClient].Udp.SendData(_packet);" +
+            "\n        if (Server.Clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
             "\n    }" +
             "\n" +
             "\n    private static void SendUDPDataToAll(Packet _packet) {" +
             "\n        _packet.WriteLength();" +
             "\n        for (int i = 0; i < Server.MaxClients; i++) {" +
-            "\n            Server.clients[i].Udp.SendData(_packet);" +
-            "\n            if (Server.clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
+            "\n            Server.Clients[i].Udp.SendData(_packet);" +
+            "\n            if (Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
             "\n        }" +
             "\n    }" +
             "\n" +
@@ -406,8 +406,8 @@ public class PacketConfigurator : ScriptableObject {
             "\n        _packet.WriteLength();" +
             "\n        for (int i = 0; i < Server.MaxClients; i++) {" +
             "\n            if (i != _excpetClient) {" +
-            "\n                Server.clients[i].Udp.SendData(_packet);" +
-            "\n                if (Server.clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
+            "\n                Server.Clients[i].Udp.SendData(_packet);" +
+            "\n                if (Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
             "\n            }" +
             "\n        }" +
             "\n    }" +
