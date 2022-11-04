@@ -171,7 +171,6 @@ public class SyncedObjectManager : MonoBehaviour {
 
     private void OnSyncedObjectVec2PosInterpolationPacket(object _packetObject) {
         SyncedObjectVec2PosInterpolationPacket _packet = (SyncedObjectVec2PosInterpolationPacket)_packetObject;
-        Debug.Log("Here");
         for (int i = 0; i < _packet.SyncedObjectUUIDs.Length; i++) {
             if (syncedObjects.ContainsKey(_packet.SyncedObjectUUIDs[i])) {
                 syncedObjects[_packet.SyncedObjectUUIDs[i]].GetComponent<SyncedObject>().PositionInterpolationUpdate(_packet.InterpolatePositions[i]);

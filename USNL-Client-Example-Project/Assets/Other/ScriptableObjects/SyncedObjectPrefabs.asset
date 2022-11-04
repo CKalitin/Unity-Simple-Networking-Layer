@@ -15,3 +15,4 @@ MonoBehaviour:
   syncedObjectPrefabs:
   - {fileID: 247625964279606225, guid: c2d3d7edecb3b9c45a3b80fa388fca1f, type: 3}
   - {fileID: 8934164373642456360, guid: b572cff5657ee2946a863e682f75c6cc, type: 3}
+  - {fileID: 2772457918485543056, guid: 15d627d3991c19b48a454145e16fc474, type: 3}

@@ -229,7 +229,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   syncedObjectsPrefabs: {fileID: 11400000, guid: 774f73ecb3be6a8498ac0afcc29108ef, type: 2}
-  localInterpolation: 0
 --- !u!114 &270393289
 MonoBehaviour:
   m_ObjectHideFlags: 0

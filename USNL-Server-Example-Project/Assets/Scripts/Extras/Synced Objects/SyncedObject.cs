@@ -19,6 +19,11 @@ public class SyncedObject : MonoBehaviour {
     [Tooltip("Minimum ammount a Synced Object needs to change in scale before it is updated on the Clients.")]
     [SerializeField] private float minScaleChange = 0.001f;
 
+    [Header("Interpolation Toggles")]
+    [SerializeField] private bool interpolatePosition = true;
+    [SerializeField] private bool interpolateRotation = false;
+    [SerializeField] private bool interpolateScale = true;
+
     private int syncedObjectUUID;
 
     // If value has not changed since last Synced Object Update
@@ -107,9 +112,14 @@ public class SyncedObject : MonoBehaviour {
 
     private void SetInterpolationValues() {
         if (prevPositionsDiffs.Count > 0) {
-            positionInterpolation = GetMedian(prevPositionsDiffs);
-            rotationInterpolation = GetMedian(prevRotationsDiffs);
-            ScaleInterpolation = GetMedian(prevScalesDiffs);
+            if (interpolatePosition & SyncedObjectManager.instance.InterpolatePosition) positionInterpolation = GetMedian(prevPositionsDiffs);
+            else positionInterpolation = Vector3.zero;
+
+            if (interpolateRotation & SyncedObjectManager.instance.InterpolateRotation) rotationInterpolation = GetMedian(prevRotationsDiffs);
+            else rotationInterpolation = Vector3.zero;
+
+            if (interpolateScale & SyncedObjectManager.instance.InterpolateScale) scaleInterpolation = GetMedian(prevScalesDiffs);
+            else scaleInterpolation = Vector3.zero;
         } else {
             positionInterpolation = Vector3.zero;
             rotationInterpolation = Vector3.zero;

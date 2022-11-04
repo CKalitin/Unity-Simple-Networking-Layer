@@ -11,14 +11,6 @@ public class SyncedObjectManager : MonoBehaviour {
     [Tooltip("If Synced Objects should be updated in Vector3s, or Vector2s for a 2D game.")]
     [SerializeField] private bool vector2Mode;
     [Space]
-    [Tooltip("Server-side interpolation is better than Client-side because there's more frames to work with.\nClient-side interpolation does not support rotation interpolation.\nIf the server is running at or over 30 Synced Object updates per second it is wise to disable this.\nThis is only updates on Server Startup.")]
-    [SerializeField] private bool serverSideInterpolation = true;
-    [Space]
-    [Tooltip("Second between Synced Object data being sent to clients.")]
-    [SerializeField] private float syncedObjectClientUpdateRate = 0.1f;
-    [Tooltip("Nth Synced Object update sends an Interpolation Update as well. Interpolation data may not need to be sent every Synced Object update.")]
-    [SerializeField] private int nthSyncedObjectUpdatePerInterpolationUpdate = 2;
-    [Space]
     [Tooltip("Minimum ammount a Synced Object needs to move before it is updated on the Clients.")]
     [SerializeField] private float minPosChange = 0.001f;
     [Tooltip("Minimum ammount a Synced Object needs to rotate before it is updated on the Clients.")]
@@ -26,8 +18,42 @@ public class SyncedObjectManager : MonoBehaviour {
     [Tooltip("Minimum ammount a Synced Object needs to change in scale before it is updated on the Clients.")]
     [SerializeField] private float minScaleChange = 0.001f;
 
+    [Header("Synced Object Updates")]
+    [Tooltip("Second between Synced Object data being sent to clients.")]
+    [SerializeField] private float syncedObjectClientUpdateRate = 0.1f;
+    [Space]
+    [Tooltip("Nth Synced Object update sends an Interpolation Update as well. Interpolation data may not need to be sent every Synced Object update.")]
+    [SerializeField] private int nthSyncedObjectUpdatePerInterpolation = 2;
+    [Space]
+    [Tooltip("Nth Synced Object update sends a position update.")]
+    [SerializeField] private int nthPositionUpdateRate = 3;
+    [Tooltip("Nth Synced Object update sends a rotation update.")]
+    [SerializeField] private int nthRotationUpdateRate = 1;
+    [Tooltip("Nth Synced Object update sends a scale update.")]
+    [SerializeField] private int nthScaleUpdateRate = 3;
+    [Space]
+    [Tooltip("Nth Interpolation update sends a position interpolation update.")]
+    [SerializeField] private int nthPositionInterpolateRate = 3;
+    [Tooltip("Nth Interpolation update sends a rotation interpolation update.")]
+    [SerializeField] private int nthRotationInterpolateRate = 1;
+    [Tooltip("Nth Interpolation update sends a scale interpolation update.")]
+    [SerializeField] private int nthScaleInterpolateRate = 3;
+
+    [Header("Interpolation Toggles")]
+    [Tooltip("Server-side interpolation is better than Client-side because there's more frames to work with.\nClient-side interpolation does not support rotation interpolation.\nIf the server is running at or over 30 Synced Object updates per second it is wise to disable this.\nThis is only updates on Server Startup.")]
+    [SerializeField] private bool serverSideInterpolation = true;
+    [Space]
+    [Tooltip("This overrides local Synced Object toggles.")]
+    [SerializeField] private bool interpolatePosition = true;
+    [Tooltip("This overrides local Synced Object toggles.")]
+    [SerializeField] private bool interpolateRotation = false;
+    [Tooltip("This overrides local Synced Object toggles.")]
+    [SerializeField] private bool interpolateScale = true;
+
     private List<SyncedObject> syncedObjects = new List<SyncedObject>();
-    private int syncedObjectUpdatesCount = 0;
+
+    private int syncedObjectUpdatesTotal = 0;
+    private int syncedObjectInterpolationUpdatesTotal = 0;
 
     // These are public so Synced Object can use them as a reference parameter
     [HideInInspector] public List<SyncedObject> soVec2PosUpdate = new List<SyncedObject>();
@@ -49,6 +75,9 @@ public class SyncedObjectManager : MonoBehaviour {
     public float MinPosChange { get => minPosChange; set => minPosChange = value; }
     public float MinRotChange { get => minRotChange; set => minRotChange = value; }
     public float MinScaleChange { get => minScaleChange; set => minScaleChange = value; }
+    public bool InterpolatePosition { get => interpolatePosition; set => interpolatePosition = value; }
+    public bool InterpolateRotation { get => interpolateRotation; set => interpolateRotation = value; }
+    public bool InterpolateScale { get => interpolateScale; set => interpolateScale = value; }
 
     #endregion
 
@@ -68,10 +97,10 @@ public class SyncedObjectManager : MonoBehaviour {
             yield return new WaitForSeconds(syncedObjectClientUpdateRate);
             SendSyncedObjectUpdatePackets();
 
-            syncedObjectUpdatesCount++;
-            if (syncedObjectUpdatesCount > nthSyncedObjectUpdatePerInterpolationUpdate - 1) {
+            syncedObjectUpdatesTotal++;
+            if (syncedObjectUpdatesTotal % nthSyncedObjectUpdatePerInterpolation == 0) {
+                syncedObjectInterpolationUpdatesTotal++;
                 SendSyncedObjectInterpolationPackets();
-                syncedObjectUpdatesCount = 0;
             }
         }
     }
@@ -87,26 +116,57 @@ public class SyncedObjectManager : MonoBehaviour {
 
     #region Synced Object Management
 
+
     private void SendSyncedObjectUpdatePackets() {
         CallSyncedObjectUpdateFunctions();
+        if (syncedObjectUpdatesTotal % nthPositionUpdateRate == 0)
+            SendSOPositionUpdate();
+        if (syncedObjectUpdatesTotal % nthRotationUpdateRate == 0)
+            SendSORotationUpdate();
+        if (syncedObjectUpdatesTotal % nthScaleUpdateRate == 0)
+            SendSOScaleUpdate();
+    }
+
+    private void SendSyncedObjectInterpolationPackets() {
+        if (!serverSideInterpolation) { return; }
+
+        CallSyncedObjectUpdateInterpolationFunctions();
+        if (syncedObjectInterpolationUpdatesTotal % nthPositionInterpolateRate == 0)
+            SendSOPositionInterpolation();
+        if (syncedObjectInterpolationUpdatesTotal % nthRotationInterpolateRate == 0)
+            SendSORotationInterpolation();
+        if (syncedObjectInterpolationUpdatesTotal % nthScaleInterpolateRate == 0)
+            SendSOScaleInterpolation();
+    }
+
+    private void SendSOPositionUpdate() {
         if (soVec2PosUpdate.Count > 0) { SyncedObjectVec2PosUpdates(); }
         if (soVec3PosUpdate.Count > 0) { SyncedObjectVec3PosUpdates(); }
+    }
+
+    private void SendSORotationUpdate() {
         if (soRotZUpdate.Count > 0) { SyncedObjectRotZUpdates(); }
         if (soRotUpdate.Count > 0) { SyncedObjectRotUpdates(); }
+    }
+
+    private void SendSOScaleUpdate() {
         if (soVec2ScaleUpdate.Count > 0) { SyncedObjectVec2ScaleUpdates(); }
         if (soVec3ScaleUpdate.Count > 0) { SyncedObjectVec3ScaleUpdates(); }
     }
 
-    private void SendSyncedObjectInterpolationPackets() {
-        if (serverSideInterpolation) {
-            CallSyncedObjectUpdateInterpolationFunctions();
-            if (soVec2PosInterpolation.Count > 0) { SendSOVec2PosInterpolation(); }
-            if (soVec3PosInterpolation.Count > 0) { SendSOVec3PosInterpolation(); }
-            if (soRotZInterpolation.Count > 0) { SendSORotZInterpolation(); }
-            if (soRotInterpolation.Count > 0) { SendSORotInterpolation(); }
-            if (soVec2ScaleInterpolation.Count > 0) { SendSOVec2ScaleInterpolation(); }
-            if (soVec3ScaleInterpolation.Count > 0) { SendSOVec3ScaleInterpolation(); }
-        }
+    private void SendSOPositionInterpolation() {
+        if (soVec2PosInterpolation.Count > 0) { SendSOVec2PosInterpolation(); }
+        if (soVec3PosInterpolation.Count > 0) { SendSOVec3PosInterpolation(); }
+    }
+
+    private void SendSORotationInterpolation() {
+        if (soRotZInterpolation.Count > 0) { SendSORotZInterpolation(); }
+        if (soRotInterpolation.Count > 0) { SendSORotInterpolation(); }
+    }
+
+    private void SendSOScaleInterpolation() {
+        if (soVec2ScaleInterpolation.Count > 0) { SendSOVec2ScaleInterpolation(); }
+        if (soVec3ScaleInterpolation.Count > 0) { SendSOVec3ScaleInterpolation(); }
     }
 
     private void CallSyncedObjectUpdateFunctions() {
