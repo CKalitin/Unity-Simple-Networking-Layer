@@ -26,7 +26,9 @@ public class SyncedObject : MonoBehaviour {
         }
     }
 
-    public void PositionUpdate(Vector3 _updatedPosition, Vector3 _interpolatePosition) {
+    #region Local Interpolation
+
+    public void PositionUpdate(Vector3 _updatedPosition) {
         if (SyncedObjectManager.instance.LocalInterpolation) {
             if (previousUpdatedPosition != new Vector3(-999999, -999999, -999999)) {
                 float timeBetweenUpdates = Time.realtimeSinceStartup - positionUpdateReceivedTime;
@@ -39,18 +41,17 @@ public class SyncedObject : MonoBehaviour {
             }
             previousUpdatedPosition = _updatedPosition;
             positionUpdateReceivedTime = Time.realtimeSinceStartup;
-        } else {
-            positionRateOfChange = _interpolatePosition;
         }
     }
 
-    public void RotationUpdate(Vector3 _updateRotation, Vector3 _interpolateRotation) {
-        if (!SyncedObjectManager.instance.LocalInterpolation) {
-            rotationRateOfChange = _interpolateRotation;
-        }
+    public void RotationUpdate(Vector3 _updateRotation) {
+        // Add local rotation interpolation here if you want to
+        /*if (SyncedObjectManager.instance.LocalInterpolation) {
+            
+        }*/
     }
 
-    public void ScaleUpdate(Vector3 _updateScale, Vector3 _interpolateScale) {
+    public void ScaleUpdate(Vector3 _updateScale) {
         if (SyncedObjectManager.instance.LocalInterpolation) {
             if (previousUpdatedScale != new Vector3(-999999, -999999, -999999)) {
                 float timeBetweenUpdates = Time.realtimeSinceStartup - scaleUpdateReceivedTime;
@@ -64,8 +65,30 @@ public class SyncedObject : MonoBehaviour {
 
             previousUpdatedScale = _updateScale;
             scaleUpdateReceivedTime = Time.realtimeSinceStartup;
-        } else {
+        }
+    }
+
+    #endregion
+
+    #region Server Interpolation
+
+    public void PositionInterpolationUpdate(Vector3 _interpolatePosition) {
+        if (!SyncedObjectManager.instance.LocalInterpolation) {
+            positionRateOfChange = _interpolatePosition;
+        }
+    }
+
+    public void RotationInterpolationUpdate(Vector3 _interpolateRotation) {
+        if (!SyncedObjectManager.instance.LocalInterpolation) {
+            rotationRateOfChange = _interpolateRotation;
+        }
+    }
+
+    public void ScaleInterpolationUpdate(Vector3 _interpolateScale) {
+        if (!SyncedObjectManager.instance.LocalInterpolation) {
             scaleRateOfChange = _interpolateScale;
         }
     }
+
+    #endregion
 }

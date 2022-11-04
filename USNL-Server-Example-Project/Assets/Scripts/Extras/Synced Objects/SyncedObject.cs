@@ -99,7 +99,9 @@ public class SyncedObject : MonoBehaviour {
         prevSOUpdatePos = transform.position;
         prevSOUpdateRot = transform.eulerAngles;
         prevSOUpdateScale = transform.lossyScale;
+    }
 
+    public void UpdateInterpolation() {
         SetInterpolationValues();
     }
 
@@ -130,47 +132,59 @@ public class SyncedObject : MonoBehaviour {
     private void Vector2SyncedObjectUpdate() {
         if (CheckValuesAgainstMinAbs(minPosChange, transform.position.x - prevSOUpdatePos.x, transform.position.y - prevSOUpdatePos.y)) {
             positionStable = false;
-            SyncedObjectManager.instance.syncedObjectVec2PosUpdate.Add(this);
+            SyncedObjectManager.instance.soVec2PosUpdate.Add(this);
+            if (!SyncedObjectManager.instance.soVec2PosInterpolation.Contains(this))
+                SyncedObjectManager.instance.soVec2PosInterpolation.Add(this);
         } else {
-            CheckValueStable(ref positionStable, ref SyncedObjectManager.instance.syncedObjectVec2PosUpdate);
+            CheckValueStable(ref positionStable, ref SyncedObjectManager.instance.soVec2PosUpdate, ref SyncedObjectManager.instance.soVec2PosInterpolation);
         }
 
         if (CheckValuesAgainstMinAbs(minRotChange, transform.eulerAngles.z - prevSOUpdateRot.z)) {
             rotationStable = false;
-            SyncedObjectManager.instance.syncedObjectRotZUpdate.Add(this);
+            SyncedObjectManager.instance.soRotZUpdate.Add(this);
+            if (!SyncedObjectManager.instance.soRotZInterpolation.Contains(this))
+                SyncedObjectManager.instance.soRotZInterpolation.Add(this);
         } else {
-            CheckValueStable(ref rotationStable, ref SyncedObjectManager.instance.syncedObjectRotZUpdate);
+            CheckValueStable(ref rotationStable, ref SyncedObjectManager.instance.soRotZUpdate, ref SyncedObjectManager.instance.soRotZInterpolation);
         }
 
 
         if (CheckValuesAgainstMinAbs(minScaleChange, transform.lossyScale.x - prevSOUpdateScale.x, transform.lossyScale.y - prevSOUpdateScale.y)) {
             scaleStable = false;
-            SyncedObjectManager.instance.syncedObjectVec2ScaleUpdate.Add(this);
+            SyncedObjectManager.instance.soVec2ScaleUpdate.Add(this);
+            if (!SyncedObjectManager.instance.soVec2ScaleInterpolation.Contains(this))
+                SyncedObjectManager.instance.soVec2ScaleInterpolation.Add(this);
         } else {
-            CheckValueStable(ref scaleStable, ref SyncedObjectManager.instance.syncedObjectVec2ScaleUpdate);
+            CheckValueStable(ref scaleStable, ref SyncedObjectManager.instance.soVec2ScaleUpdate, ref SyncedObjectManager.instance.soVec2ScaleInterpolation);
         }
     }
 
     private void Vector3SyncedObjectUpdate() {
         if (CheckValuesAgainstMinAbs(minPosChange, transform.position.x - prevSOUpdatePos.x, transform.position.y - prevSOUpdatePos.y, transform.position.z - prevSOUpdatePos.z)) {
             positionStable = false;
-            SyncedObjectManager.instance.syncedObjectVec3PosUpdate.Add(this);
+            SyncedObjectManager.instance.soVec3PosUpdate.Add(this);
+            if (!SyncedObjectManager.instance.soVec3PosInterpolation.Contains(this))
+                SyncedObjectManager.instance.soVec3PosInterpolation.Add(this);
         } else {
-            CheckValueStable(ref positionStable, ref SyncedObjectManager.instance.syncedObjectVec3PosUpdate);
+            CheckValueStable(ref positionStable, ref SyncedObjectManager.instance.soVec3PosUpdate, ref SyncedObjectManager.instance.soVec3PosInterpolation);
         }
 
         if (CheckValuesAgainstMinAbs(minRotChange, transform.eulerAngles.x - prevSOUpdateRot.x, transform.eulerAngles.y - prevSOUpdateRot.y, transform.eulerAngles.z - prevSOUpdateRot.z)) {
             rotationStable = false;
-            SyncedObjectManager.instance.syncedObjectRotUpdate.Add(this);
+            SyncedObjectManager.instance.soRotUpdate.Add(this);
+            if (!SyncedObjectManager.instance.soRotInterpolation.Contains(this))
+                SyncedObjectManager.instance.soRotInterpolation.Add(this);
         } else {
-            CheckValueStable(ref rotationStable, ref SyncedObjectManager.instance.syncedObjectRotUpdate);
+            CheckValueStable(ref rotationStable, ref SyncedObjectManager.instance.soRotUpdate, ref SyncedObjectManager.instance.soRotInterpolation);
         }
 
         if (CheckValuesAgainstMinAbs(minScaleChange, transform.lossyScale.x - prevSOUpdateScale.x, transform.lossyScale.y - prevSOUpdateScale.y, transform.lossyScale.z - prevSOUpdateScale.z)) {
             scaleStable = false;
-            SyncedObjectManager.instance.syncedObjectVec3ScaleUpdate.Add(this);
+            SyncedObjectManager.instance.soVec3ScaleUpdate.Add(this);
+            if (!SyncedObjectManager.instance.soVec3ScaleInterpolation.Contains(this))
+                SyncedObjectManager.instance.soVec3ScaleInterpolation.Add(this);
         } else {
-            CheckValueStable(ref scaleStable, ref SyncedObjectManager.instance.syncedObjectVec3ScaleUpdate);
+            CheckValueStable(ref scaleStable, ref SyncedObjectManager.instance.soVec3ScaleUpdate, ref SyncedObjectManager.instance.soVec3ScaleInterpolation);
         }
     }
 
@@ -224,11 +238,13 @@ public class SyncedObject : MonoBehaviour {
     }
     
     // If position hasn't changed, set _stable to true and lock interpolation on client via 2 add calls.
-    private void CheckValueStable(ref bool _stable, ref List<SyncedObject> _syncedObjectList) {
+    private void CheckValueStable(ref bool _stable, ref List<SyncedObject> _syncedObjectList, ref List<SyncedObject> _syncedObjectInterpolateList) {
         if (!_stable) {
             // Add value twice so it's sent twice, this way the rate of change (Client-side) is 0 and interpolation won't do anything
             _syncedObjectList.Add(this);
             _syncedObjectList.Add(this);
+            if (!_syncedObjectInterpolateList.Contains(this))
+                _syncedObjectInterpolateList.Add(this);
             _stable = true;
         }
     }

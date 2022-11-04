@@ -38,35 +38,75 @@ public class PacketConfigurator : ScriptableObject {
             ServerPacketTypes.SendToClient,
             Protocol.TCP),
         new ServerPacketConfig(
+            "SyncedObjectInterpolationMode",
+            new PacketVariable[] { new PacketVariable("Server Interpolation", PacketVarTypes.Bool) },
+            ServerPacketTypes.SendToClient,
+            Protocol.TCP
+            ),
+        #region Synced Object Updates
+        new ServerPacketConfig(
             "SyncedObjectVec2PosUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Positions", PacketVarTypes.Vector2Array), new PacketVariable("InterpolatePositions", PacketVarTypes.Vector2Array) },
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Positions", PacketVarTypes.Vector2Array) },
             ServerPacketTypes.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectVec3PosUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Positions", PacketVarTypes.Vector3Array), new PacketVariable("InterpolatePositions", PacketVarTypes.Vector3Array) },
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Positions", PacketVarTypes.Vector3Array) },
             ServerPacketTypes.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectRotZUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Rotations", PacketVarTypes.FloatArray), new PacketVariable("InterpolateRotations", PacketVarTypes.FloatArray) },
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Rotations", PacketVarTypes.FloatArray) },
             ServerPacketTypes.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectRotUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Rotations", PacketVarTypes.Vector3Array), new PacketVariable("InterpolateRotations", PacketVarTypes.Vector3Array) },
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Rotations", PacketVarTypes.Vector3Array) },
             ServerPacketTypes.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectVec2ScaleUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Scales", PacketVarTypes.Vector2Array), new PacketVariable("InterpolateScales", PacketVarTypes.Vector2Array) },
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Scales", PacketVarTypes.Vector2Array) },
             ServerPacketTypes.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectVec3ScaleUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Scales", PacketVarTypes.Vector3Array), new PacketVariable("InterpolateScales", PacketVarTypes.Vector3Array) },
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Scales", PacketVarTypes.Vector3Array) },
             ServerPacketTypes.SendToAllClients,
             Protocol.UDP),
+        #endregion
+        #region Synced Object Interpolation
+        new ServerPacketConfig(
+            "SyncedObjectVec2PosInterpolation",
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("InterpolatePositions", PacketVarTypes.Vector2Array) },
+            ServerPacketTypes.SendToAllClients,
+            Protocol.UDP),
+        new ServerPacketConfig(
+            "SyncedObjectVec3PosInterpolation",
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("InterpolatePositions", PacketVarTypes.Vector3Array) },
+            ServerPacketTypes.SendToAllClients,
+            Protocol.UDP),
+        new ServerPacketConfig(
+            "SyncedObjectRotZInterpolation",
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("InterpolateRotations", PacketVarTypes.FloatArray) },
+            ServerPacketTypes.SendToAllClients,
+            Protocol.UDP),
+        new ServerPacketConfig(
+            "SyncedObjectRotInterpolation",
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("InterpolateRotations", PacketVarTypes.Vector3Array) },
+            ServerPacketTypes.SendToAllClients,
+            Protocol.UDP),
+        new ServerPacketConfig(
+            "SyncedObjectVec2ScaleInterpolation",
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("InterpolateScales", PacketVarTypes.Vector2Array) },
+            ServerPacketTypes.SendToAllClients,
+            Protocol.UDP),
+        new ServerPacketConfig(
+            "SyncedObjectVec3ScaleInterpolation",
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("InterpolateScales", PacketVarTypes.Vector3Array) },
+            ServerPacketTypes.SendToAllClients,
+            Protocol.UDP),
+        #endregion
         #endregion
     };
     private ClientPacketConfig[] libClientPackets = {

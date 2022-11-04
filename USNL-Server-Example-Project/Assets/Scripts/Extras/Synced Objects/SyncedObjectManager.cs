@@ -11,8 +11,13 @@ public class SyncedObjectManager : MonoBehaviour {
     [Tooltip("If Synced Objects should be updated in Vector3s, or Vector2s for a 2D game.")]
     [SerializeField] private bool vector2Mode;
     [Space]
+    [Tooltip("Server-side interpolation is better than Client-side because there's more frames to work with.\nClient-side interpolation does not support rotation interpolation.\nIf the server is running at or over 30 Synced Object updates per second it is wise to disable this.\nThis is only updates on Server Startup.")]
+    [SerializeField] private bool serverSideInterpolation = true;
+    [Space]
     [Tooltip("Second between Synced Object data being sent to clients.")]
     [SerializeField] private float syncedObjectClientUpdateRate = 0.1f;
+    [Tooltip("Nth Synced Object update sends an Interpolation Update as well. Interpolation data may not need to be sent every Synced Object update.")]
+    [SerializeField] private int nthSyncedObjectUpdatePerInterpolationUpdate = 2;
     [Space]
     [Tooltip("Minimum ammount a Synced Object needs to move before it is updated on the Clients.")]
     [SerializeField] private float minPosChange = 0.001f;
@@ -22,18 +27,28 @@ public class SyncedObjectManager : MonoBehaviour {
     [SerializeField] private float minScaleChange = 0.001f;
 
     private List<SyncedObject> syncedObjects = new List<SyncedObject>();
+    private int syncedObjectUpdatesCount = 0;
 
-    [HideInInspector] public List<SyncedObject> syncedObjectVec2PosUpdate = new List<SyncedObject>();
-    [HideInInspector] public List<SyncedObject> syncedObjectVec3PosUpdate = new List<SyncedObject>();
-    [HideInInspector] public List<SyncedObject> syncedObjectRotZUpdate = new List<SyncedObject>();
-    [HideInInspector] public List<SyncedObject> syncedObjectRotUpdate = new List<SyncedObject>();
-    [HideInInspector] public List<SyncedObject> syncedObjectVec2ScaleUpdate = new List<SyncedObject>();
-    [HideInInspector] public List<SyncedObject> syncedObjectVec3ScaleUpdate = new List<SyncedObject>();
+    // These are public so Synced Object can use them as a reference parameter
+    [HideInInspector] public List<SyncedObject> soVec2PosUpdate = new List<SyncedObject>();
+    [HideInInspector] public List<SyncedObject> soVec3PosUpdate = new List<SyncedObject>();
+    [HideInInspector] public List<SyncedObject> soRotZUpdate = new List<SyncedObject>();
+    [HideInInspector] public List<SyncedObject> soRotUpdate = new List<SyncedObject>();
+    [HideInInspector] public List<SyncedObject> soVec2ScaleUpdate = new List<SyncedObject>();
+    [HideInInspector] public List<SyncedObject> soVec3ScaleUpdate = new List<SyncedObject>();
 
+    [HideInInspector] public List<SyncedObject> soVec2PosInterpolation = new List<SyncedObject>();
+    [HideInInspector] public List<SyncedObject> soVec3PosInterpolation = new List<SyncedObject>();
+    [HideInInspector] public List<SyncedObject> soRotZInterpolation = new List<SyncedObject>();
+    [HideInInspector] public List<SyncedObject> soRotInterpolation = new List<SyncedObject>();
+    [HideInInspector] public List<SyncedObject> soVec2ScaleInterpolation = new List<SyncedObject>();
+    [HideInInspector] public List<SyncedObject> soVec3ScaleInterpolation = new List<SyncedObject>();
+
+    public bool Vector2Mode { get => vector2Mode; set => vector2Mode = value; }
+    public bool ServerSideInterpolation { get => serverSideInterpolation; set => serverSideInterpolation = value; }
     public float MinPosChange { get => minPosChange; set => minPosChange = value; }
     public float MinRotChange { get => minRotChange; set => minRotChange = value; }
     public float MinScaleChange { get => minScaleChange; set => minScaleChange = value; }
-    public bool Vector2Mode { get => vector2Mode; set => vector2Mode = value; }
 
     #endregion
 
@@ -51,8 +66,13 @@ public class SyncedObjectManager : MonoBehaviour {
     private IEnumerator UpdateSyncedObjects() {
         while (Server.ServerActive) {
             yield return new WaitForSeconds(syncedObjectClientUpdateRate);
-            CallSyncedObjectUpdateFunctions();
-            SendSyncedObjectUpdates();
+            SendSyncedObjectUpdatePackets();
+
+            syncedObjectUpdatesCount++;
+            if (syncedObjectUpdatesCount > nthSyncedObjectUpdatePerInterpolationUpdate - 1) {
+                SendSyncedObjectInterpolationPackets();
+                syncedObjectUpdatesCount = 0;
+            }
         }
     }
 
@@ -67,13 +87,26 @@ public class SyncedObjectManager : MonoBehaviour {
 
     #region Synced Object Management
 
-    private void SendSyncedObjectUpdates() {
-        if (syncedObjectVec2PosUpdate.Count > 0) { SyncedObjectVec2PosUpdates(); }
-        if (syncedObjectVec3PosUpdate.Count > 0) { SyncedObjectVec3PosUpdates(); }
-        if (syncedObjectRotZUpdate.Count > 0) { SyncedObjectRotZUpdates(); }
-        if (syncedObjectRotUpdate.Count > 0) { SyncedObjectRotUpdates(); }
-        if (syncedObjectVec2ScaleUpdate.Count > 0) { SyncedObjectVec2ScaleUpdates(); }
-        if (syncedObjectVec3ScaleUpdate.Count > 0) { SyncedObjectVec3ScaleUpdates(); }
+    private void SendSyncedObjectUpdatePackets() {
+        CallSyncedObjectUpdateFunctions();
+        if (soVec2PosUpdate.Count > 0) { SyncedObjectVec2PosUpdates(); }
+        if (soVec3PosUpdate.Count > 0) { SyncedObjectVec3PosUpdates(); }
+        if (soRotZUpdate.Count > 0) { SyncedObjectRotZUpdates(); }
+        if (soRotUpdate.Count > 0) { SyncedObjectRotUpdates(); }
+        if (soVec2ScaleUpdate.Count > 0) { SyncedObjectVec2ScaleUpdates(); }
+        if (soVec3ScaleUpdate.Count > 0) { SyncedObjectVec3ScaleUpdates(); }
+    }
+
+    private void SendSyncedObjectInterpolationPackets() {
+        if (serverSideInterpolation) {
+            CallSyncedObjectUpdateInterpolationFunctions();
+            if (soVec2PosInterpolation.Count > 0) { SendSOVec2PosInterpolation(); }
+            if (soVec3PosInterpolation.Count > 0) { SendSOVec3PosInterpolation(); }
+            if (soRotZInterpolation.Count > 0) { SendSORotZInterpolation(); }
+            if (soRotInterpolation.Count > 0) { SendSORotInterpolation(); }
+            if (soVec2ScaleInterpolation.Count > 0) { SendSOVec2ScaleInterpolation(); }
+            if (soVec3ScaleInterpolation.Count > 0) { SendSOVec3ScaleInterpolation(); }
+        }
     }
 
     private void CallSyncedObjectUpdateFunctions() {
@@ -82,11 +115,18 @@ public class SyncedObjectManager : MonoBehaviour {
         }
     }
 
+    private void CallSyncedObjectUpdateInterpolationFunctions() {
+        for (int i = 0; i < syncedObjects.Count; i++) {
+            syncedObjects[i].UpdateInterpolation();
+        }
+    }
+
     private void OnClientConnected(object _clientIdObject) {
         SendAllSyncedObjectsToClient((int)_clientIdObject);
     }
 
     private void SendAllSyncedObjectsToClient(int _toClient) {
+        PacketSend.SyncedObjectInterpolationMode(_toClient, serverSideInterpolation);
         for (int i = 0; i < syncedObjects.Count; i++) {
             PacketSend.SyncedObjectInstantiate(_toClient, syncedObjects[i].PrefabId, syncedObjects[i].SyncedObjectUUID, syncedObjects[i].transform.position, syncedObjects[i].transform.rotation, syncedObjects[i].transform.lossyScale);
         }
@@ -118,140 +158,259 @@ public class SyncedObjectManager : MonoBehaviour {
 
     private void SyncedObjectVec2PosUpdates() {
         // 1300 is the max Vector2 updates per packet because of the 4096 byte limit
-        int max = 800; // Max values per packets
-        for (int i = 0; i < Mathf.CeilToInt((float)syncedObjectVec2PosUpdate.Count / (float)max); i++) {
+        int max = 1300; // Max values per packets
+        for (int i = 0; i < Mathf.CeilToInt((float)soVec2PosUpdate.Count / (float)max); i++) {
             // If there is more than max values to send in this packet, length is max, otherwise length is the amount of values
-            int length = syncedObjectVec2PosUpdate.Count;
-            if (Mathf.CeilToInt(((float)syncedObjectVec2PosUpdate.Count / (float)max) - i * max) > 1) { length = max; }
+            int length = soVec2PosUpdate.Count;
+            if (Mathf.CeilToInt(((float)soVec2PosUpdate.Count / (float)max) - i * max) > 1) { length = max; }
 
             int[] indexes = new int[length];
             Vector2[] values = new Vector2[length];
-            Vector2[] interpolateValues = new Vector2[length];
 
             for (int x = i * max; x < length + (i * max); x++) {
-                indexes[x] = syncedObjectVec2PosUpdate[x].SyncedObjectUUID;
-                values[x] = syncedObjectVec2PosUpdate[x].transform.position;
-                interpolateValues[x] = syncedObjectVec2PosUpdate[x].PositionInterpolation;
+                indexes[x] = soVec2PosUpdate[x].SyncedObjectUUID;
+                values[x] = soVec2PosUpdate[x].transform.position;
             }
 
-            PacketSend.SyncedObjectVec2PosUpdate(indexes, values, interpolateValues);
+            PacketSend.SyncedObjectVec2PosUpdate(indexes, values);
         }
-        syncedObjectVec2PosUpdate.Clear();
+        soVec2PosUpdate.Clear();
     }
 
     private void SyncedObjectVec3PosUpdates() {
         // 1000 is the max Vector3 updates per packet because of the 4096 byte limit
-        int max = 500; // Max values per packets
-        for (int i = 0; i < Mathf.CeilToInt((float)syncedObjectVec3PosUpdate.Count / (float)max); i++) {
+        int max = 1000; // Max values per packets
+        for (int i = 0; i < Mathf.CeilToInt((float)soVec3PosUpdate.Count / (float)max); i++) {
             // If there is more than max values to send in this packet, length is max, otherwise length is the amount of values
-            int length = syncedObjectVec3PosUpdate.Count;
-            if (Mathf.CeilToInt(((float)syncedObjectVec3PosUpdate.Count / (float)max) - i * max) > 1) { length = max; }
+            int length = soVec3PosUpdate.Count;
+            if (Mathf.CeilToInt(((float)soVec3PosUpdate.Count / (float)max) - i * max) > 1) { length = max; }
 
             int[] indexes = new int[length];
             Vector3[] values = new Vector3[length];
-            Vector3[] interpolateValues = new Vector3[length];
 
             for (int x = i * max; x < length + (i * max); x++) {
-                indexes[x] = syncedObjectVec3PosUpdate[x].SyncedObjectUUID;
-                values[x] = syncedObjectVec3PosUpdate[x].transform.position;
-                interpolateValues[x] = syncedObjectVec3PosUpdate[x].PositionInterpolation;
+                indexes[x] = soVec3PosUpdate[x].SyncedObjectUUID;
+                values[x] = soVec3PosUpdate[x].transform.position;
             }
 
-            PacketSend.SyncedObjectVec3PosUpdate(indexes, values, interpolateValues);
+            PacketSend.SyncedObjectVec3PosUpdate(indexes, values);
         }
-        syncedObjectVec3PosUpdate.Clear();
+        soVec3PosUpdate.Clear();
     }
 
     private void SyncedObjectRotZUpdates() {
         // 2000 is the max float updates per packet because of the 4096 byte limit
-        int max = 1333; // Max values per packets
-        for (int i = 0; i < Mathf.CeilToInt((float)syncedObjectRotZUpdate.Count / (float)max); i++) {
+        int max = 2000; // Max values per packets
+        for (int i = 0; i < Mathf.CeilToInt((float)soRotZUpdate.Count / (float)max); i++) {
             // If there is more than max values to send in this packet, length is max, otherwise length is the amount of values
-            int length = syncedObjectRotZUpdate.Count;
-            if (Mathf.CeilToInt(((float)syncedObjectRotZUpdate.Count / (float)max) - i * max) > 1) { length = max; }
+            int length = soRotZUpdate.Count;
+            if (Mathf.CeilToInt(((float)soRotZUpdate.Count / (float)max) - i * max) > 1) { length = max; }
 
             int[] indexes = new int[length];
             float[] values = new float[length];
-            float[] interpolateValues = new float[length];
 
             for (int x = i * max; x < length + (i * max); x++) {
-                indexes[x] = syncedObjectRotZUpdate[x].SyncedObjectUUID;
-                values[x] = syncedObjectRotZUpdate[x].transform.eulerAngles.z;
-                interpolateValues[x] = syncedObjectRotZUpdate[x].RotationInterpolation.z;
+                indexes[x] = soRotZUpdate[x].SyncedObjectUUID;
+                values[x] = soRotZUpdate[x].transform.eulerAngles.z;
             }
 
-            PacketSend.SyncedObjectRotZUpdate(indexes, values, interpolateValues);
+            PacketSend.SyncedObjectRotZUpdate(indexes, values);
         }
-        syncedObjectRotZUpdate.Clear();
+        soRotZUpdate.Clear();
     }
     
     private void SyncedObjectRotUpdates() {
         // 750 is the max quaternion updates per packet because of the 4096 byte limit
-        int max = 500; // Max values per packets
-        for (int i = 0; i < Mathf.CeilToInt((float)syncedObjectRotUpdate.Count / (float)max); i++) {
+        int max = 750; // Max values per packets
+        for (int i = 0; i < Mathf.CeilToInt((float)soRotUpdate.Count / (float)max); i++) {
             // If there is more than max values to send in this packet, length is max, otherwise length is the amount of values
-            int length = syncedObjectRotUpdate.Count;
-            if (Mathf.CeilToInt(((float)syncedObjectRotUpdate.Count / (float)max) - i * max) > 1) { length = max; }
+            int length = soRotUpdate.Count;
+            if (Mathf.CeilToInt(((float)soRotUpdate.Count / (float)max) - i * max) > 1) { length = max; }
 
             int[] indexes = new int[length];
             Vector3[] values = new Vector3[length];
-            Vector3[] interpolateValues = new Vector3[length];
 
             for (int x = i * max; x < length + (i * max); x++) {
-                indexes[x] = syncedObjectRotUpdate[x].SyncedObjectUUID;
-                values[x] = syncedObjectRotUpdate[x].transform.eulerAngles;
-                interpolateValues[x] = syncedObjectRotUpdate[x].RotationInterpolation;
+                indexes[x] = soRotUpdate[x].SyncedObjectUUID;
+                values[x] = soRotUpdate[x].transform.eulerAngles;
             }
 
-            PacketSend.SyncedObjectRotUpdate(indexes, values, interpolateValues);
+            PacketSend.SyncedObjectRotUpdate(indexes, values);
         }
-        syncedObjectRotUpdate.Clear();
+        soRotUpdate.Clear();
     }
 
     private void SyncedObjectVec2ScaleUpdates() {
         // 1300 is the max Vector2 updates per packet because of the 4096 byte limit
-        int max = 800; // Max values per packets
-        for (int i = 0; i < Mathf.CeilToInt((float)syncedObjectVec2ScaleUpdate.Count / (float)max); i++) {
+        int max = 1300; // Max values per packets
+        for (int i = 0; i < Mathf.CeilToInt((float)soVec2ScaleUpdate.Count / (float)max); i++) {
             // If there is more than max values to send in this packet, length is max, otherwise length is the amount of values
-            int length = syncedObjectVec2ScaleUpdate.Count;
-            if (Mathf.CeilToInt(((float)syncedObjectVec2ScaleUpdate.Count / (float)max) - i * max) > 1) { length = max; }
+            int length = soVec2ScaleUpdate.Count;
+            if (Mathf.CeilToInt(((float)soVec2ScaleUpdate.Count / (float)max) - i * max) > 1) { length = max; }
 
             int[] indexes = new int[length];
             Vector2[] values = new Vector2[length];
-            Vector2[] interpolateValues = new Vector2[length];
 
             for (int x = i * max; x < length + (i * max); x++) {
-                indexes[x] = syncedObjectVec2ScaleUpdate[x].SyncedObjectUUID;
-                values[x] = syncedObjectVec2ScaleUpdate[x].transform.lossyScale;
-                interpolateValues[x] = syncedObjectVec2ScaleUpdate[x].ScaleInterpolation;
+                indexes[x] = soVec2ScaleUpdate[x].SyncedObjectUUID;
+                values[x] = soVec2ScaleUpdate[x].transform.lossyScale;
             }
 
-            PacketSend.SyncedObjectVec2ScaleUpdate(indexes, values, interpolateValues);
+            PacketSend.SyncedObjectVec2ScaleUpdate(indexes, values);
         }
-        syncedObjectVec2ScaleUpdate.Clear();
+        soVec2ScaleUpdate.Clear();
     }
 
     private void SyncedObjectVec3ScaleUpdates() {
         // 1000 is the max Vector3 updates per packet because of the 4096 byte limit
-        int max = 500; // Max values per packets
-        for (int i = 0; i < Mathf.CeilToInt((float)syncedObjectVec3ScaleUpdate.Count / (float)max); i++) {
+        int max = 1000; // Max values per packets
+        for (int i = 0; i < Mathf.CeilToInt((float)soVec3ScaleUpdate.Count / (float)max); i++) {
             // If there is more than max values to send in this packet, length is max, otherwise length is the amount of values
-            int length = syncedObjectVec3ScaleUpdate.Count;
-            if (Mathf.CeilToInt(((float)syncedObjectVec3ScaleUpdate.Count / (float)max) - i * max) > 1) { length = max; }
+            int length = soVec3ScaleUpdate.Count;
+            if (Mathf.CeilToInt(((float)soVec3ScaleUpdate.Count / (float)max) - i * max) > 1) { length = max; }
 
             int[] indexes = new int[length];
             Vector3[] values = new Vector3[length];
+
+            for (int x = i * max; x < length + (i * max); x++) {
+                indexes[x] = soVec3ScaleUpdate[x].SyncedObjectUUID;
+                values[x] = soVec3ScaleUpdate[x].transform.lossyScale;
+            }
+
+            PacketSend.SyncedObjectVec3ScaleUpdate(indexes, values);
+        }
+        soVec3ScaleUpdate.Clear();
+    }
+
+    #endregion
+
+    #region Synced Object Interpolation
+
+    private void SendSOVec2PosInterpolation() {
+        // 1300 is the max Vector2 updates per packet because of the 4096 byte limit
+        int max = 1300; // Max values per packets
+        for (int i = 0; i < Mathf.CeilToInt((float)soVec2PosInterpolation.Count / (float)max); i++) {
+            // If there is more than max values to send in this packet, length is max, otherwise length is the amount of values
+            int length = soVec2PosInterpolation.Count;
+            if (Mathf.CeilToInt(((float)soVec2PosInterpolation.Count / (float)max) - i * max) > 1) { length = max; }
+
+            int[] indexes = new int[length];
+            Vector2[] interpolateValues = new Vector2[length];
+
+            for (int x = i * max; x < length + (i * max); x++) {
+                indexes[x] = soVec2PosInterpolation[x].SyncedObjectUUID;
+                interpolateValues[x] = soVec2PosInterpolation[x].PositionInterpolation;
+            }
+
+            PacketSend.SyncedObjectVec2PosInterpolation(indexes, interpolateValues);
+        }
+        soVec2PosInterpolation.Clear();
+    }
+
+    private void SendSOVec3PosInterpolation() {
+        // 1000 is the max Vector3 updates per packet because of the 4096 byte limit
+        int max = 1000; // Max values per packets
+        for (int i = 0; i < Mathf.CeilToInt((float)soVec3PosInterpolation.Count / (float)max); i++) {
+            // If there is more than max values to send in this packet, length is max, otherwise length is the amount of values
+            int length = soVec3PosInterpolation.Count;
+            if (Mathf.CeilToInt(((float)soVec3PosInterpolation.Count / (float)max) - i * max) > 1) { length = max; }
+
+            int[] indexes = new int[length];
             Vector3[] interpolateValues = new Vector3[length];
 
             for (int x = i * max; x < length + (i * max); x++) {
-                indexes[x] = syncedObjectVec3ScaleUpdate[x].SyncedObjectUUID;
-                values[x] = syncedObjectVec3ScaleUpdate[x].transform.lossyScale;
-                interpolateValues[x] = syncedObjectVec3ScaleUpdate[x].ScaleInterpolation;
+                indexes[x] = soVec3PosInterpolation[x].SyncedObjectUUID;
+                interpolateValues[x] = soVec3PosInterpolation[x].PositionInterpolation;
             }
 
-            PacketSend.SyncedObjectVec3ScaleUpdate(indexes, values, interpolateValues);
+            PacketSend.SyncedObjectVec3PosInterpolation(indexes, interpolateValues);
         }
-        syncedObjectVec3ScaleUpdate.Clear();
+        soVec3PosInterpolation.Clear();
     }
+
+    private void SendSORotZInterpolation() {
+        // 2000 is the max float updates per packet because of the 4096 byte limit
+        int max = 2000; // Max values per packets
+        for (int i = 0; i < Mathf.CeilToInt((float)soRotZInterpolation.Count / (float)max); i++) {
+            // If there is more than max values to send in this packet, length is max, otherwise length is the amount of values
+            int length = soRotZInterpolation.Count;
+            if (Mathf.CeilToInt(((float)soRotZInterpolation.Count / (float)max) - i * max) > 1) { length = max; }
+
+            int[] indexes = new int[length];
+            float[] interpolateValues = new float[length];
+
+            for (int x = i * max; x < length + (i * max); x++) {
+                indexes[x] = soRotZInterpolation[x].SyncedObjectUUID;
+                interpolateValues[x] = soRotZInterpolation[x].RotationInterpolation.z;
+            }
+
+            PacketSend.SyncedObjectRotZInterpolation(indexes, interpolateValues);
+        }
+        soRotZInterpolation.Clear();
+    }
+
+    private void SendSORotInterpolation() {
+        // 750 is the max quaternion updates per packet because of the 4096 byte limit
+        int max = 750; // Max values per packets
+        for (int i = 0; i < Mathf.CeilToInt((float)soRotInterpolation.Count / (float)max); i++) {
+            // If there is more than max values to send in this packet, length is max, otherwise length is the amount of values
+            int length = soRotInterpolation.Count;
+            if (Mathf.CeilToInt(((float)soRotInterpolation.Count / (float)max) - i * max) > 1) { length = max; }
+
+            int[] indexes = new int[length];
+            Vector3[] interpolateValues = new Vector3[length];
+
+            for (int x = i * max; x < length + (i * max); x++) {
+                indexes[x] = soRotInterpolation[x].SyncedObjectUUID;
+                interpolateValues[x] = soRotInterpolation[x].RotationInterpolation;
+            }
+
+            PacketSend.SyncedObjectRotInterpolation(indexes, interpolateValues);
+        }
+        soRotInterpolation.Clear();
+    }
+
+    private void SendSOVec2ScaleInterpolation() {
+        // 1300 is the max Vector2 updates per packet because of the 4096 byte limit
+        int max = 1300; // Max values per packets
+        for (int i = 0; i < Mathf.CeilToInt((float)soVec2ScaleInterpolation.Count / (float)max); i++) {
+            // If there is more than max values to send in this packet, length is max, otherwise length is the amount of values
+            int length = soVec2ScaleInterpolation.Count;
+            if (Mathf.CeilToInt(((float)soVec2ScaleInterpolation.Count / (float)max) - i * max) > 1) { length = max; }
+
+            int[] indexes = new int[length];
+            Vector2[] interpolateValues = new Vector2[length];
+
+            for (int x = i * max; x < length + (i * max); x++) {
+                indexes[x] = soVec2ScaleInterpolation[x].SyncedObjectUUID;
+                interpolateValues[x] = soVec2ScaleInterpolation[x].ScaleInterpolation;
+            }
+
+            PacketSend.SyncedObjectVec2ScaleInterpolation(indexes, interpolateValues);
+        }
+        soVec2ScaleInterpolation.Clear();
+    }
+
+    private void SendSOVec3ScaleInterpolation() {
+        // 1000 is the max Vector3 updates per packet because of the 4096 byte limit
+        int max = 1000; // Max values per packets
+        for (int i = 0; i < Mathf.CeilToInt((float)soVec3ScaleInterpolation.Count / (float)max); i++) {
+            // If there is more than max values to send in this packet, length is max, otherwise length is the amount of values
+            int length = soVec3ScaleInterpolation.Count;
+            if (Mathf.CeilToInt(((float)soVec3ScaleInterpolation.Count / (float)max) - i * max) > 1) { length = max; }
+
+            int[] indexes = new int[length];
+            Vector3[] interpolateValues = new Vector3[length];
+
+            for (int x = i * max; x < length + (i * max); x++) {
+                indexes[x] = soVec3ScaleInterpolation[x].SyncedObjectUUID;
+                interpolateValues[x] = soVec3ScaleInterpolation[x].ScaleInterpolation;
+            }
+
+            PacketSend.SyncedObjectVec3ScaleInterpolation(indexes, interpolateValues);
+        }
+        soVec3ScaleInterpolation.Clear();
+    }
+
     #endregion
 }

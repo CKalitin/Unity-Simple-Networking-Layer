@@ -11,12 +11,19 @@ public enum ServerPackets {
     Ping,
     SyncedObjectInstantiate,
     SyncedObjectDestroy,
+    SyncedObjectInterpolationMode,
     SyncedObjectVec2PosUpdate,
     SyncedObjectVec3PosUpdate,
     SyncedObjectRotZUpdate,
     SyncedObjectRotUpdate,
     SyncedObjectVec2ScaleUpdate,
     SyncedObjectVec3ScaleUpdate,
+    SyncedObjectVec2PosInterpolation,
+    SyncedObjectVec3PosInterpolation,
+    SyncedObjectRotZInterpolation,
+    SyncedObjectRotInterpolation,
+    SyncedObjectVec2ScaleInterpolation,
+    SyncedObjectVec3ScaleInterpolation,
 }
 
 // Sent from Client to Server
@@ -204,60 +211,116 @@ public static class PacketSend {
         }
     }
 
-    public static void SyncedObjectVec2PosUpdate(int[] _syncedObjectUUIDs, Vector2[] _positions, Vector2[] _interpolatePositions) {
+    public static void SyncedObjectInterpolationMode(int _toClient, bool _serverInterpolation) {
+        using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectInterpolationMode)) {
+            _packet.Write(_serverInterpolation);
+
+            SendTCPData(_toClient, _packet);
+        }
+    }
+
+    public static void SyncedObjectVec2PosUpdate(int[] _syncedObjectUUIDs, Vector2[] _positions) {
         using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectVec2PosUpdate)) {
             _packet.Write(_syncedObjectUUIDs);
             _packet.Write(_positions);
-            _packet.Write(_interpolatePositions);
 
             SendUDPDataToAll(_packet);
         }
     }
 
-    public static void SyncedObjectVec3PosUpdate(int[] _syncedObjectUUIDs, Vector3[] _positions, Vector3[] _interpolatePositions) {
+    public static void SyncedObjectVec3PosUpdate(int[] _syncedObjectUUIDs, Vector3[] _positions) {
         using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectVec3PosUpdate)) {
             _packet.Write(_syncedObjectUUIDs);
             _packet.Write(_positions);
+
+            SendUDPDataToAll(_packet);
+        }
+    }
+
+    public static void SyncedObjectRotZUpdate(int[] _syncedObjectUUIDs, float[] _rotations) {
+        using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectRotZUpdate)) {
+            _packet.Write(_syncedObjectUUIDs);
+            _packet.Write(_rotations);
+
+            SendUDPDataToAll(_packet);
+        }
+    }
+
+    public static void SyncedObjectRotUpdate(int[] _syncedObjectUUIDs, Vector3[] _rotations) {
+        using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectRotUpdate)) {
+            _packet.Write(_syncedObjectUUIDs);
+            _packet.Write(_rotations);
+
+            SendUDPDataToAll(_packet);
+        }
+    }
+
+    public static void SyncedObjectVec2ScaleUpdate(int[] _syncedObjectUUIDs, Vector2[] _scales) {
+        using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectVec2ScaleUpdate)) {
+            _packet.Write(_syncedObjectUUIDs);
+            _packet.Write(_scales);
+
+            SendUDPDataToAll(_packet);
+        }
+    }
+
+    public static void SyncedObjectVec3ScaleUpdate(int[] _syncedObjectUUIDs, Vector3[] _scales) {
+        using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectVec3ScaleUpdate)) {
+            _packet.Write(_syncedObjectUUIDs);
+            _packet.Write(_scales);
+
+            SendUDPDataToAll(_packet);
+        }
+    }
+
+    public static void SyncedObjectVec2PosInterpolation(int[] _syncedObjectUUIDs, Vector2[] _interpolatePositions) {
+        using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectVec2PosInterpolation)) {
+            _packet.Write(_syncedObjectUUIDs);
             _packet.Write(_interpolatePositions);
 
             SendUDPDataToAll(_packet);
         }
     }
 
-    public static void SyncedObjectRotZUpdate(int[] _syncedObjectUUIDs, float[] _rotations, float[] _interpolateRotations) {
-        using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectRotZUpdate)) {
+    public static void SyncedObjectVec3PosInterpolation(int[] _syncedObjectUUIDs, Vector3[] _interpolatePositions) {
+        using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectVec3PosInterpolation)) {
             _packet.Write(_syncedObjectUUIDs);
-            _packet.Write(_rotations);
+            _packet.Write(_interpolatePositions);
+
+            SendUDPDataToAll(_packet);
+        }
+    }
+
+    public static void SyncedObjectRotZInterpolation(int[] _syncedObjectUUIDs, float[] _interpolateRotations) {
+        using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectRotZInterpolation)) {
+            _packet.Write(_syncedObjectUUIDs);
             _packet.Write(_interpolateRotations);
 
             SendUDPDataToAll(_packet);
         }
     }
 
-    public static void SyncedObjectRotUpdate(int[] _syncedObjectUUIDs, Vector3[] _rotations, Vector3[] _interpolateRotations) {
-        using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectRotUpdate)) {
+    public static void SyncedObjectRotInterpolation(int[] _syncedObjectUUIDs, Vector3[] _interpolateRotations) {
+        using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectRotInterpolation)) {
             _packet.Write(_syncedObjectUUIDs);
-            _packet.Write(_rotations);
             _packet.Write(_interpolateRotations);
 
             SendUDPDataToAll(_packet);
         }
     }
 
-    public static void SyncedObjectVec2ScaleUpdate(int[] _syncedObjectUUIDs, Vector2[] _scales, Vector2[] _interpolateScales) {
-        using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectVec2ScaleUpdate)) {
+    public static void SyncedObjectVec2ScaleInterpolation(int[] _syncedObjectUUIDs, Vector2[] _interpolateScales) {
+        using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectVec2ScaleInterpolation)) {
             _packet.Write(_syncedObjectUUIDs);
-            _packet.Write(_scales);
             _packet.Write(_interpolateScales);
 
             SendUDPDataToAll(_packet);
         }
     }
 
-    public static void SyncedObjectVec3ScaleUpdate(int[] _syncedObjectUUIDs, Vector3[] _scales, Vector3[] _interpolateScales) {
-        using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectVec3ScaleUpdate)) {
+    public static void SyncedObjectVec3ScaleInterpolation(int[] _syncedObjectUUIDs, Vector3[] _interpolateScales) {
+        using (Packet _packet = new Packet((int)ServerPackets.SyncedObjectVec3ScaleInterpolation)) {
             _packet.Write(_syncedObjectUUIDs);
-            _packet.Write(_scales);
             _packet.Write(_interpolateScales);
 
             SendUDPDataToAll(_packet);

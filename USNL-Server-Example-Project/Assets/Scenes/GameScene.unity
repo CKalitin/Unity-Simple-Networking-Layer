@@ -3431,16 +3431,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   vector2Mode: 1
+  serverSideInterpolation: 1
   syncedObjectClientUpdateRate: 0.5
+  nthSyncedObjectUpdatePerInterpolationUpdate: 1
   minPosChange: 0.001
   minRotChange: 0.001
   minScaleChange: 0.001
-  syncedObjectVec2PosUpdate: []
-  syncedObjectVec3PosUpdate: []
-  syncedObjectRotZUpdate: []
-  syncedObjectRotUpdate: []
-  syncedObjectVec2ScaleUpdate: []
-  syncedObjectVec3ScaleUpdate: []
+  soVec2PosUpdate: []
+  soVec3PosUpdate: []
+  soRotZUpdate: []
+  soRotUpdate: []
+  soVec2ScaleUpdate: []
+  soVec3ScaleUpdate: []
+  soVec2PosInterpolation: []
+  soVec3PosInterpolation: []
+  soRotZInterpolation: []
+  soRotInterpolation: []
+  soVec2ScaleInterpolation: []
+  soVec3ScaleInterpolation: []
 --- !u!114 &1974716062
 MonoBehaviour:
   m_ObjectHideFlags: 0
