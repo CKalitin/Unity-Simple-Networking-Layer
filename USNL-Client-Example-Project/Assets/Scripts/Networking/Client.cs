@@ -10,9 +10,9 @@ public class Client : MonoBehaviour {
 
     public static Client instance;
 
-    [Header("Connection Info")]
-    public string ip = "127.0.0.1";
-    public int port = 26950;
+    //[Header("Connection Info")]
+    /*public*/ string ip = "127.0.0.1";
+    /*public*/ int port = 26950;
     [Space]
     public static int dataBufferSize = 4096;
 
@@ -22,12 +22,14 @@ public class Client : MonoBehaviour {
     private TCP tcp;
     private UDP udp;
     private bool isConnected = false;
+    private bool isHost = false;
 
     public int ServerMaxPlayers { get => serverMaxPlayers; set => serverMaxPlayers = value; }
     public int ClientId { get => clientId; set => clientId = value; }
     public UDP Udp { get => udp; set => udp = value; }
     public TCP Tcp { get => tcp; set => tcp = value; }
     public bool IsConnected { get => isConnected; set => isConnected = value; }
+    public bool IsHost { get => isHost; set => isHost = value; }
 
     #endregion
 
@@ -286,7 +288,7 @@ public class Client : MonoBehaviour {
                 udp.socket.Close();
             }
 
-            ClientManager.instance.DisconnectedFromServer();
+            ClientManager.instance.SetDisconnectedFromServer();
 
             ThreadManager.StopPacketHandleThread();
 

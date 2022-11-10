@@ -48,6 +48,22 @@ public class NetworkDebugInfo : MonoBehaviour {
     private int[] tempPacketsSentPerSecond = new int[Enum.GetNames(typeof(ClientPackets)).Length];
     private int[] tempPacketsReceivedPerSecond = new int[Enum.GetNames(typeof(ServerPackets)).Length];
 
+    public int TotalBytesSent { get => totalBytesSent; set => totalBytesSent = value; }
+    public int TotalBytesReceived { get => totalBytesReceived; set => totalBytesReceived = value; }
+
+    public int BytesSentPerSecond { get => bytesSentPerSecond; set => bytesSentPerSecond = value; }
+    public int BytesReceivedPerSecond { get => bytesReceivedPerSecond; set => bytesReceivedPerSecond = value; }
+
+    public int TotalPacketsSent { get => totalPacketsSent; set => totalPacketsSent = value; }
+    public int TotalPacketsReceived { get => totalPacketsReceived; set => totalPacketsReceived = value; }
+
+    public int TotalPacketsSentPerSecond { get => totalPacketsSentPerSecond; set => totalPacketsSentPerSecond = value; }
+    public int TotalPacketsReceivedPerSecond { get => totalPacketsReceivedPerSecond; set => totalPacketsReceivedPerSecond 
+            = value; }
+
+    public int PacketRTT { get => packetRTT; set => packetRTT = value; }
+    public int SmoothPacketRTT { get => smoothPacketRTT; set => smoothPacketRTT = value; }
+
     #endregion
 
     #region Core

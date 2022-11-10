@@ -7,12 +7,22 @@ public class ClientManager : MonoBehaviour {
 
     public static ClientManager instance;
 
+    [Header("Connection Info")]
     [SerializeField] private string ip = "127.0.0.1";
     [SerializeField] private int port = 26950;
+    [Space]
+    [Tooltip("If connection is not established after x milliseconds, stop attemping connection.")]
+    [SerializeField] private float connectionTimeout;
 
-    public bool HandleData = true;
-    public bool PacketHandlers = true;
-    public bool PacketManager = true;
+    private bool isConnecting = false;
+    private bool isMigratingHost = false;
+    private bool isBecomingHost = false;
+
+    public bool IsConnected { get => Client.instance.IsConnected; }
+    public bool IsAttempingConnection { get => isConnecting; }
+    public bool IsHost { get => Client.instance.IsHost; }
+    public bool IsMigratingHost { get => isMigratingHost; }
+    public bool IsBecomingHost { get => isBecomingHost; }
 
     #endregion
 
@@ -31,16 +41,36 @@ public class ClientManager : MonoBehaviour {
         }
     }
 
-    private void Start() {
-        ConnectToServer();
+    private void OnEnable() { USNLCallbackEvents.OnWelcomePacket += OnWelcomePacket; }
+    private void OnDisable() { USNLCallbackEvents.OnWelcomePacket -= OnWelcomePacket; }
+
+    #endregion
+
+    #region Functions
+
+    public void ConnectToServer() {
+        Client.instance.SetIP(ip, port);
+        Client.instance.ConnectToServer();
+
+        StartCoroutine(AttemptingConnection());
     }
 
-    private void OnEnable() {
-        USNLCallbackEvents.OnWelcomePacket += OnWelcomePacket;
+    public void ConnectToServer(string _ip, int _port) {
+        ip = _ip;
+        port = _port;
+        Client.instance.SetIP(ip, port);
+        Client.instance.ConnectToServer();
+
+        StartCoroutine(AttemptingConnection());
     }
 
-    private void OnDisable() {
-        USNLCallbackEvents.OnWelcomePacket -= OnWelcomePacket;
+    public void SetIPAndPort(string _ip, int _port) {
+        ip = _ip;
+        port = _port;
+    }
+
+    public void DisconnectFromServer() {
+        Client.instance.Disconnect();
     }
 
     private void OnWelcomePacket(object _packetObject) {
@@ -54,21 +84,20 @@ public class ClientManager : MonoBehaviour {
         USNLCallbackEvents.CallOnConnectedCallbacks(0);
     }
 
-    #endregion
-
-    #region Functions
-
-    private void ConnectToServer() {
-        Client.instance.SetIP(ip, port);
-        Client.instance.ConnectToServer();
-    }
-
-    private void DisconnectFromServer() {
-        Client.instance.Disconnect();
-    }
-
-    public void DisconnectedFromServer() {
+    public void SetDisconnectedFromServer() {
         USNLCallbackEvents.CallOnDisconnectedCallbacks(0);
+    }
+
+    private IEnumerator AttemptingConnection() {
+        isConnecting = true;
+        float timer = 0f;
+        while (timer < connectionTimeout) {
+            yield return new WaitForEndOfFrame();
+            if (Client.instance.IsConnected)
+                break;
+            timer += Time.unscaledDeltaTime;
+        }
+        isConnecting = false;
     }
 
     #endregion
