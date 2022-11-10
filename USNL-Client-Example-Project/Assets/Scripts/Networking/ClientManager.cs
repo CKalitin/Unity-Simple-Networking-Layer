@@ -11,15 +11,15 @@ public class ClientManager : MonoBehaviour {
     [SerializeField] private string ip = "127.0.0.1";
     [SerializeField] private int port = 26950;
     [Space]
-    [Tooltip("If connection is not established after x milliseconds, stop attemping connection.")]
-    [SerializeField] private float connectionTimeout;
+    [Tooltip("If connection is not established after x seconds, stop attemping connection.")]
+    [SerializeField] private float connectionTimeout = 5f;
 
-    private bool isConnecting = false;
+    private bool isAttempingConnection = false;
     private bool isMigratingHost = false;
     private bool isBecomingHost = false;
 
     public bool IsConnected { get => Client.instance.IsConnected; }
-    public bool IsAttempingConnection { get => isConnecting; }
+    public bool IsAttempingConnection { get => isAttempingConnection; }
     public bool IsHost { get => Client.instance.IsHost; }
     public bool IsMigratingHost { get => isMigratingHost; }
     public bool IsBecomingHost { get => isBecomingHost; }
@@ -49,19 +49,20 @@ public class ClientManager : MonoBehaviour {
     #region Functions
 
     public void ConnectToServer() {
+        StartCoroutine(AttemptingConnection());
+
         Client.instance.SetIP(ip, port);
         Client.instance.ConnectToServer();
-
-        StartCoroutine(AttemptingConnection());
     }
 
     public void ConnectToServer(string _ip, int _port) {
         ip = _ip;
         port = _port;
-        Client.instance.SetIP(ip, port);
-        Client.instance.ConnectToServer();
 
         StartCoroutine(AttemptingConnection());
+
+        Client.instance.SetIP(ip, port);
+        Client.instance.ConnectToServer();
     }
 
     public void SetIPAndPort(string _ip, int _port) {
@@ -89,7 +90,7 @@ public class ClientManager : MonoBehaviour {
     }
 
     private IEnumerator AttemptingConnection() {
-        isConnecting = true;
+        isAttempingConnection = true;
         float timer = 0f;
         while (timer < connectionTimeout) {
             yield return new WaitForEndOfFrame();
@@ -97,7 +98,7 @@ public class ClientManager : MonoBehaviour {
                 break;
             timer += Time.unscaledDeltaTime;
         }
-        isConnecting = false;
+        isAttempingConnection = false;
     }
 
     #endregion

@@ -63,6 +63,14 @@ public class SyncedObject : MonoBehaviour {
 
     void Awake() {
         syncedObjectUUID = BitConverter.ToInt32(Guid.NewGuid().ToByteArray(), 0); // Generate UUID
+
+        prevUpdatePos = transform.position;
+        prevUpdateRot = transform.eulerAngles;
+        prevUpdateScale = transform.lossyScale;
+
+        prevSOUpdatePos = transform.position;
+        prevSOUpdateRot = transform.eulerAngles;
+        prevSOUpdateScale = transform.lossyScale;
     }
 
     private void Start() {

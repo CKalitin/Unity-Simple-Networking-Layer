@@ -30,14 +30,16 @@ public class USNLDebugDisplay : MonoBehaviour {
     [SerializeField] private TextMeshProUGUI packetRTT;
     [Tooltip("Average of last 5 pings")]
     [SerializeField] private TextMeshProUGUI smoothPacketRTT;
+    [Space]
+    //[SerializeField] private TextMeshProUGUI connectedTime;
 
     [Header("Connection Info")]
-    [SerializeField] private InputField ip;
-    [SerializeField] private InputField port;
+    [SerializeField] private TMP_InputField ip;
+    [SerializeField] private TMP_InputField port;
 
     private void Update() {
         // Toggle debug menu visible
-        if (Input.GetKeyDown(KeyCode.LeftControl) & Input.GetKeyDown(KeyCode.Tilde)) {
+        if (Input.GetKey(KeyCode.LeftControl) & Input.GetKeyDown(KeyCode.BackQuote)) {
             debugMenuParent.SetActive(!debugMenuParent.activeSelf);
         }
 
@@ -52,21 +54,37 @@ public class USNLDebugDisplay : MonoBehaviour {
             #endregion
 
             #region Network Info
-            totalBytesSent.text = NetworkDebugInfo.instance.TotalBytesSent.ToString();
-            totalBytesReceived.text = NetworkDebugInfo.instance.TotalBytesReceived.ToString();
-            bytesSentPerSecond.text = NetworkDebugInfo.instance.BytesSentPerSecond.ToString();
-            bytesReceivedPerSecond.text = NetworkDebugInfo.instance.BytesReceivedPerSecond.ToString();
+            totalBytesSent.text = RoundBytesToString(NetworkDebugInfo.instance.TotalBytesSent);
+            totalBytesReceived.text = RoundBytesToString(NetworkDebugInfo.instance.TotalBytesReceived);
+            bytesSentPerSecond.text = RoundBytesToString(NetworkDebugInfo.instance.BytesSentPerSecond);
+            bytesReceivedPerSecond.text = RoundBytesToString(NetworkDebugInfo.instance.BytesReceivedPerSecond);
 
-            totalPacketsSent.text = NetworkDebugInfo.instance.TotalPacketsSent.ToString();
-            totalPacketsReceived.text = NetworkDebugInfo.instance.TotalPacketsReceived.ToString();
+            totalPacketsSent.text = String.Format("{0:n0}", NetworkDebugInfo.instance.TotalPacketsSent);
+            totalPacketsReceived.text = String.Format("{0:n0}", NetworkDebugInfo.instance.TotalPacketsReceived);
 
-            totalPacketsSentPerSecond.text = NetworkDebugInfo.instance.TotalPacketsSentPerSecond.ToString();
-            totalPacketsReceivedPerSecond.text = NetworkDebugInfo.instance.TotalPacketsReceivedPerSecond.ToString();
+            totalPacketsSentPerSecond.text = String.Format("{0:n0}", NetworkDebugInfo.instance.TotalPacketsSentPerSecond);
+            totalPacketsReceivedPerSecond.text = String.Format("{0:n0}", NetworkDebugInfo.instance.TotalPacketsReceivedPerSecond);
 
-            packetRTT.text = NetworkDebugInfo.instance.PacketRTT.ToString();
-            smoothPacketRTT.text = NetworkDebugInfo.instance.SmoothPacketRTT.ToString();
+            packetRTT.text = String.Format("{0:n0}", NetworkDebugInfo.instance.PacketRTT) + "ms";
+            smoothPacketRTT.text = String.Format("{0:n0}", NetworkDebugInfo.instance.SmoothPacketRTT) + "ms";
             #endregion
         }
+    }
+
+    private string RoundBytesToString(int _bytes) {
+        string output = "";
+
+        if (_bytes > 1000000000) {
+            output = String.Format("{0:n}", _bytes / 1000000000f) + "GB";
+        } else if (_bytes > 1000000) {
+            output = String.Format("{0:n}", _bytes / 1000000f) + "MB";
+        } else if (_bytes > 1000) {
+            output = String.Format("{0:n}", _bytes / 1000f) + "KB";
+        } else {
+            output = String.Format("{0:n0}", _bytes) + "B";
+        }
+
+        return output;
     }
 
     public void ConnectButtonDown() {
@@ -79,5 +97,13 @@ public class USNLDebugDisplay : MonoBehaviour {
 
     public void DisconnectButtonDown() {
         ClientManager.instance.DisconnectFromServer();
+    }
+
+    public void OnCloseButton() {
+        debugMenuParent.SetActive(false);
+    }
+
+    public void OnOpenButton() {
+        debugMenuParent.SetActive(true);
     }
 }

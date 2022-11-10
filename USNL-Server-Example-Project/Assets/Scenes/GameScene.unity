@@ -4047,13 +4047,13 @@ MonoBehaviour:
   minRotChange: 0.001
   minScaleChange: 0.001
   syncedObjectClientUpdateRate: 0.01667
-  nthSyncedObjectUpdatePerInterpolation: 2
-  nthPositionUpdateRate: 3
+  nthSyncedObjectUpdatePerInterpolation: 1
+  nthPositionUpdateRate: 1
   nthRotationUpdateRate: 1
-  nthScaleUpdateRate: 3
-  nthPositionInterpolateRate: 3
+  nthScaleUpdateRate: 1
+  nthPositionInterpolateRate: 1
   nthRotationInterpolateRate: 1
-  nthScaleInterpolateRate: 3
+  nthScaleInterpolateRate: 1
   serverSideInterpolation: 1
   interpolatePosition: 1
   interpolateRotation: 1

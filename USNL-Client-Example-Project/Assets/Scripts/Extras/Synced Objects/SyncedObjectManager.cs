@@ -25,6 +25,8 @@ public class SyncedObjectManager : MonoBehaviour {
     }
 
     private void OnEnable() {
+        USNLCallbackEvents.OnDisconnected += DisconnectedFromServer;
+
         USNLCallbackEvents.OnSyncedObjectInterpolationModePacket += OnSyncedObjectInterpolationModePacket;
 
         USNLCallbackEvents.OnSyncedObjectInstantiatePacket += OnSyncedObjectInstantiatePacket;
@@ -46,6 +48,8 @@ public class SyncedObjectManager : MonoBehaviour {
     }
 
     private void OnDisable() {
+        USNLCallbackEvents.OnDisconnected -= DisconnectedFromServer;
+
         USNLCallbackEvents.OnSyncedObjectInterpolationModePacket -= OnSyncedObjectInterpolationModePacket;
 
         USNLCallbackEvents.OnSyncedObjectInstantiatePacket -= OnSyncedObjectInstantiatePacket;
@@ -93,6 +97,18 @@ public class SyncedObjectManager : MonoBehaviour {
 
         Destroy(syncedObjects[_packet.SyncedObjectUUID].gameObject);
         syncedObjects.Remove(_packet.SyncedObjectUUID);
+    }
+
+    private void DisconnectedFromServer(object _object) {
+        ClearLocalSyncedObjects();
+    }
+
+    private void ClearLocalSyncedObjects() {
+        if (syncedObjects.Count <= 0) return;
+        for (int i = 0; i < syncedObjects.Count; i++) {
+            Destroy(syncedObjects[i].gameObject);
+        }
+        syncedObjects.Clear();
     }
 
     #endregion
@@ -210,7 +226,6 @@ public class SyncedObjectManager : MonoBehaviour {
 
     private void OnSyncedObjectVec2ScaleInterpolationPacket(object _packetObject) {
         SyncedObjectVec2ScaleInterpolationPacket _packet = (SyncedObjectVec2ScaleInterpolationPacket)_packetObject;
-
         for (int i = 0; i < _packet.SyncedObjectUUIDs.Length; i++) {
             if (syncedObjects.ContainsKey(_packet.SyncedObjectUUIDs[i])) {
                 syncedObjects[_packet.SyncedObjectUUIDs[i]].GetComponent<SyncedObject>().ScaleInterpolationUpdate(_packet.InterpolateScales[i]);
