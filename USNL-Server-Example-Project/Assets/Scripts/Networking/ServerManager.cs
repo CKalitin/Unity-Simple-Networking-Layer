@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -13,10 +14,16 @@ public class ServerManager : MonoBehaviour {
     [Space]
     [SerializeField] private int dataBufferSize = 4096;
 
+    private bool isMigratingHost = false;
+
+    private DateTime timeOfStartup;
+
     public int MaxPlayers { get => maxPlayers; set => maxPlayers = value; }
     public int Port { get => port; set => port = value; }
     public string WelcomeMessage { get => welcomeMessage; set => welcomeMessage = value; }
     public int DataBufferSize { get => dataBufferSize; set => dataBufferSize = value; }
+    public bool IsMigratingHost { get => isMigratingHost; set => isMigratingHost = value; }
+    public DateTime TimeOfStartup { get => timeOfStartup; set => timeOfStartup = value; }
 
     #endregion
 
@@ -40,6 +47,8 @@ public class ServerManager : MonoBehaviour {
     private void Start() {
         QualitySettings.vSyncCount = 0;
         Application.targetFrameRate = 60;
+
+        TimeOfStartup = DateTime.Now;
 
         Server.Start(maxPlayers, port);
     }

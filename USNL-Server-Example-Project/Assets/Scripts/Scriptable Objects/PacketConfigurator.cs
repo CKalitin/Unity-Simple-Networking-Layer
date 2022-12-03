@@ -407,7 +407,7 @@ public class PacketConfigurator : ScriptableObject {
             "\n    private static void SendTCPData(int _toClient, Packet _packet) {" +
             "\n        _packet.WriteLength();" +
             "\n        Server.Clients[_toClient].Tcp.SendData(_packet);" +
-            "\n            if (Server.Clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
+            "\n        if (Server.Clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
             "\n    }" +
             "\n" +
             "\n    private static void SendTCPDataToAll(Packet _packet) {" +

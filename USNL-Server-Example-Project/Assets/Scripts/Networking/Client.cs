@@ -109,7 +109,7 @@ public class Client {
                         _packet.PacketId = _packet.ReadInt();
                         _packet.FromClient = clientId;
                         PacketHandlers.packetHandlers[_packet.PacketId](_packet);
-                        NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length());
+                        NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length() + 4); // +4 for packet length
                     }
                 });
 
@@ -165,7 +165,7 @@ public class Client {
                     _packet.PacketId = _packet.ReadInt();
                     _packet.FromClient = clientId;
                     PacketHandlers.packetHandlers[_packet.PacketId](_packet);
-                    NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length());
+                    NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length() + 4); // +4 for packet length
                 }
             });
         }

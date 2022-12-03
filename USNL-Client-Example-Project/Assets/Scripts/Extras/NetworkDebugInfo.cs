@@ -28,6 +28,9 @@ public class NetworkDebugInfo : MonoBehaviour {
     [Tooltip("Average of last 5 pings")]
     [SerializeField] private int smoothPacketRTT;
 
+    [Header("Other")]
+    [SerializeField] private TimeSpan timeConnected;
+
     private List<int> packetRTTs = new List<int>();
     private float packetPingSentTime = -1; // Seconds since startup when ping packet was sent
 
@@ -58,11 +61,23 @@ public class NetworkDebugInfo : MonoBehaviour {
     public int TotalPacketsReceived { get => totalPacketsReceived; set => totalPacketsReceived = value; }
 
     public int TotalPacketsSentPerSecond { get => totalPacketsSentPerSecond; set => totalPacketsSentPerSecond = value; }
-    public int TotalPacketsReceivedPerSecond { get => totalPacketsReceivedPerSecond; set => totalPacketsReceivedPerSecond 
+    public int TotalPacketsReceivedPerSecond { get => totalPacketsReceivedPerSecond; set => totalPacketsReceivedPerSecond
             = value; }
 
     public int PacketRTT { get => packetRTT; set => packetRTT = value; }
     public int SmoothPacketRTT { get => smoothPacketRTT; set => smoothPacketRTT = value; }
+
+    public TimeSpan TimeConnected { get => timeConnected; set => timeConnected = value; }
+
+    public int[] BytesSentByPacketPerSecond { get => bytesSentByPacketPerSecond; set => bytesSentByPacketPerSecond = value; }
+    public int[] BytesReceivedByPacketPerSecond { get => bytesReceivedByPacketPerSecond; set => bytesReceivedByPacketPerSecond = value; }
+    public int[] PacketsSentPerSecond { get => packetsSentPerSecond; set => packetsSentPerSecond = value; }
+    public int[] PacketsReceivedPerSecond { get => packetsReceivedPerSecond; set => packetsReceivedPerSecond = value; }
+
+    public int[] TempBytesSentByPacketPerSecond { get => tempBytesSentByPacketPerSecond; set => tempBytesSentByPacketPerSecond = value; }
+    public int[] TempBytesReceivedByPacketPerSecond { get => tempBytesReceivedByPacketPerSecond; set => tempBytesReceivedByPacketPerSecond = value; }
+    public int[] TempPacketsSentPerSecond { get => tempPacketsSentPerSecond; set => tempPacketsSentPerSecond = value; }
+    public int[] TempPacketsReceivedPerSecond { get => tempPacketsReceivedPerSecond; set => tempPacketsReceivedPerSecond = value; }
 
     #endregion
 
@@ -79,6 +94,10 @@ public class NetworkDebugInfo : MonoBehaviour {
 
     private void Start() {
         StartCoroutine(BytesAndPacketsPerSecondCoroutine());
+    }
+
+    private void Update() {
+        timeConnected = DateTime.Now.Subtract(ClientManager.instance.TimeOfConnection);
     }
 
     private void OnEnable() {
@@ -172,6 +191,11 @@ public class NetworkDebugInfo : MonoBehaviour {
             packetPingSentTime = Time.realtimeSinceStartup;
             PacketSend.Ping(true);
         } else {
+            // Set smoothPacketRTT
+            if (packetRTTs.Count > 5) { packetRTTs.RemoveAt(0); }
+            packetRTTs.Add(-1);
+            smoothPacketRTT = packetRTTs.Sum() / packetRTTs.Count;
+            
             Debug.Log("Packet RTT/ping is greater than 1000ms");
         }
     }
@@ -195,8 +219,48 @@ public class NetworkDebugInfo : MonoBehaviour {
         packetPingSentTime = -1; // Reset Packet Ping Sent Time so SendPingPacket() works
     }
 
+    #endregion
+
+    #region Other
+    
     private void OnDisconnected(object _object) {
         packetPingSentTime = -1; // Reset Packet Ping Sent Time so SendPingPacket() works
+        ResetData();
+    }
+
+    public void ResetData() {
+        totalBytesSent = 0;
+        totalBytesReceived = 0;
+
+        bytesSentPerSecond = 0;
+        bytesReceivedPerSecond = 0;
+
+
+        totalPacketsSent = 0;
+        totalPacketsReceived = 0;
+
+        totalPacketsSentPerSecond = 0;
+        totalPacketsReceivedPerSecond = 0;
+        
+        packetRTT = 0;
+        smoothPacketRTT = 0;
+        
+        packetRTTs = new List<int>();
+        packetPingSentTime = -1;
+        
+        totalBytesSentByPacket = new int[Enum.GetNames(typeof(ClientPackets)).Length];
+        totalBytesReceivedByPacket = new int[Enum.GetNames(typeof(ServerPackets)).Length];
+        
+        bytesSentByPacketPerSecond = new int[Enum.GetNames(typeof(ClientPackets)).Length];
+        bytesReceivedByPacketPerSecond = new int[Enum.GetNames(typeof(ServerPackets)).Length];
+        packetsSentPerSecond = new int[Enum.GetNames(typeof(ClientPackets)).Length];
+        packetsReceivedPerSecond = new int[Enum.GetNames(typeof(ServerPackets)).Length];
+        
+        tempBytesSentByPacketPerSecond = new int[Enum.GetNames(typeof(ClientPackets)).Length];
+        tempBytesReceivedByPacketPerSecond = new int[Enum.GetNames(typeof(ServerPackets)).Length];
+        tempPacketsSentPerSecond = new int[Enum.GetNames(typeof(ClientPackets)).Length];
+        tempPacketsReceivedPerSecond = new int[Enum.GetNames(typeof(ServerPackets)).Length];
+
     }
 
     #endregion

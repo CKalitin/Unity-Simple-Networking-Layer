@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -13,16 +14,21 @@ public class ClientManager : MonoBehaviour {
     [Space]
     [Tooltip("If connection is not established after x seconds, stop attemping connection.")]
     [SerializeField] private float connectionTimeout = 5f;
+    [Tooltip("If this is too low the server will see 2 attempted connections and the client will not received UDP data, who knows why.")]
+    [SerializeField] private float timeBetweenConnectionAttempts = 3f;
 
     private bool isAttempingConnection = false;
     private bool isMigratingHost = false;
     private bool isBecomingHost = false;
+
+    private DateTime timeOfConnection;
 
     public bool IsConnected { get => Client.instance.IsConnected; }
     public bool IsAttempingConnection { get => isAttempingConnection; }
     public bool IsHost { get => Client.instance.IsHost; }
     public bool IsMigratingHost { get => isMigratingHost; }
     public bool IsBecomingHost { get => isBecomingHost; }
+    public DateTime TimeOfConnection { get => timeOfConnection; set => timeOfConnection = value; }
 
     #endregion
 
@@ -49,20 +55,16 @@ public class ClientManager : MonoBehaviour {
     #region Functions
 
     public void ConnectToServer() {
-        StartCoroutine(AttemptingConnection());
-
         Client.instance.SetIP(ip, port);
-        Client.instance.ConnectToServer();
+        StartCoroutine(AttemptingConnection());
     }
 
     public void ConnectToServer(string _ip, int _port) {
         ip = _ip;
         port = _port;
 
-        StartCoroutine(AttemptingConnection());
-
         Client.instance.SetIP(ip, port);
-        Client.instance.ConnectToServer();
+        StartCoroutine(AttemptingConnection());
     }
 
     public void SetIPAndPort(string _ip, int _port) {
@@ -80,6 +82,8 @@ public class ClientManager : MonoBehaviour {
         Debug.Log($"Welcome message from Server: {_wp.WelcomeMessage}, Client Id: {_wp.ClientId}");
         Client.instance.ClientId = _wp.ClientId;
 
+        timeOfConnection = DateTime.Now;
+
         PacketSend.WelcomeReceived(_wp.ClientId);
 
         USNLCallbackEvents.CallOnConnectedCallbacks(0);
@@ -91,13 +95,24 @@ public class ClientManager : MonoBehaviour {
 
     private IEnumerator AttemptingConnection() {
         isAttempingConnection = true;
-        float timer = 0f;
+
+        int connectionsAttempted = 0;
+
+        float timer = 0.00001f;
         while (timer < connectionTimeout) {
             yield return new WaitForEndOfFrame();
+            
             if (Client.instance.IsConnected)
                 break;
+
+            if (timer > connectionsAttempted * timeBetweenConnectionAttempts) {
+                Client.instance.ConnectToServer();
+                connectionsAttempted++;
+            }
+
             timer += Time.unscaledDeltaTime;
         }
+        
         isAttempingConnection = false;
     }
 

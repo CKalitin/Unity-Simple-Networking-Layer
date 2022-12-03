@@ -21,6 +21,9 @@ public class NetworkDebugInfo : MonoBehaviour {
     [SerializeField] private int totalPacketsSentPerSecond;
     [SerializeField] private int totalPacketsReceivedPerSecond;
 
+    [Header("Other")]
+    [SerializeField] private TimeSpan uptime;
+
     // Too much memory? - adding a clear function, nvm it's just some ints
     // Index is packet Id
     private int[] totalBytesSentByPacket = new int[Enum.GetNames(typeof(ServerPackets)).Length];
@@ -37,6 +40,32 @@ public class NetworkDebugInfo : MonoBehaviour {
     private int[] tempBytesReceivedByPacketPerSecond = new int[Enum.GetNames(typeof(ClientPackets)).Length];
     private int[] tempPacketsSentPerSecond = new int[Enum.GetNames(typeof(ServerPackets)).Length];
     private int[] tempPacketsReceivedPerSecond = new int[Enum.GetNames(typeof(ClientPackets)).Length];
+    
+    public int TotalBytesSent { get => totalBytesSent; set => totalBytesSent = value; }
+    public int TotalBytesReceived { get => totalBytesReceived; set => totalBytesReceived = value; }
+
+    public int BytesSentPerSecond { get => bytesSentPerSecond; set => bytesSentPerSecond = value; }
+    public int BytesReceivedPerSecond { get => bytesReceivedPerSecond; set => bytesReceivedPerSecond = value; }
+
+    public int TotalPacketsSent { get => totalPacketsSent; set => totalPacketsSent = value; }
+    public int TotalPacketsReceived { get => totalPacketsReceived; set => totalPacketsReceived = value; }
+
+    public int TotalPacketsSentPerSecond { get => totalPacketsSentPerSecond; set => totalPacketsSentPerSecond = value; }
+    public int TotalPacketsReceivedPerSecond {
+        get => totalPacketsReceivedPerSecond; set => totalPacketsReceivedPerSecond
+            = value;
+    }
+    public TimeSpan Uptime { get => uptime; set => uptime = value; }
+
+    public int[] BytesSentByPacketPerSecond { get => bytesSentByPacketPerSecond; set => bytesSentByPacketPerSecond = value; }
+    public int[] BytesReceivedByPacketPerSecond { get => bytesReceivedByPacketPerSecond; set => bytesReceivedByPacketPerSecond = value; }
+    public int[] PacketsSentPerSecond { get => packetsSentPerSecond; set => packetsSentPerSecond = value; }
+    public int[] PacketsReceivedPerSecond { get => packetsReceivedPerSecond; set => packetsReceivedPerSecond = value; }
+
+    public int[] TempBytesSentByPacketPerSecond { get => tempBytesSentByPacketPerSecond; set => tempBytesSentByPacketPerSecond = value; }
+    public int[] TempBytesReceivedByPacketPerSecond { get => tempBytesReceivedByPacketPerSecond; set => tempBytesReceivedByPacketPerSecond = value; }
+    public int[] TempPacketsSentPerSecond { get => tempPacketsSentPerSecond; set => tempPacketsSentPerSecond = value; }
+    public int[] TempPacketsReceivedPerSecond { get => tempPacketsReceivedPerSecond; set => tempPacketsReceivedPerSecond = value; }
 
     #endregion
 
@@ -77,6 +106,7 @@ public class NetworkDebugInfo : MonoBehaviour {
             packetsSentPerSecond = new int[Enum.GetNames(typeof(ServerPackets)).Length];
             packetsReceivedPerSecond = new int[Enum.GetNames(typeof(ClientPackets)).Length];
 
+            uptime = ServerManager.instance.TimeOfStartup.Subtract(DateTime.Now);
 
             // Loop through temp data
             bytesSentByPacketPerSecond = tempBytesSentByPacketPerSecond;

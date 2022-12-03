@@ -219,7 +219,6 @@ public class Packet : IDisposable {
     /// <param name="_value">The bool array to add.</param>
     public void Write(bool[] _value) {
         Write(_value.Length);
-        Debug.Log($"bl {_value.Length}");
         for (int i = 0; i < _value.Length; i++) {
             Write(_value[i]);
         }

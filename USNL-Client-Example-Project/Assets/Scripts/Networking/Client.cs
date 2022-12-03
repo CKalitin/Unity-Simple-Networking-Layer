@@ -144,7 +144,7 @@ public class Client : MonoBehaviour {
                     using (Packet _packet = new Packet(_packetBytes)) {
                         _packet.PacketId = _packet.ReadInt();
                         PacketHandlers.packetHandlers[_packet.PacketId](_packet);
-                        NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length());
+                        NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length() + 4); // +4 for packet length
                     }
                 });
 
@@ -241,7 +241,7 @@ public class Client : MonoBehaviour {
                 using (Packet _packet = new Packet(_data)) {
                     _packet.PacketId = _packet.ReadInt();
                     PacketHandlers.packetHandlers[_packet.PacketId](_packet);
-                    NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length());
+                    NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length() + 4); // +4 for packet length
                 }
             });
         }
@@ -288,9 +288,9 @@ public class Client : MonoBehaviour {
                 udp.socket.Close();
             }
 
-            ClientManager.instance.SetDisconnectedFromServer();
-
             ThreadManager.StopPacketHandleThread();
+
+            ClientManager.instance.SetDisconnectedFromServer();
 
             Debug.Log("Disconnected from server.");
         }

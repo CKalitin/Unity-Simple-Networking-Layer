@@ -103,10 +103,10 @@ public class SyncedObjectManager : MonoBehaviour {
         ClearLocalSyncedObjects();
     }
 
-    private void ClearLocalSyncedObjects() {
+    public void ClearLocalSyncedObjects() {
         if (syncedObjects.Count <= 0) return;
-        for (int i = 0; i < syncedObjects.Count; i++) {
-            Destroy(syncedObjects[i].gameObject);
+        foreach (KeyValuePair<int, Transform> syncedObject in syncedObjects) {
+            Destroy(syncedObject.Value.gameObject);
         }
         syncedObjects.Clear();
     }

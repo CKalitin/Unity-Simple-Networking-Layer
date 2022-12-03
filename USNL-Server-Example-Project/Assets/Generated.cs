@@ -127,7 +127,7 @@ public static class PacketSend {
     private static void SendTCPData(int _toClient, Packet _packet) {
         _packet.WriteLength();
         Server.Clients[_toClient].Tcp.SendData(_packet);
-            if (Server.Clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+        if (Server.Clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
     }
 
     private static void SendTCPDataToAll(Packet _packet) {

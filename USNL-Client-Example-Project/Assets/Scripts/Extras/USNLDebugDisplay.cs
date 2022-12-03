@@ -31,7 +31,7 @@ public class USNLDebugDisplay : MonoBehaviour {
     [Tooltip("Average of last 5 pings")]
     [SerializeField] private TextMeshProUGUI smoothPacketRTT;
     [Space]
-    //[SerializeField] private TextMeshProUGUI connectedTime;
+    [SerializeField] private TextMeshProUGUI timeConnected;
 
     [Header("Connection Info")]
     [SerializeField] private TMP_InputField ip;
@@ -67,7 +67,14 @@ public class USNLDebugDisplay : MonoBehaviour {
 
             packetRTT.text = String.Format("{0:n0}", NetworkDebugInfo.instance.PacketRTT) + "ms";
             smoothPacketRTT.text = String.Format("{0:n0}", NetworkDebugInfo.instance.SmoothPacketRTT) + "ms";
+
+            if (ClientManager.instance.IsConnected)
+                timeConnected.text = NetworkDebugInfo.instance.TimeConnected.ToString(@"hh\:mm\:ss");
+            else
+                timeConnected.text = "00:00:00";
             #endregion
+
+            // Read text from json file ???? what
         }
     }
 
