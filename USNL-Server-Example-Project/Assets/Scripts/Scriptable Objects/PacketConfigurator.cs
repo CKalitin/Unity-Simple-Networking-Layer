@@ -18,7 +18,7 @@ public class PacketConfigurator : ScriptableObject {
     private ServerPacketConfig[] libServerPackets = { 
         new ServerPacketConfig(
             "Welcome",
-            new PacketVariable[] { new PacketVariable("Welcome Message", PacketVarTypes.String), new PacketVariable("Client Id", PacketVarTypes.Int) },
+            new PacketVariable[] { new PacketVariable("Welcome Message", PacketVarTypes.String), new PacketVariable("Server Name", PacketVarTypes.String), new PacketVariable("Client Id", PacketVarTypes.Int) },
             ServerPacketTypes.SendToClient,
             Protocol.TCP),
         new ServerPacketConfig(

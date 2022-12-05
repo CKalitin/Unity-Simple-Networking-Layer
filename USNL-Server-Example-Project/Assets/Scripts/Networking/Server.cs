@@ -58,7 +58,7 @@ public class Server {
     public static void Stop() {
         tcpListener.Stop();
         udpListener.Close();
-
+        
         ThreadManager.StopPacketHandleThread();
 
         ServerActive = false;
@@ -66,6 +66,12 @@ public class Server {
         USNLCallbackEvents.CallOnServerStoppedCallbacks(0);
 
         Debug.Log("Server stopped.");
+    }
+
+    public static void DisconnectAllClients() {
+        for (int i = 0; i < Clients.Count; i++) {
+            if (Clients[i].IsConnected) Clients[i].Disconnect();
+        }
     }
 
     public static int GetConnectedClients() {

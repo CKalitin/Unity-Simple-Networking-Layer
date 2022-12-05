@@ -84,7 +84,7 @@ public struct ClientInput {
 
 public class InputManager : MonoBehaviour {
     #region Variables
-
+    
     public static InputManager instance;
 
     private ClientInput[] clientInputs = null;

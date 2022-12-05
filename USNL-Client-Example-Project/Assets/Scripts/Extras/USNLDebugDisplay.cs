@@ -11,6 +11,7 @@ public class USNLDebugDisplay : MonoBehaviour {
     [SerializeField] private GameObject isConnected;
     [SerializeField] private GameObject isAttempingConnection;
     [SerializeField] private GameObject isHost;
+    [SerializeField] private GameObject isServerActive;
     [SerializeField] private GameObject isMigratingHost;
     [SerializeField] private GameObject isBecomingHost;
 
@@ -32,6 +33,7 @@ public class USNLDebugDisplay : MonoBehaviour {
     [SerializeField] private TextMeshProUGUI smoothPacketRTT;
     [Space]
     [SerializeField] private TextMeshProUGUI timeConnected;
+    [SerializeField] private TextMeshProUGUI clientId;
 
     [Header("Connection Info")]
     [SerializeField] private TMP_InputField ip;
@@ -49,6 +51,7 @@ public class USNLDebugDisplay : MonoBehaviour {
             isConnected.SetActive(ClientManager.instance.IsConnected);
             isAttempingConnection.SetActive(ClientManager.instance.IsAttempingConnection);
             isHost.SetActive(ClientManager.instance.IsHost);
+            isServerActive.SetActive(ClientManager.instance.ServerData.IsServerActive);
             isMigratingHost.SetActive(ClientManager.instance.IsMigratingHost);
             isBecomingHost.SetActive(ClientManager.instance.IsBecomingHost);
             #endregion
@@ -72,6 +75,8 @@ public class USNLDebugDisplay : MonoBehaviour {
                 timeConnected.text = NetworkDebugInfo.instance.TimeConnected.ToString(@"hh\:mm\:ss");
             else
                 timeConnected.text = "00:00:00";
+
+            clientId.text = ClientManager.instance.ClientId.ToString();
             #endregion
 
             // Read text from json file ???? what
@@ -96,7 +101,7 @@ public class USNLDebugDisplay : MonoBehaviour {
 
     public void ConnectButtonDown() {
         try {
-            ClientManager.instance.ConnectToServer(ip.text, Int32.Parse(port.text));
+            ClientManager.instance.ConnectToServer(int.Parse(ip.text), Int32.Parse(port.text));
         } catch (Exception _ex) {
             Debug.LogError($"Could not connect to server via Debug Menu, likely improper port.\n{_ex}");
         }
@@ -112,5 +117,13 @@ public class USNLDebugDisplay : MonoBehaviour {
 
     public void OnOpenButton() {
         debugMenuParent.SetActive(true);
+    }
+
+    public void StartHostingButton() {
+        ClientManager.instance.LaunchServer();
+    }
+
+    public void StopHostingButton() {
+        ClientManager.instance.CloseServer();
     }
 }

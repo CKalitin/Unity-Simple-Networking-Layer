@@ -258,13 +258,13 @@ public class Client : MonoBehaviour {
 
     #region Functions
 
-    public void SetIP(string _ip, int _port) {
+    public void SetIP(int _id, int _port) {
         if (isConnected) {
             Debug.Log("Client already connected, cannot change IP.");
             return;
         }
 
-        instance.ip = _ip;
+        instance.ip = IDtoIP(_id);
         instance.port = _port;
     }
 
@@ -287,13 +287,27 @@ public class Client : MonoBehaviour {
             if (udp.socket != null) {
                 udp.socket.Close();
             }
-
+            
             ThreadManager.StopPacketHandleThread();
 
             ClientManager.instance.SetDisconnectedFromServer();
 
             Debug.Log("Disconnected from server.");
         }
+    }
+
+    public int IPToID(string _ip) {
+        int[] ipOctets = new int[4];
+        string[] ipOctetsString = _ip.Split('.');
+        for (int i = 0; i < ipOctets.Length; i++) {
+            ipOctets[i] = int.Parse(ipOctetsString[i]);
+        }
+
+        return ipOctets[0] * 16777216 + ipOctets[1] * 65536 + ipOctets[2] * 256 + ipOctets[3];
+    }
+
+    public string IDtoIP(int _id) {
+        return new IPAddress(IPAddress.HostToNetworkOrder(_id)).ToString();
     }
 
     #endregion
