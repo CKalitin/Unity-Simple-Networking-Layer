@@ -1,13 +1,5 @@
 {
   "dependencies": {
-    "com.ckalitin.usnl-client": {
-      "version": "file:G:/_Dev/Unity Projects/Unity-Simple-Networking-Layer/com.ckalitin.usnl-client@0.0.4",
-      "depth": 0,
-      "source": "local",
-      "dependencies": {
-        "com.unity.textmeshpro": "3.0.6"
-      }
-    },
     "com.unity.2d.animation": {
       "version": "7.0.9",
       "depth": 1,
