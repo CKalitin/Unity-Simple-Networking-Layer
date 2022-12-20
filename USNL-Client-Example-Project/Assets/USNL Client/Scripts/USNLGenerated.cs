@@ -24,7 +24,7 @@ public enum ServerPackets {
     SyncedObjectRotInterpolation,
     SyncedObjectVec2ScaleInterpolation,
     SyncedObjectVec3ScaleInterpolation,
-    Text,
+    Test,
 }
 
 // Sent from Client to Server
@@ -32,7 +32,7 @@ public enum ClientPackets {
     WelcomeReceived,
     Ping,
     ClientInput,
-    ClientTest,
+    Test,
 }
 
 #endregion
@@ -263,17 +263,14 @@ public struct SyncedObjectVec3ScaleInterpolationPacket {
     public Vector3[] InterpolateScales { get => interpolateScales; set => interpolateScales = value; }
 }
 
-public struct TextPacket {
-    private Vector3 a;
-    private Quaternion[] b;
+public struct TestPacket {
+    private short testt;
 
-    public TextPacket(Vector3 _a, Quaternion[] _b) {
-        a = _a;
-        b = _b;
+    public TestPacket(short _testt) {
+        testt = _testt;
     }
 
-    public Vector3 A { get => a; set => a = value; }
-    public Quaternion[] B { get => b; set => b = value; }
+    public short Testt { get => testt; set => testt = value; }
 }
 
 #endregion
@@ -300,7 +297,7 @@ public static class PacketHandlers {
         { SyncedObjectRotInterpolation },
         { SyncedObjectVec2ScaleInterpolation },
         { SyncedObjectVec3ScaleInterpolation },
-        { Text },
+        { Test },
     };
 
     public static void Welcome(Packet _packet) {
@@ -440,12 +437,11 @@ public static class PacketHandlers {
         PacketManager.instance.PacketReceived(_packet, syncedObjectVec3ScaleInterpolationPacket);
     }
 
-    public static void Text(Packet _packet) {
-        Vector3 a = _packet.ReadVector3();
-        Quaternion[] b = _packet.ReadQuaternions();
+    public static void Test(Packet _packet) {
+        short testt = _packet.ReadShort();
 
-        TextPacket textPacket = new TextPacket(a, b);
-        PacketManager.instance.PacketReceived(_packet, textPacket);
+        TestPacket testPacket = new TestPacket(testt);
+        PacketManager.instance.PacketReceived(_packet, testPacket);
     }
 }
 
@@ -495,9 +491,9 @@ public static class PacketSend {
         }
     }
 
-    public static void ClientTest(Quaternion _c) {
-        using (Packet _packet = new Packet((int)ClientPackets.ClientTest)) {
-            _packet.Write(_c);
+    public static void Test(short _testt) {
+        using (Packet _packet = new Packet((int)ClientPackets.Test)) {
+            _packet.Write(_testt);
 
             SendTCPData(_packet);
         }
@@ -531,7 +527,7 @@ public static class USNLCallbackEvents {
         CallOnSyncedObjectRotInterpolationPacketCallbacks,
         CallOnSyncedObjectVec2ScaleInterpolationPacketCallbacks,
         CallOnSyncedObjectVec3ScaleInterpolationPacketCallbacks,
-        CallOnTextPacketCallbacks,
+        CallOnTestPacketCallbacks,
     };
 
     public static event USNLCallbackEvent OnConnected;
@@ -554,7 +550,7 @@ public static class USNLCallbackEvents {
     public static event USNLCallbackEvent OnSyncedObjectRotInterpolationPacket;
     public static event USNLCallbackEvent OnSyncedObjectVec2ScaleInterpolationPacket;
     public static event USNLCallbackEvent OnSyncedObjectVec3ScaleInterpolationPacket;
-    public static event USNLCallbackEvent OnTextPacket;
+    public static event USNLCallbackEvent OnTestPacket;
 
     public static void CallOnConnectedCallbacks(object _param) { if (OnConnected != null) { OnConnected(_param); } }
     public static void CallOnDisconnectedCallbacks(object _param) { if (OnDisconnected != null) { OnDisconnected(_param); } }
@@ -576,7 +572,7 @@ public static class USNLCallbackEvents {
     public static void CallOnSyncedObjectRotInterpolationPacketCallbacks(object _param) { if (OnSyncedObjectRotInterpolationPacket != null) { OnSyncedObjectRotInterpolationPacket(_param); } }
     public static void CallOnSyncedObjectVec2ScaleInterpolationPacketCallbacks(object _param) { if (OnSyncedObjectVec2ScaleInterpolationPacket != null) { OnSyncedObjectVec2ScaleInterpolationPacket(_param); } }
     public static void CallOnSyncedObjectVec3ScaleInterpolationPacketCallbacks(object _param) { if (OnSyncedObjectVec3ScaleInterpolationPacket != null) { OnSyncedObjectVec3ScaleInterpolationPacket(_param); } }
-    public static void CallOnTextPacketCallbacks(object _param) { if (OnTextPacket != null) { OnTextPacket(_param); } }
+    public static void CallOnTestPacketCallbacks(object _param) { if (OnTestPacket != null) { OnTestPacket(_param); } }
 }
 
 #endregion

@@ -12,7 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd1330b2e584538429b514e513e7b023, type: 3}
   m_Name: ScriptGenerator
   m_EditorClassIdentifier: 
-  serverPackets: []
   clientPackets: []
-  packetJSONFilePath: G:\_Dev\Unity Projects\Unity-Simple-Networking-Layer\USNL-Client-Example-Project\Assets\USNL
-    Client\
+  serverPackets: []

@@ -22,6 +22,9 @@ public class ScriptGenerator : ScriptableObject {
         "OnDisconnected"
     };
 
+    public ClientPacketConfig[] ClientPackets { get => clientPackets; set => clientPackets = value; }
+    public ServerPacketConfig[] ServerPackets { get => serverPackets; set => serverPackets = value; }
+
     #region Packet Generation Variables
 
     /*** Library Packets (Not for user) ***/
@@ -29,93 +32,93 @@ public class ScriptGenerator : ScriptableObject {
         new ServerPacketConfig(
             "Welcome",
             new PacketVariable[] { 
-                new PacketVariable("Welcome Message", PacketVarTypes.String), new PacketVariable("Server Name", PacketVarTypes.String), new PacketVariable("Client Id", PacketVarTypes.Int) },
-            ServerPacketTypes.SendToClient,
+                new PacketVariable("Welcome Message", PacketVarType.String), new PacketVariable("Server Name", PacketVarType.String), new PacketVariable("Client Id", PacketVarType.Int) },
+            ServerPacketType.SendToClient,
             Protocol.TCP),
         new ServerPacketConfig(
             "Ping",
-            new PacketVariable[] { new PacketVariable("Send Ping Back", PacketVarTypes.Bool) },
-            ServerPacketTypes.SendToClient,
+            new PacketVariable[] { new PacketVariable("Send Ping Back", PacketVarType.Bool) },
+            ServerPacketType.SendToClient,
             Protocol.TCP),
         #region Synced Objects
         new ServerPacketConfig(
             "SyncedObjectInstantiate",
-            new PacketVariable[] {new PacketVariable("Synced Object Prefeb Id", PacketVarTypes.Int), new PacketVariable("Synced Object UUID", PacketVarTypes.Int), new PacketVariable("Position", PacketVarTypes.Vector3), new PacketVariable("Rotation", PacketVarTypes.Quaternion), new PacketVariable("Scale", PacketVarTypes.Vector3) },
-            ServerPacketTypes.SendToClient,
+            new PacketVariable[] {new PacketVariable("Synced Object Prefeb Id", PacketVarType.Int), new PacketVariable("Synced Object UUID", PacketVarType.Int), new PacketVariable("Position", PacketVarType.Vector3), new PacketVariable("Rotation", PacketVarType.Quaternion), new PacketVariable("Scale", PacketVarType.Vector3) },
+            ServerPacketType.SendToClient,
             Protocol.TCP),
         new ServerPacketConfig(
             "SyncedObjectDestroy",
-            new PacketVariable[] { new PacketVariable("Synced Object UUID", PacketVarTypes.Int) },
-            ServerPacketTypes.SendToClient,
+            new PacketVariable[] { new PacketVariable("Synced Object UUID", PacketVarType.Int) },
+            ServerPacketType.SendToClient,
             Protocol.TCP),
         new ServerPacketConfig(
             "SyncedObjectInterpolationMode",
-            new PacketVariable[] { new PacketVariable("Server Interpolation", PacketVarTypes.Bool) },
-            ServerPacketTypes.SendToClient,
+            new PacketVariable[] { new PacketVariable("Server Interpolation", PacketVarType.Bool) },
+            ServerPacketType.SendToClient,
             Protocol.TCP
             ),
         #region Synced Object Updates
         new ServerPacketConfig(
             "SyncedObjectVec2PosUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Positions", PacketVarTypes.Vector2Array) },
-            ServerPacketTypes.SendToAllClients,
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarType.IntArray), new PacketVariable("Positions", PacketVarType.Vector2Array) },
+            ServerPacketType.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectVec3PosUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Positions", PacketVarTypes.Vector3Array) },
-            ServerPacketTypes.SendToAllClients,
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarType.IntArray), new PacketVariable("Positions", PacketVarType.Vector3Array) },
+            ServerPacketType.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectRotZUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Rotations", PacketVarTypes.FloatArray) },
-            ServerPacketTypes.SendToAllClients,
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarType.IntArray), new PacketVariable("Rotations", PacketVarType.FloatArray) },
+            ServerPacketType.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectRotUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Rotations", PacketVarTypes.Vector3Array) },
-            ServerPacketTypes.SendToAllClients,
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarType.IntArray), new PacketVariable("Rotations", PacketVarType.Vector3Array) },
+            ServerPacketType.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectVec2ScaleUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Scales", PacketVarTypes.Vector2Array) },
-            ServerPacketTypes.SendToAllClients,
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarType.IntArray), new PacketVariable("Scales", PacketVarType.Vector2Array) },
+            ServerPacketType.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectVec3ScaleUpdate",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("Scales", PacketVarTypes.Vector3Array) },
-            ServerPacketTypes.SendToAllClients,
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarType.IntArray), new PacketVariable("Scales", PacketVarType.Vector3Array) },
+            ServerPacketType.SendToAllClients,
             Protocol.UDP),
         #endregion
         #region Synced Object Interpolation
         new ServerPacketConfig(
             "SyncedObjectVec2PosInterpolation",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("InterpolatePositions", PacketVarTypes.Vector2Array) },
-            ServerPacketTypes.SendToAllClients,
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarType.IntArray), new PacketVariable("InterpolatePositions", PacketVarType.Vector2Array) },
+            ServerPacketType.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectVec3PosInterpolation",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("InterpolatePositions", PacketVarTypes.Vector3Array) },
-            ServerPacketTypes.SendToAllClients,
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarType.IntArray), new PacketVariable("InterpolatePositions", PacketVarType.Vector3Array) },
+            ServerPacketType.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectRotZInterpolation",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("InterpolateRotations", PacketVarTypes.FloatArray) },
-            ServerPacketTypes.SendToAllClients,
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarType.IntArray), new PacketVariable("InterpolateRotations", PacketVarType.FloatArray) },
+            ServerPacketType.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectRotInterpolation",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("InterpolateRotations", PacketVarTypes.Vector3Array) },
-            ServerPacketTypes.SendToAllClients,
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarType.IntArray), new PacketVariable("InterpolateRotations", PacketVarType.Vector3Array) },
+            ServerPacketType.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectVec2ScaleInterpolation",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("InterpolateScales", PacketVarTypes.Vector2Array) },
-            ServerPacketTypes.SendToAllClients,
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarType.IntArray), new PacketVariable("InterpolateScales", PacketVarType.Vector2Array) },
+            ServerPacketType.SendToAllClients,
             Protocol.UDP),
         new ServerPacketConfig(
             "SyncedObjectVec3ScaleInterpolation",
-            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarTypes.IntArray), new PacketVariable("InterpolateScales", PacketVarTypes.Vector3Array) },
-            ServerPacketTypes.SendToAllClients,
+            new PacketVariable[] { new PacketVariable("Synced Object UUIDs", PacketVarType.IntArray), new PacketVariable("InterpolateScales", PacketVarType.Vector3Array) },
+            ServerPacketType.SendToAllClients,
             Protocol.UDP),
         #endregion
         #endregion
@@ -123,64 +126,64 @@ public class ScriptGenerator : ScriptableObject {
     private ClientPacketConfig[] libClientPackets = {
         new ClientPacketConfig(
             "Welcome Received",
-            new PacketVariable[] { new PacketVariable("Client Id Check", PacketVarTypes.Int) },
+            new PacketVariable[] { new PacketVariable("Client Id Check", PacketVarType.Int) },
             Protocol.TCP),
         new ClientPacketConfig(
             "Ping",
-            new PacketVariable[] { new PacketVariable("Send Ping Back", PacketVarTypes.Bool) },
+            new PacketVariable[] { new PacketVariable("Send Ping Back", PacketVarType.Bool) },
             Protocol.TCP),
         new ClientPacketConfig(
             "ClientInput",
-            new PacketVariable[] { new PacketVariable("KeycodesDown", PacketVarTypes.IntArray), new PacketVariable("KeycodesUp", PacketVarTypes.IntArray) },
+            new PacketVariable[] { new PacketVariable("KeycodesDown", PacketVarType.IntArray), new PacketVariable("KeycodesUp", PacketVarType.IntArray) },
             Protocol.TCP),
     };
 
-    Dictionary<PacketVarTypes, string> packetTypes = new Dictionary<PacketVarTypes, string>()
-    { { PacketVarTypes.Byte, "byte"},
-    { PacketVarTypes.Short, "short"},
-    { PacketVarTypes.Int, "int"},
-    { PacketVarTypes.Long, "long"},
-    { PacketVarTypes.Float, "float"},
-    { PacketVarTypes.Bool, "bool"},
-    { PacketVarTypes.String, "string"},
-    { PacketVarTypes.Vector2, "Vector2"},
-    { PacketVarTypes.Vector3, "Vector3"},
-    { PacketVarTypes.Quaternion, "Quaternion"},
-    { PacketVarTypes.ByteArray, "byte[]"},
-    { PacketVarTypes.ShortArray, "short[]"},
-    { PacketVarTypes.IntArray, "int[]"},
-    { PacketVarTypes.LongArray, "long[]"},
-    { PacketVarTypes.FloatArray, "float[]"},
-    { PacketVarTypes.BoolArray, "bool[]"},
-    { PacketVarTypes.StringArray, "string[]"},
-    { PacketVarTypes.Vector2Array, "Vector2[]"},
-    { PacketVarTypes.Vector3Array, "Vector3[]"},
-    { PacketVarTypes.QuaternionArray, "Quaternion[]"},
+    Dictionary<PacketVarType, string> packetTypes = new Dictionary<PacketVarType, string>()
+    { { PacketVarType.Byte, "byte"},
+    { PacketVarType.Short, "short"},
+    { PacketVarType.Int, "int"},
+    { PacketVarType.Long, "long"},
+    { PacketVarType.Float, "float"},
+    { PacketVarType.Bool, "bool"},
+    { PacketVarType.String, "string"},
+    { PacketVarType.Vector2, "Vector2"},
+    { PacketVarType.Vector3, "Vector3"},
+    { PacketVarType.Quaternion, "Quaternion"},
+    { PacketVarType.ByteArray, "byte[]"},
+    { PacketVarType.ShortArray, "short[]"},
+    { PacketVarType.IntArray, "int[]"},
+    { PacketVarType.LongArray, "long[]"},
+    { PacketVarType.FloatArray, "float[]"},
+    { PacketVarType.BoolArray, "bool[]"},
+    { PacketVarType.StringArray, "string[]"},
+    { PacketVarType.Vector2Array, "Vector2[]"},
+    { PacketVarType.Vector3Array, "Vector3[]"},
+    { PacketVarType.QuaternionArray, "Quaternion[]"},
     };
-    Dictionary<PacketVarTypes, string> packetReadTypes = new Dictionary<PacketVarTypes, string>()
-    { { PacketVarTypes.Byte, "Byte"},
-    { PacketVarTypes.Short, "Short"},
-    { PacketVarTypes.Int, "Int"},
-    { PacketVarTypes.Long, "Long"},
-    { PacketVarTypes.Float, "Float"},
-    { PacketVarTypes.Bool, "Bool"},
-    { PacketVarTypes.String, "String"},
-    { PacketVarTypes.Vector2, "Vector2"},
-    { PacketVarTypes.Vector3, "Vector3"},
-    { PacketVarTypes.Quaternion, "Quaternion"},
-    { PacketVarTypes.ByteArray, "Bytes"},
-    { PacketVarTypes.ShortArray, "Shorts"},
-    { PacketVarTypes.IntArray, "Ints"},
-    { PacketVarTypes.LongArray, "Longs"},
-    { PacketVarTypes.FloatArray, "Floats"},
-    { PacketVarTypes.BoolArray, "Bools"},
-    { PacketVarTypes.StringArray, "Strings"},
-    { PacketVarTypes.Vector2Array, "Vector2s"},
-    { PacketVarTypes.Vector3Array, "Vector3s"},
-    { PacketVarTypes.QuaternionArray, "Quaternions"}
+    Dictionary<PacketVarType, string> packetReadTypes = new Dictionary<PacketVarType, string>()
+    { { PacketVarType.Byte, "Byte"},
+    { PacketVarType.Short, "Short"},
+    { PacketVarType.Int, "Int"},
+    { PacketVarType.Long, "Long"},
+    { PacketVarType.Float, "Float"},
+    { PacketVarType.Bool, "Bool"},
+    { PacketVarType.String, "String"},
+    { PacketVarType.Vector2, "Vector2"},
+    { PacketVarType.Vector3, "Vector3"},
+    { PacketVarType.Quaternion, "Quaternion"},
+    { PacketVarType.ByteArray, "Bytes"},
+    { PacketVarType.ShortArray, "Shorts"},
+    { PacketVarType.IntArray, "Ints"},
+    { PacketVarType.LongArray, "Longs"},
+    { PacketVarType.FloatArray, "Floats"},
+    { PacketVarType.BoolArray, "Bools"},
+    { PacketVarType.StringArray, "Strings"},
+    { PacketVarType.Vector2Array, "Vector2s"},
+    { PacketVarType.Vector3Array, "Vector3s"},
+    { PacketVarType.QuaternionArray, "Quaternions"}
     };
-    
-    public enum PacketVarTypes {
+
+    public enum PacketVarType {
         Byte,
         Short,
         Int,
@@ -202,7 +205,7 @@ public class ScriptGenerator : ScriptableObject {
         Vector3Array,
         QuaternionArray
     }
-    public enum ServerPacketTypes {
+    public enum ServerPacketType {
         SendToClient,
         SendToAllClients,
         SendToAllClientsExcept
@@ -214,16 +217,16 @@ public class ScriptGenerator : ScriptableObject {
 
     [Serializable]
     public struct PacketVariable {
-        [SerializeField] private string packetName;
-        [SerializeField] private PacketVarTypes packetType;
+        [SerializeField] private string variableName;
+        [SerializeField] private PacketVarType variableType;
 
-        public PacketVariable(string packetName, PacketVarTypes packetType) {
-            this.packetName = packetName;
-            this.packetType = packetType;
+        public PacketVariable(string variableName, PacketVarType variableType) {
+            this.variableName = variableName;
+            this.variableType = variableType;
         }
 
-        public string PacketName { get => packetName; set => packetName = value; }
-        public PacketVarTypes PacketType { get => packetType; set => packetType = value; }
+        public string VariableName { get => variableName; set => variableName = value; }
+        public PacketVarType VariableType { get => variableType; set => variableType = value; }
     }
 
     [Serializable]
@@ -234,13 +237,13 @@ public class ScriptGenerator : ScriptableObject {
         [Tooltip("SendToClient: Send Packet to a single client specified by you.\n" +
             "SendToAllClients: Send Packet to all clients.\n" +
             "SendToAllClientsExcept: Send Packet to all clients execpt one specified by you.")]
-        [SerializeField] private ServerPacketTypes sendType;
+        [SerializeField] private ServerPacketType sendType;
         [SerializeField] private Protocol protocol;
         [Space]
         [Tooltip("This is only for the user.")]
         [SerializeField] private string notes;
 
-        public ServerPacketConfig(string packetName, PacketVariable[] packetVariables, ServerPacketTypes sendType, Protocol protocol) : this() {
+        public ServerPacketConfig(string packetName, PacketVariable[] packetVariables, ServerPacketType sendType, Protocol protocol) : this() {
             this.packetName = packetName;
             this.packetVariables = packetVariables;
             this.sendType = sendType;
@@ -249,7 +252,7 @@ public class ScriptGenerator : ScriptableObject {
 
         public string PacketName { get => packetName; set => packetName = value; }
         public PacketVariable[] PacketVariables { get => packetVariables; set => packetVariables = value; }
-        public ServerPacketTypes SendType { get => sendType; set => sendType = value; }
+        public ServerPacketType SendType { get => sendType; set => sendType = value; }
         public Protocol Protocol { get => protocol; set => protocol = value; }
     }
 
@@ -344,8 +347,8 @@ public class ScriptGenerator : ScriptableObject {
 
             psts += "";
             for (int x = 0; x < _serverPackets[i].PacketVariables.Length; x++) {
-                string varName = Lower(_serverPackets[i].PacketVariables[x].PacketName); // Lower case variable name (C# formatting)
-                string varType = packetTypes[_serverPackets[i].PacketVariables[x].PacketType]; // Variable type string
+                string varName = Lower(_serverPackets[i].PacketVariables[x].VariableName); // Lower case variable name (C# formatting)
+                string varType = packetTypes[_serverPackets[i].PacketVariables[x].VariableType]; // Variable type string
                 psts += $"\n    private {varType} {varName};";
             }
 
@@ -354,21 +357,21 @@ public class ScriptGenerator : ScriptableObject {
             psts += "\n";
             string constructorParameters = "";
             for (int x = 0; x < _serverPackets[i].PacketVariables.Length; x++) {
-                constructorParameters += $"{packetTypes[_serverPackets[i].PacketVariables[x].PacketType]} _{Lower(_serverPackets[i].PacketVariables[x].PacketName)}, ";
+                constructorParameters += $"{packetTypes[_serverPackets[i].PacketVariables[x].VariableType]} _{Lower(_serverPackets[i].PacketVariables[x].VariableName)}, ";
             }
             constructorParameters = constructorParameters.Substring(0, constructorParameters.Length - 2);
 
             psts += $"\n    public {Upper(_serverPackets[i].PacketName)}Packet({constructorParameters}) {{";
             for (int x = 0; x < _serverPackets[i].PacketVariables.Length; x++) {
-                psts += $"\n        {Lower(_serverPackets[i].PacketVariables[x].PacketName)} = _{Lower(_serverPackets[i].PacketVariables[x].PacketName)};";
+                psts += $"\n        {Lower(_serverPackets[i].PacketVariables[x].VariableName)} = _{Lower(_serverPackets[i].PacketVariables[x].VariableName)};";
             }
             psts += "\n    }";
             psts += "\n";
 
 
             for (int x = 0; x < _serverPackets[i].PacketVariables.Length; x++) {
-                string varName = Lower(_serverPackets[i].PacketVariables[x].PacketName); // Lower case variable name (C# formatting)
-                string varType = packetTypes[_serverPackets[i].PacketVariables[x].PacketType]; // Variable type string
+                string varName = Lower(_serverPackets[i].PacketVariables[x].VariableName); // Lower case variable name (C# formatting)
+                string varType = packetTypes[_serverPackets[i].PacketVariables[x].VariableType]; // Variable type string
 
                 psts += $"\n    public {varType} {Upper(varName)} {{ get => {varName}; set => {varName} = value; }}";
             }
@@ -399,14 +402,14 @@ public class ScriptGenerator : ScriptableObject {
             phs += $"\n    public static void {upPacketName}(Packet _packet) {{";
 
             for (int x = 0; x < _serverPackets[i].PacketVariables.Length; x++) {
-                phs += $"\n        {packetTypes[_serverPackets[i].PacketVariables[x].PacketType]} {Lower(_serverPackets[i].PacketVariables[x].PacketName)} = _packet.Read{packetReadTypes[_serverPackets[i].PacketVariables[x].PacketType]}();";
+                phs += $"\n        {packetTypes[_serverPackets[i].PacketVariables[x].VariableType]} {Lower(_serverPackets[i].PacketVariables[x].VariableName)} = _packet.Read{packetReadTypes[_serverPackets[i].PacketVariables[x].VariableType]}();";
             }
 
             phs += "\n";
 
             string packetParameters = "";
             for (int x = 0; x < _serverPackets[i].PacketVariables.Length; x++) {
-                packetParameters += $"{Lower(_serverPackets[i].PacketVariables[x].PacketName)}, ";
+                packetParameters += $"{Lower(_serverPackets[i].PacketVariables[x].VariableName)}, ";
             }
             packetParameters = packetParameters.Substring(0, packetParameters.Length - 2);
 
@@ -447,7 +450,7 @@ public class ScriptGenerator : ScriptableObject {
         for (int i = 0; i < _clientPackets.Count; i++) {
             string pas = ""; // Packet arguments (parameters) string
             for (int x = 0; x < _clientPackets[i].PacketVariables.Length; x++) {
-                pas += $"{packetTypes[_clientPackets[i].PacketVariables[x].PacketType]} _{Lower(_clientPackets[i].PacketVariables[x].PacketName)}, ";
+                pas += $"{packetTypes[_clientPackets[i].PacketVariables[x].VariableType]} _{Lower(_clientPackets[i].PacketVariables[x].VariableName)}, ";
             }
             pas = pas.Substring(0, pas.Length - 2);
 
@@ -456,7 +459,7 @@ public class ScriptGenerator : ScriptableObject {
 
             string pws = ""; // Packet writes
             for (int x = 0; x < _clientPackets[i].PacketVariables.Length; x++) {
-                pws += $"\n            _packet.Write(_{Lower(_clientPackets[i].PacketVariables[x].PacketName)});";
+                pws += $"\n            _packet.Write(_{Lower(_clientPackets[i].PacketVariables[x].VariableName)});";
             }
             pss += pws;
             pss += "\n";

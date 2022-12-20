@@ -24,6 +24,7 @@ public enum ServerPackets {
     SyncedObjectRotInterpolation,
     SyncedObjectVec2ScaleInterpolation,
     SyncedObjectVec3ScaleInterpolation,
+    Gf,
 }
 
 // Sent from Client to Server
@@ -31,6 +32,7 @@ public enum ClientPackets {
     WelcomeReceived,
     Ping,
     ClientInput,
+    Sd,
 }
 
 #endregion
@@ -82,6 +84,20 @@ public struct ClientInputPacket {
     public int[] KeycodesUp { get => keycodesUp; set => keycodesUp = value; }
 }
 
+public struct SdPacket {
+    private int fromClient;
+
+    private Vector2[] asdf;
+
+    public SdPacket(int _fromClient, Vector2[] _asdf) {
+        fromClient = _fromClient;
+        asdf = _asdf;
+    }
+
+    public int FromClient { get => fromClient; set => fromClient = value; }
+    public Vector2[] Asdf { get => asdf; set => asdf = value; }
+}
+
 #endregion
 
 #region Packet Handlers
@@ -92,6 +108,7 @@ public static class PacketHandlers {
         { WelcomeReceived },
         { Ping },
         { ClientInput },
+        { Sd },
     };
 
     public static void WelcomeReceived(Packet _packet) {
@@ -114,6 +131,13 @@ public static class PacketHandlers {
 
         ClientInputPacket clientInputPacket = new ClientInputPacket(_packet.FromClient, keycodesDown, keycodesUp);
         PacketManager.instance.PacketReceived(_packet, clientInputPacket);
+    }
+
+    public static void Sd(Packet _packet) {
+        Vector2[] asdf = _packet.ReadVector2s();
+
+        SdPacket sdPacket = new SdPacket(_packet.FromClient, asdf);
+        PacketManager.instance.PacketReceived(_packet, sdPacket);
     }
 }
 
@@ -327,6 +351,14 @@ public static class PacketSend {
             SendUDPDataToAll(_packet);
         }
     }
+
+    public static void Gf(int _toClient, float _hjfjk) {
+        using (Packet _packet = new Packet((int)ServerPackets.Gf)) {
+            _packet.Write(_hjfjk);
+
+            SendTCPData(_toClient, _packet);
+        }
+    }
 }
 
 #endregion
@@ -342,6 +374,7 @@ public static class USNLCallbackEvents {
         CallOnWelcomeReceivedPacketCallbacks,
         CallOnPingPacketCallbacks,
         CallOnClientInputPacketCallbacks,
+        CallOnSdPacketCallbacks,
     };
 
     public static event USNLCallbackEvent OnServerStarted;
@@ -352,6 +385,7 @@ public static class USNLCallbackEvents {
     public static event USNLCallbackEvent OnWelcomeReceivedPacket;
     public static event USNLCallbackEvent OnPingPacket;
     public static event USNLCallbackEvent OnClientInputPacket;
+    public static event USNLCallbackEvent OnSdPacket;
 
     public static void CallOnServerStartedCallbacks(object _param) { if (OnServerStarted != null) { OnServerStarted(_param); } }
     public static void CallOnServerStoppedCallbacks(object _param) { if (OnServerStopped != null) { OnServerStopped(_param); } }
@@ -361,6 +395,7 @@ public static class USNLCallbackEvents {
     public static void CallOnWelcomeReceivedPacketCallbacks(object _param) { if (OnWelcomeReceivedPacket != null) { OnWelcomeReceivedPacket(_param); } }
     public static void CallOnPingPacketCallbacks(object _param) { if (OnPingPacket != null) { OnPingPacket(_param); } }
     public static void CallOnClientInputPacketCallbacks(object _param) { if (OnClientInputPacket != null) { OnClientInputPacket(_param); } }
+    public static void CallOnSdPacketCallbacks(object _param) { if (OnSdPacket != null) { OnSdPacket(_param); } }
 }
 
 #endregion
