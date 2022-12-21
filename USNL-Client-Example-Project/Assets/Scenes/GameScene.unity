@@ -509,6 +509,10 @@ PrefabInstance:
       propertyPath: editorServerPath
       value: G:\_Dev\Unity Projects\Unity-Simple-Networking-Layer\USNL-Server-Example-Project\Build\
       objectReference: {fileID: 0}
+    - target: {fileID: 5325183203695712137, guid: dcbdd65ab627a0448921e3b1f79f3341, type: 3}
+      propertyPath: useApplicationPath
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8115309673269438032, guid: dcbdd65ab627a0448921e3b1f79f3341, type: 3}
       propertyPath: m_Name
       value: USNL Management

@@ -31,7 +31,7 @@ public class ScriptGeneratorEditor : Editor {
     float variableElementHeight;
     float variableNameWidth;
     float variableTypeWidth;
-    float variableElementVerticalBreakSize = 3;
+    float variableElementVerticalBreakSize = 5;
 
     // Real Variables
     int targetClientPacketsListSize;
@@ -144,7 +144,8 @@ public class ScriptGeneratorEditor : Editor {
 
             // Remaining Client Packets
             for (int i = scriptGenerator.ClientPackets.Length; i < packets.Length; i++) {
-                packets[i] = new ScriptGenerator.ClientPacketConfig("", new ScriptGenerator.PacketVariable[0], ScriptGenerator.Protocol.TCP);
+                if (scriptGenerator.ClientPackets.Length > 0) packets[i] = scriptGenerator.ClientPackets[scriptGenerator.ClientPackets.Length - 1];
+                else packets[i] = new ScriptGenerator.ClientPacketConfig("", new ScriptGenerator.PacketVariable[0], ScriptGenerator.Protocol.TCP);
                 foldouts[i] = true;
             }
             scriptGenerator.ClientPackets = packets;
@@ -153,6 +154,11 @@ public class ScriptGeneratorEditor : Editor {
             int[] newTargetClientVariblesLengths = new int[targetClientPacketsListSize];
             for (int i = 0; i < targetClientVariblesLengths.Length && i < newTargetClientVariblesLengths.Length; i++) {
                 newTargetClientVariblesLengths[i] = targetClientVariblesLengths[i];
+            }
+
+            for (int i = targetClientVariblesLengths.Length; i < newTargetClientVariblesLengths.Length; i++) {
+                if (targetClientVariblesLengths.Length > 0) newTargetClientVariblesLengths[i] = targetClientVariblesLengths[targetClientVariblesLengths.Length - 1];
+                else newTargetClientVariblesLengths[i] = 0;
             }
 
             targetClientVariblesLengths = newTargetClientVariblesLengths;
@@ -196,7 +202,10 @@ public class ScriptGeneratorEditor : Editor {
             }
 
             for (int i = targetClientVariblesLengths[_index]; i < packetVariables.Length; i++) {
-                packetVariables[i] = new ScriptGenerator.PacketVariable("", ScriptGenerator.PacketVarType.Byte);
+                if (scriptGenerator.ClientPackets[_index].PacketVariables.Length > 0)
+                    packetVariables[i] = scriptGenerator.ClientPackets[_index].PacketVariables[scriptGenerator.ClientPackets[_index].PacketVariables.Length - 1];
+                else
+                    packetVariables[i] = new ScriptGenerator.PacketVariable("", ScriptGenerator.PacketVarType.Byte);
             }
 
             scriptGenerator.ClientPackets[_index].PacketVariables = packetVariables;
@@ -221,9 +230,14 @@ public class ScriptGeneratorEditor : Editor {
     private void ServerPacketsField() {
         EditorGUILayout.BeginHorizontal();
 
-        EditorGUILayout.LabelField("Server Packets", labelStyle, GUILayout.Width(labelWidth), GUILayout.Height(labelHeight));
-        GUI.SetNextControlName("ServerPacketsLengthField"); // This line means GetNameOfFocusedControl() returns "ArrayLengthField" when this box is selected
-        targetServerPacketsListSize = EditorGUILayout.IntField(targetServerPacketsListSize, GUILayout.Width(labelFieldWidth), GUILayout.Height(labelHeight));
+        try {
+            EditorGUILayout.LabelField("Server Packets", labelStyle, GUILayout.Width(labelWidth), GUILayout.Height(labelHeight));
+            GUI.SetNextControlName("ServerPacketsLengthField"); // This line means GetNameOfFocusedControl() returns "ArrayLengthField" when this box is selected
+            targetServerPacketsListSize = EditorGUILayout.IntField(targetServerPacketsListSize, GUILayout.Width(labelFieldWidth), GUILayout.Height(labelHeight));
+
+        } catch {
+            // This prevents an error message
+        }
 
         EditorGUILayout.EndHorizontal();
 
@@ -246,7 +260,8 @@ public class ScriptGeneratorEditor : Editor {
 
             // Remaining Server Packets
             for (int i = scriptGenerator.ServerPackets.Length; i < packets.Length; i++) {
-                packets[i] = new ScriptGenerator.ServerPacketConfig("", new ScriptGenerator.PacketVariable[0], ScriptGenerator.ServerPacketType.SendToAllClients, ScriptGenerator.Protocol.TCP);
+                if (scriptGenerator.ServerPackets.Length > 0) packets[i] = scriptGenerator.ServerPackets[scriptGenerator.ServerPackets.Length - 1];
+                else packets[i] = new ScriptGenerator.ServerPacketConfig("", new ScriptGenerator.PacketVariable[0], ScriptGenerator.ServerPacketType.SendToAllClients, ScriptGenerator.Protocol.TCP);
                 foldouts[i] = true;
             }
             scriptGenerator.ServerPackets = packets;
@@ -255,6 +270,11 @@ public class ScriptGeneratorEditor : Editor {
             int[] newTargetServerVariblesLengths = new int[targetServerPacketsListSize];
             for (int i = 0; i < targetServerVariblesLengths.Length && i < newTargetServerVariblesLengths.Length; i++) {
                 newTargetServerVariblesLengths[i] = targetServerVariblesLengths[i];
+            }
+
+            for (int i = targetServerVariblesLengths.Length; i < newTargetServerVariblesLengths.Length; i++) {
+                if (targetServerVariblesLengths.Length > 0) newTargetServerVariblesLengths[i] = targetServerVariblesLengths[targetServerVariblesLengths.Length - 1];
+                else newTargetServerVariblesLengths[i] = 0;
             }
 
             targetServerVariblesLengths = newTargetServerVariblesLengths;
@@ -300,7 +320,10 @@ public class ScriptGeneratorEditor : Editor {
             }
 
             for (int i = targetServerVariblesLengths[_index]; i < packetVariables.Length; i++) {
-                packetVariables[i] = new ScriptGenerator.PacketVariable("", ScriptGenerator.PacketVarType.Byte);
+                if (scriptGenerator.ServerPackets[_index].PacketVariables.Length > 0)
+                    packetVariables[i] = scriptGenerator.ServerPackets[_index].PacketVariables[scriptGenerator.ServerPackets[_index].PacketVariables.Length - 1];
+                else
+                    packetVariables[i] = new ScriptGenerator.PacketVariable("", ScriptGenerator.PacketVarType.Byte);
             }
 
             scriptGenerator.ServerPackets[_index].PacketVariables = packetVariables;

@@ -327,61 +327,35 @@ public class ScriptGenerator : ScriptableObject {
         #region Server & Client Packet Enums
 
         string serverPacketsString = "";
-        for (int i = 0; i < _serverPackets.Count; i++) {
-            serverPacketsString += $"\n    {Upper(_serverPackets[i].PacketName.ToString())},";
+        for (int i = 0; i < serverPackets.Length; i++) {
+            serverPacketsString += $"\n        {Upper(serverPackets[i].PacketName.ToString())},";
         }
         serverPacketsString = serverPacketsString.Substring(1, serverPacketsString.Length - 1); // Remove last ", " & first \n
 
         string clientPacketsString = "";
-        for (int i = 0; i < _clientPackets.Count; i++) {
-            clientPacketsString += $"\n    {Upper(_clientPackets[i].PacketName.ToString())},";
+        for (int i = 0; i < clientPackets.Length; i++) {
+            clientPacketsString += $"\n        {Upper(clientPackets[i].PacketName.ToString())},";
         }
         clientPacketsString = clientPacketsString.Substring(1, clientPacketsString.Length - 1); // Remove last ", " & first \n
+
+        string pServerPacketsString = "";
+        for (int i = 0; i < libServerPackets.Length; i++) {
+            pServerPacketsString += $"\n        {Upper(libServerPackets[i].PacketName.ToString())},";
+        }
+        pServerPacketsString = pServerPacketsString.Substring(1, pServerPacketsString.Length - 1); // Remove last ", " & first \n
+
+        string pClientPacketsString = "";
+        for (int i = 0; i < libClientPackets.Length; i++) {
+            pClientPacketsString += $"\n        {Upper(libClientPackets[i].PacketName.ToString())},";
+        }
+        pClientPacketsString = pClientPacketsString.Substring(1, pClientPacketsString.Length - 1); // Remove last ", " & first \n
 
         #endregion
 
         #region Packet Structs
 
-        string psts = ""; // Packet Structs String
-        for (int i = 0; i < _clientPackets.Count; i++) {
-            psts += $"\npublic struct {Upper(_clientPackets[i].PacketName.ToString())}Packet {{";
-
-            psts += $"\n    private int fromClient;";
-            psts += "\n";
-            for (int x = 0; x < _clientPackets[i].PacketVariables.Length; x++) {
-                string varName = Lower(_clientPackets[i].PacketVariables[x].VariableName); // Lower case variable name (C# formatting)
-                string varType = packetTypes[_clientPackets[i].PacketVariables[x].VariableType]; // Variable type string
-                psts += $"\n    private {varType} {varName};";
-            }
-
-
-            // Constructor:
-            psts += "\n";
-            string constructorParameters = "int _fromClient, ";
-            for (int x = 0; x < _clientPackets[i].PacketVariables.Length; x++) {
-                constructorParameters += $"{packetTypes[_clientPackets[i].PacketVariables[x].VariableType]} _{Lower(_clientPackets[i].PacketVariables[x].VariableName)}, ";
-            }
-            constructorParameters = constructorParameters.Substring(0, constructorParameters.Length - 2);
-
-            psts += $"\n    public {Upper(_clientPackets[i].PacketName)}Packet({constructorParameters}) {{";
-            psts += "\n        fromClient = _fromClient;";
-            for (int x = 0; x < _clientPackets[i].PacketVariables.Length; x++) {
-                psts += $"\n        {Lower(_clientPackets[i].PacketVariables[x].VariableName)} = _{Lower(_clientPackets[i].PacketVariables[x].VariableName)};";
-            }
-            psts += "\n    }";
-            psts += "\n";
-
-
-            psts += "\n    public int FromClient { get => fromClient; set => fromClient = value; }";
-            for (int x = 0; x < _clientPackets[i].PacketVariables.Length; x++) {
-                string varName = Lower(_clientPackets[i].PacketVariables[x].VariableName); // Lower case variable name (C# formatting)
-                string varType = packetTypes[_clientPackets[i].PacketVariables[x].VariableType]; // Variable type string
-
-                psts += $"\n    public {varType} {Upper(varName)} {{ get => {varName}; set => {varName} = value; }}";
-            }
-            psts += "\n}";
-            psts += "\n";
-        }
+        string packetStructs = GeneratePacketStructs(clientPackets);
+        string pPacketStructs = GeneratePacketStructs(libClientPackets);
 
         #endregion
 
@@ -528,20 +502,37 @@ public class ScriptGenerator : ScriptableObject {
         return
             "\n#region Packet Enums" +
             "\n" +
-            "\n// Sent from Server to Client" +
-            "\npublic enum ServerPackets {" +
+            "\nnamespace USNL {" +
+            "\n    public enum ServerPackets {" +
             $"\n{serverPacketsString}" +
+            "\n    }" +
+            "\n" +
+            "\n    public enum ClientPackets {" +
+            $"\n{clientPacketsString}" +
+            "\n    }" +
             "\n}" +
             "\n" +
-            "\n// Sent from Client to Server" +
-            "\npublic enum ClientPackets {" +
-            $"\n{clientPacketsString}" +
+            "\nnamespace USNL.Package {" +
+            "\n    public enum ServerPackets {" +
+            $"\n{pServerPacketsString}" +
+            "\n    }" +
+            "\n" +
+            "\n    public enum ClientPackets {" +
+            $"\n{pClientPacketsString}" +
+            "\n    }" +
             "\n}" +
             "\n" +
             "\n#endregion" +
             "\n" +
             "\n#region Packet Structs" +
-            $"\n{psts}" +
+            "\n namespace USNL {" +
+            $"{packetStructs}" +
+            "\n}" +
+            "\n" +
+            "\n namespace USNL.Package {" +
+            $"{pPacketStructs}" +
+            "\n}" +
+            "\n" +
             "\n#endregion" +
             "\n" +
             "\n#region Packet Handlers" +
@@ -560,7 +551,7 @@ public class ScriptGenerator : ScriptableObject {
             "\n" +
             $"\n#endregion";
     }
-    
+
     private string GenerateUSNLCallbackEventsText() {
         ClientPacketConfig[] _clientPackets = new ClientPacketConfig[libClientPackets.Length + clientPackets.Length];
 
@@ -614,8 +605,8 @@ public class ScriptGenerator : ScriptableObject {
     }
 
     #endregion
-    
-    #region Utils
+
+    #region Generation Utils
 
     private string Upper(string _input) {
         string output = String.Concat(_input.Where(c => !Char.IsWhiteSpace(c))); // Remove whitespace
@@ -625,6 +616,50 @@ public class ScriptGenerator : ScriptableObject {
     private string Lower(string _input) {
         string output = String.Concat(_input.Where(c => !Char.IsWhiteSpace(c))); // Remove whitespace
         return $"{Char.ToLower(output[0])}{output.Substring(1)}";
+    }
+
+    private string GeneratePacketStructs(ClientPacketConfig[] cpcs) {
+        string psts = ""; // Packet Structs String
+        for (int i = 0; i < cpcs.Length; i++) {
+            psts += $"\npublic struct {Upper(cpcs[i].PacketName.ToString())}Packet {{";
+
+            psts += $"\n    private int fromClient;";
+            psts += "\n";
+            for (int x = 0; x < cpcs[i].PacketVariables.Length; x++) {
+                string varName = Lower(cpcs[i].PacketVariables[x].VariableName); // Lower case variable name (C# formatting)
+                string varType = packetTypes[cpcs[i].PacketVariables[x].VariableType]; // Variable type string
+                psts += $"\n    private {varType} {varName};";
+            }
+
+
+            // Constructor:
+            psts += "\n";
+            string constructorParameters = "int _fromClient, ";
+            for (int x = 0; x < cpcs[i].PacketVariables.Length; x++) {
+                constructorParameters += $"{packetTypes[cpcs[i].PacketVariables[x].VariableType]} _{Lower(cpcs[i].PacketVariables[x].VariableName)}, ";
+            }
+            constructorParameters = constructorParameters.Substring(0, constructorParameters.Length - 2);
+
+            psts += $"\n    public {Upper(cpcs[i].PacketName)}Packet({constructorParameters}) {{";
+            psts += "\n        fromClient = _fromClient;";
+            for (int x = 0; x < cpcs[i].PacketVariables.Length; x++) {
+                psts += $"\n        {Lower(cpcs[i].PacketVariables[x].VariableName)} = _{Lower(cpcs[i].PacketVariables[x].VariableName)};";
+            }
+            psts += "\n    }";
+            psts += "\n";
+
+
+            psts += "\n    public int FromClient { get => fromClient; set => fromClient = value; }";
+            for (int x = 0; x < cpcs[i].PacketVariables.Length; x++) {
+                string varName = Lower(cpcs[i].PacketVariables[x].VariableName); // Lower case variable name (C# formatting)
+                string varType = packetTypes[cpcs[i].PacketVariables[x].VariableType]; // Variable type string
+
+                psts += $"\n    public {varType} {Upper(varName)} {{ get => {varName}; set => {varName} = value; }}";
+            }
+            psts += "\n}";
+            psts += "\n";
+        }
+        return psts;
     }
 
     #endregion
