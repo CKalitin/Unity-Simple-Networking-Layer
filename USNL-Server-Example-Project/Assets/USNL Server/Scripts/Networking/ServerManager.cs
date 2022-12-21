@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace USNL {
@@ -11,21 +12,15 @@ namespace USNL {
         public static ServerManager instance;
 
         [Header("Editor Config")]
-        [SerializeField] private int port = 26950;
-        [SerializeField] private int maxPlayers = 20;
-        [SerializeField] private string serverName = "Server";
-        [SerializeField] private string welcomeMessage = "Holy fuck my code worked! :O :)";
+        [SerializeField] private Package.ServerConfig serverConfig;
         [Space]
         [SerializeField] private int dataBufferSize = 4096;
-
-        private bool isServerActive = true;
+        
         private bool isMigratingHost = false;
         private DateTime timeOfStartup;
 
-        public int MaxPlayers { get => maxPlayers; set => maxPlayers = value; }
-        public int Port { get => port; set => port = value; }
-        public string ServerName { get => serverName; set => serverName = value; }
-        public string WelcomeMessage { get => welcomeMessage; set => welcomeMessage = value; }
+        public Package.ServerConfig ServerConfig { get => serverConfig; set => serverConfig = value; }
+
         public int DataBufferSize { get => dataBufferSize; set => dataBufferSize = value; }
         public bool IsMigratingHost { get => isMigratingHost; set => isMigratingHost = value; }
         public DateTime TimeOfStartup { get => timeOfStartup; set => timeOfStartup = value; }
@@ -70,23 +65,24 @@ namespace USNL {
         #region Server Manager
 
         public void StartServer() {
-            isServerActive = true;
+            Package.Server.ServerData.IsServerActive = true;
 
             WriteServerDataFile();
 
             ReadServerConfigFile();
 
-            Package.Server.Start(maxPlayers, port);
+            Package.Server.Start(serverConfig.MaxPlayers, serverConfig.ServerPort);
 
             TimeOfStartup = DateTime.Now;
         }
 
         public void StopServer() {
-            Package.Server.DisconnectAllClients();
+            Package.Server.DisconnectAllClients("Server is shutting down.");
 
-            isServerActive = false;
+            Package.Server.ServerData.IsServerActive = false;
             WriteServerDataFile();
-            Package.Server.Stop();
+            
+            StartCoroutine(Package.Server.ShutdownServer());
         }
 
         private void OnWelcomeReceivedPacket(object _packetObject) {
@@ -110,7 +106,7 @@ namespace USNL {
 
         private void LookForServerQuitFile() {
             if (File.Exists(GetApplicationPath() + "ServerQuit")) {
-                Debug.Log("ServerQuit commanded from host client, shutting down server.");
+                Debug.Log("Server Quit commanded from host client, shutting down server.");
                 File.Delete(GetApplicationPath() + "ServerQuit");
                 StopServer();
                 Application.Quit();
@@ -118,15 +114,13 @@ namespace USNL {
         }
 
         public void WriteServerDataFile() {
-            string text = "{" +
-                $"\n    \"serverActive\":{isServerActive}" +
-                "\n}";
+            string jsonText = JsonConvert.SerializeObject(Package.Server.ServerData, Formatting.Indented);
 
             StreamWriter sw = new StreamWriter($"{GetApplicationPath()}ServerData.json");
-            sw.Write(text);
+            sw.Write(jsonText);
             sw.Flush();
             sw.Close();
-
+            
             Debug.Log("Wrote Server Data file at: " + GetApplicationPath() + "ServerData.json");
         }
 
@@ -134,45 +128,21 @@ namespace USNL {
             string path = GetApplicationPath() + "/ServerConfig.json";
 
             if (!File.Exists(path)) {
-                string serverConfigFileText = "{" +
-                $"\n    \"serverPort\":{port}" +
-                $"\n    \"maxPlayers\":{maxPlayers}" +
-                $"\n    \"serverName\":{ServerName}" +
-                $"\n    \"welcomeMessage\":{welcomeMessage}" +
-                "\n}";
+                string jsonText = JsonConvert.SerializeObject(serverConfig, Formatting.Indented);
 
                 StreamWriter sw = new StreamWriter($"{path}");
-                sw.Write(serverConfigFileText);
+                sw.Write(jsonText);
                 sw.Flush();
                 sw.Close();
 
                 Debug.Log("Server Config file did not exist. Created one.");
                 return;
             }
+            
+            string text = File.ReadAllText($"{path}");
+            serverConfig = JsonConvert.DeserializeObject<Package.ServerConfig>(text);
 
-            string[] text = File.ReadAllLines($"{path}");
-            for (int i = 0; i < text.Length; i++) {
-                if (text[i].Contains("serverPort")) {
-                    string[] split = text[i].Split(':');
-                    string value = split[1].Replace(",", "").Replace(" ", "");
-                    int newPort = int.Parse(value);
-                    if (newPort != 0) port = newPort;
-                } else if (text[i].Contains("maxPlayers")) {
-                    string[] split = text[i].Split(':');
-                    string value = split[1].Replace(",", "").Replace(" ", "");
-                    int newMaxPlayers = int.Parse(value);
-                } else if (text[i].Contains("serverName")) {
-                    string[] split = text[i].Split(':');
-                    string value = split[1].Replace(",", "").Replace(" ", "");
-                    string newServerName = value;
-                    if (newServerName != "") ServerName = newServerName;
-                } else if (text[i].Contains("weclomeMessage")) {
-                    string[] split = text[i].Split(':');
-                    string value = split[1].Replace(",", "").Replace(" ", "");
-                    string newWelcomeMessage = value;
-                    if (newWelcomeMessage != "") welcomeMessage = newWelcomeMessage;
-                }
-            }
+            Debug.Log("Read server config file.");
         }
 
         private string GetApplicationPath() {

@@ -8,12 +8,12 @@ namespace USNL {
         WelcomeReceived,
         Ping,
         ClientInput,
-        Test,
     }
 
     public enum ServerPackets {
         Welcome,
         Ping,
+        DisconnectClient,
         SyncedObjectInstantiate,
         SyncedObjectDestroy,
         SyncedObjectInterpolationMode,
@@ -29,22 +29,12 @@ namespace USNL {
         SyncedObjectRotInterpolation,
         SyncedObjectVec2ScaleInterpolation,
         SyncedObjectVec3ScaleInterpolation,
-        Testt,
     }
 
     #endregion
 
     #region Packet Structs
 
-    public struct TesttPacket {
-        private int b;
-
-        public TesttPacket(int _b) {
-            b = _b;
-        }
-
-        public int B { get => b; set => b = value; }
-    }
 
 
     #endregion
@@ -56,6 +46,7 @@ namespace USNL {
         public static List<PacketHandler> packetHandlers = new List<PacketHandler>() {
             { Package.PacketHandlers.Welcome },
             { Package.PacketHandlers.Ping },
+            { Package.PacketHandlers.DisconnectClient },
             { Package.PacketHandlers.SyncedObjectInstantiate },
             { Package.PacketHandlers.SyncedObjectDestroy },
             { Package.PacketHandlers.SyncedObjectInterpolationMode },
@@ -71,15 +62,8 @@ namespace USNL {
             { Package.PacketHandlers.SyncedObjectRotInterpolation },
             { Package.PacketHandlers.SyncedObjectVec2ScaleInterpolation },
             { Package.PacketHandlers.SyncedObjectVec3ScaleInterpolation },
-            { Testt },
         };
 
-        public static void Testt(Package.Packet _packet) {
-            int b = _packet.ReadInt();
-
-            USNL.TesttPacket testtPacket = new USNL.TesttPacket(b);
-            Package.PacketManager.instance.PacketReceived(_packet, testtPacket);
-        }
     }
 
     #endregion
@@ -87,29 +71,7 @@ namespace USNL {
     #region Packet Send
 
     public static class PacketSend {
-        private static void SendTCPData(USNL.Package.Packet _packet) {
-            _packet.WriteLength();
-            if (USNL.Package.Client.instance.IsConnected) {
-                USNL.Package.Client.instance.Tcp.SendData(_packet);
-                NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length());
-            }
-        }
-    
-        private static void SendUDPData(USNL.Package.Packet _packet) {
-            _packet.WriteLength();
-            if (USNL.Package.Client.instance.IsConnected) {
-                USNL.Package.Client.instance.Udp.SendData(_packet);
-                NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length());
-            }
-        }
-    
-        public static void Test(long _a) {
-            using (Package.Packet _packet = new Package.Packet((int)USNL.ClientPackets.Test)) {
-                _packet.Write(_a);
 
-                SendTCPData(_packet);
-            }
-        }
     }
 
 #endregion
@@ -121,12 +83,12 @@ namespace USNL.Package {
         WelcomeReceived,
         Ping,
         ClientInput,
-        Test,
     }
 
     public enum ServerPackets {
         Welcome,
         Ping,
+        DisconnectClient,
         SyncedObjectInstantiate,
         SyncedObjectDestroy,
         SyncedObjectInterpolationMode,
@@ -142,7 +104,6 @@ namespace USNL.Package {
         SyncedObjectRotInterpolation,
         SyncedObjectVec2ScaleInterpolation,
         SyncedObjectVec3ScaleInterpolation,
-        Testt,
     }
     #endregion
 
@@ -174,22 +135,32 @@ namespace USNL.Package {
         public bool SendPingBack { get => sendPingBack; set => sendPingBack = value; }
     }
 
+    public struct DisconnectClientPacket {
+        private string disconnectMessage;
+
+        public DisconnectClientPacket(string _disconnectMessage) {
+            disconnectMessage = _disconnectMessage;
+        }
+
+        public string DisconnectMessage { get => disconnectMessage; set => disconnectMessage = value; }
+    }
+
     public struct SyncedObjectInstantiatePacket {
-        private int syncedObjectPrefebId;
+        private string syncedObjectTag;
         private int syncedObjectUUID;
         private Vector3 position;
         private Quaternion rotation;
         private Vector3 scale;
 
-        public SyncedObjectInstantiatePacket(int _syncedObjectPrefebId, int _syncedObjectUUID, Vector3 _position, Quaternion _rotation, Vector3 _scale) {
-            syncedObjectPrefebId = _syncedObjectPrefebId;
+        public SyncedObjectInstantiatePacket(string _syncedObjectTag, int _syncedObjectUUID, Vector3 _position, Quaternion _rotation, Vector3 _scale) {
+            syncedObjectTag = _syncedObjectTag;
             syncedObjectUUID = _syncedObjectUUID;
             position = _position;
             rotation = _rotation;
             scale = _scale;
         }
 
-        public int SyncedObjectPrefebId { get => syncedObjectPrefebId; set => syncedObjectPrefebId = value; }
+        public string SyncedObjectTag { get => syncedObjectTag; set => syncedObjectTag = value; }
         public int SyncedObjectUUID { get => syncedObjectUUID; set => syncedObjectUUID = value; }
         public Vector3 Position { get => position; set => position = value; }
         public Quaternion Rotation { get => rotation; set => rotation = value; }
@@ -382,6 +353,7 @@ namespace USNL.Package {
         public static List<PacketHandler> packetHandlers = new List<PacketHandler>() {
             { Welcome },
             { Ping },
+            { DisconnectClient },
             { SyncedObjectInstantiate },
             { SyncedObjectDestroy },
             { SyncedObjectInterpolationMode },
@@ -397,7 +369,6 @@ namespace USNL.Package {
             { SyncedObjectRotInterpolation },
             { SyncedObjectVec2ScaleInterpolation },
             { SyncedObjectVec3ScaleInterpolation },
-            { USNL.PacketHandlers.Testt },
         };
 
         public static void Welcome(Package.Packet _packet) {
@@ -416,14 +387,21 @@ namespace USNL.Package {
             Package.PacketManager.instance.PacketReceived(_packet, pingPacket);
         }
 
+        public static void DisconnectClient(Package.Packet _packet) {
+            string disconnectMessage = _packet.ReadString();
+
+            Package.DisconnectClientPacket disconnectClientPacket = new Package.DisconnectClientPacket(disconnectMessage);
+            Package.PacketManager.instance.PacketReceived(_packet, disconnectClientPacket);
+        }
+
         public static void SyncedObjectInstantiate(Package.Packet _packet) {
-            int syncedObjectPrefebId = _packet.ReadInt();
+            string syncedObjectTag = _packet.ReadString();
             int syncedObjectUUID = _packet.ReadInt();
             Vector3 position = _packet.ReadVector3();
             Quaternion rotation = _packet.ReadQuaternion();
             Vector3 scale = _packet.ReadVector3();
 
-            Package.SyncedObjectInstantiatePacket syncedObjectInstantiatePacket = new Package.SyncedObjectInstantiatePacket(syncedObjectPrefebId, syncedObjectUUID, position, rotation, scale);
+            Package.SyncedObjectInstantiatePacket syncedObjectInstantiatePacket = new Package.SyncedObjectInstantiatePacket(syncedObjectTag, syncedObjectUUID, position, rotation, scale);
             Package.PacketManager.instance.PacketReceived(_packet, syncedObjectInstantiatePacket);
         }
 
@@ -597,6 +575,7 @@ namespace USNL {
         public static CallbackEvent[] PacketCallbackEvents = {
             CallOnWelcomePacketCallbacks,
             CallOnPingPacketCallbacks,
+            CallOnDisconnectClientPacketCallbacks,
             CallOnSyncedObjectInstantiatePacketCallbacks,
             CallOnSyncedObjectDestroyPacketCallbacks,
             CallOnSyncedObjectInterpolationModePacketCallbacks,
@@ -612,7 +591,6 @@ namespace USNL {
             CallOnSyncedObjectRotInterpolationPacketCallbacks,
             CallOnSyncedObjectVec2ScaleInterpolationPacketCallbacks,
             CallOnSyncedObjectVec3ScaleInterpolationPacketCallbacks,
-            CallOnTesttPacketCallbacks,
         };
 
         public static event CallbackEvent OnConnected;
@@ -620,6 +598,7 @@ namespace USNL {
 
         public static event CallbackEvent OnWelcomePacket;
         public static event CallbackEvent OnPingPacket;
+        public static event CallbackEvent OnDisconnectClientPacket;
         public static event CallbackEvent OnSyncedObjectInstantiatePacket;
         public static event CallbackEvent OnSyncedObjectDestroyPacket;
         public static event CallbackEvent OnSyncedObjectInterpolationModePacket;
@@ -635,13 +614,13 @@ namespace USNL {
         public static event CallbackEvent OnSyncedObjectRotInterpolationPacket;
         public static event CallbackEvent OnSyncedObjectVec2ScaleInterpolationPacket;
         public static event CallbackEvent OnSyncedObjectVec3ScaleInterpolationPacket;
-        public static event CallbackEvent OnTesttPacket;
 
         public static void CallOnConnectedCallbacks(object _param) { if (OnConnected != null) { OnConnected(_param); } }
         public static void CallOnDisconnectedCallbacks(object _param) { if (OnDisconnected != null) { OnDisconnected(_param); } }
 
         public static void CallOnWelcomePacketCallbacks(object _param) { if (OnWelcomePacket != null) { OnWelcomePacket(_param); } }
         public static void CallOnPingPacketCallbacks(object _param) { if (OnPingPacket != null) { OnPingPacket(_param); } }
+        public static void CallOnDisconnectClientPacketCallbacks(object _param) { if (OnDisconnectClientPacket != null) { OnDisconnectClientPacket(_param); } }
         public static void CallOnSyncedObjectInstantiatePacketCallbacks(object _param) { if (OnSyncedObjectInstantiatePacket != null) { OnSyncedObjectInstantiatePacket(_param); } }
         public static void CallOnSyncedObjectDestroyPacketCallbacks(object _param) { if (OnSyncedObjectDestroyPacket != null) { OnSyncedObjectDestroyPacket(_param); } }
         public static void CallOnSyncedObjectInterpolationModePacketCallbacks(object _param) { if (OnSyncedObjectInterpolationModePacket != null) { OnSyncedObjectInterpolationModePacket(_param); } }
@@ -657,7 +636,6 @@ namespace USNL {
         public static void CallOnSyncedObjectRotInterpolationPacketCallbacks(object _param) { if (OnSyncedObjectRotInterpolationPacket != null) { OnSyncedObjectRotInterpolationPacket(_param); } }
         public static void CallOnSyncedObjectVec2ScaleInterpolationPacketCallbacks(object _param) { if (OnSyncedObjectVec2ScaleInterpolationPacket != null) { OnSyncedObjectVec2ScaleInterpolationPacket(_param); } }
         public static void CallOnSyncedObjectVec3ScaleInterpolationPacketCallbacks(object _param) { if (OnSyncedObjectVec3ScaleInterpolationPacket != null) { OnSyncedObjectVec3ScaleInterpolationPacket(_param); } }
-        public static void CallOnTesttPacketCallbacks(object _param) { if (OnTesttPacket != null) { OnTesttPacket(_param); } }
     }
 }
 

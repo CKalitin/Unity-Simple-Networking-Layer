@@ -56,7 +56,7 @@ namespace USNL.Package {
 
                 stream.BeginRead(receiveBuffer, 0, ServerManager.instance.DataBufferSize, ReceiveCallback, null);
 
-                USNL.Package.PacketSend.Welcome(clientId, ServerManager.instance.WelcomeMessage, ServerManager.instance.ServerName, clientId);
+                USNL.Package.PacketSend.Welcome(clientId, ServerManager.instance.ServerConfig.WelcomeMessage, ServerManager.instance.ServerConfig.ServerName, clientId);
 
                 client.isConnected = true;
             }

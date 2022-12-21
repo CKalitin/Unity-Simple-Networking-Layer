@@ -169,7 +169,10 @@ namespace USNL.Package {
 
             private void Disconnect() {
                 instance.Disconnect();
+                Reset();
+            }
 
+            public void Reset() {
                 stream = null;
                 receivedData = null;
                 receiveBuffer = null;
@@ -251,6 +254,10 @@ namespace USNL.Package {
 
             private void Disconnect() {
                 instance.Disconnect();
+                Reset();
+            }
+
+            public void Reset() {
 
                 endPoint = null;
                 socket = null;
@@ -291,9 +298,12 @@ namespace USNL.Package {
                     udp.socket.Close();
                 }
 
-                USNL.Package.ThreadManager.StopPacketHandleThread();
+                tcp.Reset();
+                udp.Reset();
 
-                ClientManager.instance.SetDisconnectedFromServer();
+                USNL.Package.ThreadManager.StopPacketHandleThread();
+                
+                USNL.CallbackEvents.CallOnDisconnectedCallbacks(0);
 
                 Debug.Log("Disconnected from server.");
             }

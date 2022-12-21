@@ -94,7 +94,7 @@ namespace USNL {
         }
 
         private IEnumerator UpdateSyncedObjects() {
-            while (Package.Server.ServerActive) {
+            while (Package.Server.ServerData.IsServerActive) {
                 yield return new WaitForSeconds(syncedObjectClientUpdateRate);
                 SendSyncedObjectUpdatePackets();
 
@@ -187,9 +187,9 @@ namespace USNL {
         }
 
         private void SendAllSyncedObjectsToClient(int _toClient) {
-            USNL.Package.PacketSend.SyncedObjectInterpolationMode(_toClient, serverSideInterpolation);
+            Package.PacketSend.SyncedObjectInterpolationMode(_toClient, serverSideInterpolation);
             for (int i = 0; i < syncedObjects.Count; i++) {
-                USNL.Package.PacketSend.SyncedObjectInstantiate(_toClient, syncedObjects[i].PrefabId, syncedObjects[i].SyncedObjectUUID, syncedObjects[i].transform.position, syncedObjects[i].transform.rotation, syncedObjects[i].transform.lossyScale);
+                Package.PacketSend.SyncedObjectInstantiate(_toClient, syncedObjects[i].SyncedObjectTag, syncedObjects[i].SyncedObjectUUID, syncedObjects[i].transform.position, syncedObjects[i].transform.rotation, syncedObjects[i].transform.lossyScale);
             }
         }
 
@@ -198,7 +198,7 @@ namespace USNL {
 
             for (int i = 0; i < Package.Server.MaxClients; i++) {
                 if (Package.Server.Clients[i].IsConnected) {
-                    USNL.Package.PacketSend.SyncedObjectInstantiate(i, _so.PrefabId, _so.SyncedObjectUUID, _so.transform.position, _so.transform.rotation, _so.transform.lossyScale);
+                    Package.PacketSend.SyncedObjectInstantiate(i, _so.SyncedObjectTag, _so.SyncedObjectUUID, _so.transform.position, _so.transform.rotation, _so.transform.lossyScale);
                 }
             }
         }
@@ -208,7 +208,7 @@ namespace USNL {
 
             for (int i = 0; i < Package.Server.MaxClients; i++) {
                 if (Package.Server.Clients[i].IsConnected) {
-                    USNL.Package.PacketSend.SyncedObjectDestroy(i, _so.SyncedObjectUUID);
+                    Package.PacketSend.SyncedObjectDestroy(i, _so.SyncedObjectUUID);
                 }
             }
         }

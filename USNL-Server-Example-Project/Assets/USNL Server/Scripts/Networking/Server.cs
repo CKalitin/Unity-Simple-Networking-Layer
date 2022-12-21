@@ -3,10 +3,32 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using System.Linq;
 using UnityEngine;
 
 namespace USNL.Package {
+    [Serializable]
+    public struct ServerData {
+        [SerializeField] private bool isServerActive;
+
+        public bool IsServerActive { get => isServerActive; set => isServerActive = value; }
+    }
+    
+    [Serializable]
+    public struct ServerConfig {
+        [SerializeField] private string serverName;
+        [SerializeField] private int serverPort;
+        [SerializeField] private int maxPlayers;
+        [SerializeField] private string welcomeMessage;
+        [Space]
+        [SerializeField] private bool showGUI;
+
+        public string ServerName { get => serverName; set => serverName = value; }
+        public int ServerPort { get => serverPort; set => serverPort = value; }
+        public int MaxPlayers { get => maxPlayers; set => maxPlayers = value; }
+        public string WelcomeMessage { get => welcomeMessage; set => welcomeMessage = value; }
+        public bool ShowGUI { get => showGUI; set => showGUI = value; }
+    }
+
     public class Server {
         #region Variables
 
@@ -16,7 +38,7 @@ namespace USNL.Package {
 
         public static List<Client> Clients = new List<Client>();
 
-        public static bool ServerActive = false;
+        public static ServerData ServerData;
 
         private static TcpListener tcpListener;
         private static UdpClient udpListener;
@@ -43,7 +65,7 @@ namespace USNL.Package {
 
             InputManager.instance.Initialize();
 
-            ServerActive = true;
+            ServerData.IsServerActive = true;
 
             USNL.CallbackEvents.CallOnServerStartedCallbacks(0);
 
@@ -55,23 +77,36 @@ namespace USNL.Package {
                 Clients.Add(new Client(i));
             }
         }
+        
+        public static IEnumerator ShutdownServer() {
+            float time = 0f;
+            while (true) {
+                if (GetConnectedClients() <= 0 || time > 1f) {
+                    for (int i = 0; i < Clients.Count; i++) {
+                        if (Clients[i].IsConnected) Clients[i].Disconnect();
+                    }
 
-        public static void Stop() {
-            tcpListener.Stop();
-            udpListener.Close();
+                    tcpListener.Stop();
+                    udpListener.Close();
 
-            ThreadManager.StopPacketHandleThread();
+                    ThreadManager.StopPacketHandleThread();
 
-            ServerActive = false;
+                    ServerData.IsServerActive = false;
 
-            USNL.CallbackEvents.CallOnServerStoppedCallbacks(0);
+                    USNL.CallbackEvents.CallOnServerStoppedCallbacks(0);
 
-            Debug.Log("Server stopped.");
+                    Debug.Log("Server stopped.");
+                    
+                    break;
+                }
+                yield return new WaitForEndOfFrame();
+                time += Time.deltaTime;
+            }
         }
 
-        public static void DisconnectAllClients() {
+        public static void DisconnectAllClients(string _disconnectMessage) {
             for (int i = 0; i < Clients.Count; i++) {
-                if (Clients[i].IsConnected) Clients[i].Disconnect();
+                if (Clients[i].IsConnected) USNL.Package.PacketSend.DisconnectClient(i, _disconnectMessage);
             }
         }
 

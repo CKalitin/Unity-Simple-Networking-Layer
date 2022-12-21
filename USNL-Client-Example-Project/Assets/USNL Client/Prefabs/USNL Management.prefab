@@ -135,15 +135,17 @@ MonoBehaviour:
   port: 26950
   connectionTimeout: 10
   timeBetweenConnectionAttempts: 3
+  serverName: 
   serverExeName: USNL-Server-Example-Project.exe
-  serverPath: Server
-  editorServerPath: G:\_Dev\Unity Projects\Unity-Simple-Networking-Layer\USNL-Server-Example-Project\Build
-  useApplicationPath: 0
+  serverPath: Server\
+  editorServerPath: G:\_Dev\Unity Projects\Unity-Simple-Networking-Layer\USNL-Server-Example-Project\Build\
+  useApplicationPath: 1
   serverConfig:
-    serverName: Yay Code Works!
+    serverName: GoodServer
     serverPort: 26950
     maxPlayers: 69
     welcomeMessage: Tovarishch
+    showGUI: 0
 --- !u!114 &7365712499779709808
 MonoBehaviour:
   m_ObjectHideFlags: 0

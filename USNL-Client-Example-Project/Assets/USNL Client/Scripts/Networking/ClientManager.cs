@@ -40,7 +40,7 @@ namespace USNL {
 
         private DateTime timeOfConnection;
 
-        [SerializeField] private string serverName;
+        private string serverName;
 
         [Header("Server Host")]
         [SerializeField] private string serverExeName = "USNL-Server-Example-Project.exe";
@@ -56,8 +56,7 @@ namespace USNL {
         public int LanClientId { get => lanClientId; set => lanClientId = value; }
         public string WanClientIp { get => wanClientIp; set => wanClientIp = value; }
         public string LanClientIP { get => lanClientIp; set => lanClientIp = value; }
-
-        // Debug Menu Variables
+        
         public bool IsConnected { get => Package.Client.instance.IsConnected; }
         public bool IsAttempingConnection { get => isAttempingConnection; }
         public bool IsHost { get => Package.Client.instance.IsHost; }
@@ -104,8 +103,15 @@ namespace USNL {
             if (Package.ServerHost.GetServerData().IsServerActive == false && !Package.ServerHost.LaunchingServer) Package.Client.instance.IsHost = false;
         }
 
-        private void OnEnable() { USNL.CallbackEvents.OnWelcomePacket += OnWelcomePacket; }
-        private void OnDisable() { USNL.CallbackEvents.OnWelcomePacket -= OnWelcomePacket; }
+        private void OnEnable() {
+            USNL.CallbackEvents.OnWelcomePacket += OnWelcomePacket;
+            USNL.CallbackEvents.OnDisconnectClientPacket += OnDisconnectClientPacket;
+        }
+
+        private void OnDisable() {
+            USNL.CallbackEvents.OnWelcomePacket -= OnWelcomePacket;
+            USNL.CallbackEvents.OnDisconnectClientPacket -= OnDisconnectClientPacket;
+        }
 
         private void OnApplicationQuit() {
             CloseServer();
@@ -238,7 +244,7 @@ namespace USNL {
         private void OnWelcomePacket(object _packetObject) {
             USNL.Package.WelcomePacket _wp = (USNL.Package.WelcomePacket)_packetObject;
 
-            Debug.Log($"Welcome message from Server: {_wp.WelcomeMessage}, Client Id: {_wp.ClientId}");
+            Debug.Log($"Welcome message from Server {_wp.ServerName}: {_wp.WelcomeMessage}, Client Id: {_wp.ClientId}");
             Package.Client.instance.ClientId = _wp.ClientId;
             serverName = _wp.ServerName;
 
@@ -249,8 +255,12 @@ namespace USNL {
             USNL.CallbackEvents.CallOnConnectedCallbacks(0);
         }
 
-        public void SetDisconnectedFromServer() {
-            USNL.CallbackEvents.CallOnDisconnectedCallbacks(0);
+        private void OnDisconnectClientPacket(object _packetObject) {
+            USNL.Package.DisconnectClientPacket _dcp = (USNL.Package.DisconnectClientPacket)_packetObject;
+
+            Debug.Log($"Disconnection commanded from server.\nMessage: {_dcp.DisconnectMessage}");
+
+            USNL.Package.Client.instance.Disconnect();
         }
 
         #endregion
