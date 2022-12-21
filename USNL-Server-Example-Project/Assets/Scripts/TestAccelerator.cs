@@ -15,7 +15,7 @@ public class TestAccelerator : MonoBehaviour {
     }
 
     private void OnTriggerEnter2D(Collider2D collision) {
-        if (collision.GetComponent<SyncedObject>()) {
+        if (collision.GetComponent<USNL.SyncedObject>()) {
             syncedObjectsInCollider.Add(collision.GetComponent<Rigidbody2D>());
         }
     }

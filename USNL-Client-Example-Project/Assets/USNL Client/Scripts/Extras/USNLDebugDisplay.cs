@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-namespace USNL {
+namespace USNL.Package {
     public class USNLDebugDisplay : MonoBehaviour {
         [Header("Debug Menu")]
         [SerializeField] GameObject debugMenuParent;

@@ -543,7 +543,7 @@ namespace USNL.Package {
             for (int i = 0; i < spcs.Length; i++) {
                 string upPacketName = Upper(spcs[i].PacketName);
                 string loPacketName = Lower(spcs[i].PacketName);
-                phs += $"\n        public static void {upPacketName}(Packet _packet) {{";
+                phs += $"\n        public static void {upPacketName}(Package.Packet _packet) {{";
 
                 for (int x = 0; x < spcs[i].PacketVariables.Length; x++) {
                     phs += $"\n            {packetTypes[spcs[i].PacketVariables[x].VariableType]} {Lower(spcs[i].PacketVariables[x].VariableName)} = _packet.Read{packetReadTypes[spcs[i].PacketVariables[x].VariableType]}();";
@@ -558,7 +558,7 @@ namespace USNL.Package {
                 packetParameters = packetParameters.Substring(0, packetParameters.Length - 2);
 
                 phs += $"\n            {usingStatement}{upPacketName}Packet {loPacketName}Packet = new {usingStatement}{upPacketName}Packet({packetParameters});";
-                phs += $"\n            PacketManager.instance.PacketReceived(_packet, {loPacketName}Packet);";
+                phs += $"\n            Package.PacketManager.instance.PacketReceived(_packet, {loPacketName}Packet);";
 
                 phs += "\n        }\n";
             }
@@ -572,23 +572,24 @@ namespace USNL.Package {
             string pss = ""; // Packet Send String
 
             #region TcpUdpSendFunctionsString
-            string TcpUdpSendFunctionsString = "        private static void SendTCPData(Packet _packet) {" +
+            string TcpUdpSendFunctionsString = "        private static void SendTCPData(USNL.Package.Packet _packet) {" +
                     "\n            _packet.WriteLength();" +
-                    "\n            if (Client.instance.IsConnected) {" +
-                    "\n                Client.instance.Tcp.SendData(_packet);" +
+                    "\n            if (USNL.Package.Client.instance.IsConnected) {" +
+                    "\n                USNL.Package.Client.instance.Tcp.SendData(_packet);" +
                     "\n                NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length());" +
                     "\n            }" +
                     "\n        }" +
                     "\n    " +
-                    "\n        private static void SendUDPData(Packet _packet) {" +
+                    "\n        private static void SendUDPData(USNL.Package.Packet _packet) {" +
                     "\n            _packet.WriteLength();" +
-                    "\n            if (Client.instance.IsConnected) {" +
-                    "\n                Client.instance.Udp.SendData(_packet);" +
+                    "\n            if (USNL.Package.Client.instance.IsConnected) {" +
+                    "\n                USNL.Package.Client.instance.Udp.SendData(_packet);" +
                     "\n                NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length());" +
                     "\n            }" +
                     "\n        }" +
                     "\n    ";
             #endregion
+
             pss += TcpUdpSendFunctionsString;
 
             for (int i = 0; i < cpcs.Length; i++) {
@@ -599,7 +600,7 @@ namespace USNL.Package {
                 pas = pas.Substring(0, pas.Length - 2);
 
                 pss += $"\n        public static void {Upper(cpcs[i].PacketName)}({pas}) {{";
-                pss += $"\n            using (Packet _packet = new Packet((int){usingStatement}ClientPackets.{Upper(cpcs[i].PacketName)})) {{";
+                pss += $"\n            using (Package.Packet _packet = new Package.Packet((int){usingStatement}ClientPackets.{Upper(cpcs[i].PacketName)})) {{";
 
                 string pws = ""; // Packet writes
                 for (int x = 0; x < cpcs[i].PacketVariables.Length; x++) {

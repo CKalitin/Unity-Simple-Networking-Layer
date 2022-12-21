@@ -3,194 +3,196 @@ using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
 
-public class Client {
-    #region Variables & Core
+namespace USNL.Package {
+    public class Client {
+        #region Variables & Core
 
-    private TCP tcp;
-    private UDP udp;
+        private TCP tcp;
+        private UDP udp;
 
-    private int clientId;
+        private int clientId;
 
-    private bool isConnected = false;
+        private bool isConnected = false;
 
-    public TCP Tcp { get => tcp; set => tcp = value; }
-    public UDP Udp { get => udp; set => udp = value; }
-    public int ClientId { get => clientId; set => clientId = value; }
-    public bool IsConnected { get => isConnected; set => isConnected = value; }
+        public TCP Tcp { get => tcp; set => tcp = value; }
+        public UDP Udp { get => udp; set => udp = value; }
+        public int ClientId { get => clientId; set => clientId = value; }
+        public bool IsConnected { get => isConnected; set => isConnected = value; }
 
-    public Client(int _clientID) {
-        clientId = _clientID;
-        tcp = new TCP(clientId, this);
-        udp = new UDP(clientId);
-    }
-
-    #endregion
-
-    #region TCP & UDP
-
-    public class TCP {
-        public TcpClient socket;
-
-        private readonly int clientId;
-        private NetworkStream stream;
-        private Packet receivedData;
-        private byte[] receiveBuffer;
-
-        Client client;
-
-        public TCP(int _id, Client _client) {
-            clientId = _id;
-            client = _client;
+        public Client(int _clientID) {
+            clientId = _clientID;
+            tcp = new TCP(clientId, this);
+            udp = new UDP(clientId);
         }
 
-        public void Connect(TcpClient _socket) {
-            socket = _socket;
-            socket.ReceiveBufferSize = ServerManager.instance.DataBufferSize;
-            socket.SendBufferSize = ServerManager.instance.DataBufferSize;
+        #endregion
 
-            stream = socket.GetStream();
+        #region TCP & UDP
 
-            receivedData = new Packet();
-            receiveBuffer = new byte[ServerManager.instance.DataBufferSize];
+        public class TCP {
+            public TcpClient socket;
 
-            stream.BeginRead(receiveBuffer, 0, ServerManager.instance.DataBufferSize, ReceiveCallback, null);
+            private readonly int clientId;
+            private NetworkStream stream;
+            private Packet receivedData;
+            private byte[] receiveBuffer;
 
-            PacketSend.Welcome(clientId, ServerManager.instance.WelcomeMessage, ServerManager.instance.ServerName, clientId);
+            Client client;
 
-            client.isConnected = true;
-        }
-
-        public void SendData(Packet _packet) {
-            try {
-                if (socket != null) {
-                    stream.BeginWrite(_packet.ToArray(), 0, _packet.Length(), null, null);
-                }
-            } catch (Exception _ex) {
-                Debug.Log($"Error sending data to client {clientId} via TCP: {_ex}");
+            public TCP(int _id, Client _client) {
+                clientId = _id;
+                client = _client;
             }
-        }
 
-        private void ReceiveCallback(IAsyncResult _result) {
-            try {
-                int _byteLength = stream.EndRead(_result);
-                if (_byteLength <= 0) {
-                    Server.Clients[clientId].Disconnect();
-                    return;
-                }
+            public void Connect(TcpClient _socket) {
+                socket = _socket;
+                socket.ReceiveBufferSize = ServerManager.instance.DataBufferSize;
+                socket.SendBufferSize = ServerManager.instance.DataBufferSize;
 
-                byte[] _data = new byte[_byteLength];
-                Array.Copy(receiveBuffer, _data, _byteLength);
+                stream = socket.GetStream();
 
-                receivedData.Reset(HandleData(_data));
+                receivedData = new Packet();
+                receiveBuffer = new byte[ServerManager.instance.DataBufferSize];
+
                 stream.BeginRead(receiveBuffer, 0, ServerManager.instance.DataBufferSize, ReceiveCallback, null);
-            } catch (Exception _ex) {
-                Debug.Log($"Error recieving TCP data: {_ex}");
-                Server.Clients[clientId].Disconnect();
+
+                USNL.Package.PacketSend.Welcome(clientId, ServerManager.instance.WelcomeMessage, ServerManager.instance.ServerName, clientId);
+
+                client.isConnected = true;
             }
-        }
 
-
-        private bool HandleData(byte[] _data) {
-            int _packetLength = 0;
-
-            receivedData.SetBytes(_data);
-
-            if (receivedData.UnreadLength() >= 4) {
-                _packetLength = receivedData.ReadInt();
-                if (_packetLength <= 0) {
-                    return true;
+            public void SendData(Packet _packet) {
+                try {
+                    if (socket != null) {
+                        stream.BeginWrite(_packet.ToArray(), 0, _packet.Length(), null, null);
+                    }
+                } catch (Exception _ex) {
+                    Debug.Log($"Error sending data to client {clientId} via TCP: {_ex}");
                 }
             }
 
-            while (_packetLength > 0 && _packetLength <= receivedData.UnreadLength()) {
-                byte[] _packetBytes = receivedData.ReadBytes(_packetLength);
-                ThreadManager.ExecuteOnPacketHandleThread(() => {
-                    using (Packet _packet = new Packet(_packetBytes)) {
-                        _packet.PacketId = _packet.ReadInt();
-                        _packet.FromClient = clientId;
-                        PacketHandlers.packetHandlers[_packet.PacketId](_packet);
-                        NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length() + 4); // +4 for packet length
+            private void ReceiveCallback(IAsyncResult _result) {
+                try {
+                    int _byteLength = stream.EndRead(_result);
+                    if (_byteLength <= 0) {
+                        Server.Clients[clientId].Disconnect();
+                        return;
                     }
-                });
 
-                _packetLength = 0;
+                    byte[] _data = new byte[_byteLength];
+                    Array.Copy(receiveBuffer, _data, _byteLength);
+
+                    receivedData.Reset(HandleData(_data));
+                    stream.BeginRead(receiveBuffer, 0, ServerManager.instance.DataBufferSize, ReceiveCallback, null);
+                } catch (Exception _ex) {
+                    Debug.Log($"Error recieving TCP data: {_ex}");
+                    Server.Clients[clientId].Disconnect();
+                }
+            }
+
+
+            private bool HandleData(byte[] _data) {
+                int _packetLength = 0;
+
+                receivedData.SetBytes(_data);
+
                 if (receivedData.UnreadLength() >= 4) {
                     _packetLength = receivedData.ReadInt();
                     if (_packetLength <= 0) {
                         return true;
                     }
                 }
-            }
 
-            if (_packetLength <= 1) {
-                return true;
-            }
+                while (_packetLength > 0 && _packetLength <= receivedData.UnreadLength()) {
+                    byte[] _packetBytes = receivedData.ReadBytes(_packetLength);
+                    ThreadManager.ExecuteOnPacketHandleThread(() => {
+                        using (Packet _packet = new Packet(_packetBytes)) {
+                            _packet.PacketId = _packet.ReadInt();
+                            _packet.FromClient = clientId;
+                            USNL.Package.PacketHandlers.packetHandlers[_packet.PacketId](_packet);
+                            NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length() + 4); // +4 for packet length
+                        }
+                    });
 
-            return false;
-        }
-
-        public void Disconnect() {
-            socket.Close();
-            stream = null;
-            receivedData = null;
-            receiveBuffer = null;
-            socket = null;
-        }
-    }
-
-    public class UDP {
-        public IPEndPoint endPoint;
-
-        private int clientId;
-
-        public UDP(int _id) {
-            clientId = _id;
-        }
-
-        public void Connect(IPEndPoint _endPoint) {
-            endPoint = _endPoint;
-        }
-
-        public void SendData(Packet _packet) {
-            Server.SendUDPData(endPoint, _packet);
-        }
-
-        public void HandleData(Packet _packetData) {
-            int _packetLength = _packetData.ReadInt();
-            byte[] _packetBytes = _packetData.ReadBytes(_packetLength);
-
-
-            ThreadManager.ExecuteOnPacketHandleThread(() => {
-                using (Packet _packet = new Packet(_packetBytes)) {
-                    _packet.PacketId = _packet.ReadInt();
-                    _packet.FromClient = clientId;
-                    PacketHandlers.packetHandlers[_packet.PacketId](_packet);
-                    NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length() + 4); // +4 for packet length
+                    _packetLength = 0;
+                    if (receivedData.UnreadLength() >= 4) {
+                        _packetLength = receivedData.ReadInt();
+                        if (_packetLength <= 0) {
+                            return true;
+                        }
+                    }
                 }
-            });
+
+                if (_packetLength <= 1) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            public void Disconnect() {
+                socket.Close();
+                stream = null;
+                receivedData = null;
+                receiveBuffer = null;
+                socket = null;
+            }
         }
+
+        public class UDP {
+            public IPEndPoint endPoint;
+
+            private int clientId;
+
+            public UDP(int _id) {
+                clientId = _id;
+            }
+
+            public void Connect(IPEndPoint _endPoint) {
+                endPoint = _endPoint;
+            }
+
+            public void SendData(Packet _packet) {
+                Server.SendUDPData(endPoint, _packet);
+            }
+
+            public void HandleData(Packet _packetData) {
+                int _packetLength = _packetData.ReadInt();
+                byte[] _packetBytes = _packetData.ReadBytes(_packetLength);
+
+
+                ThreadManager.ExecuteOnPacketHandleThread(() => {
+                    using (Packet _packet = new Packet(_packetBytes)) {
+                        _packet.PacketId = _packet.ReadInt();
+                        _packet.FromClient = clientId;
+                        USNL.Package.PacketHandlers.packetHandlers[_packet.PacketId](_packet);
+                        NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length() + 4); // +4 for packet length
+                    }
+                });
+            }
+
+            public void Disconnect() {
+                endPoint = null;
+            }
+        }
+
+        #endregion
+
+        #region Functions
 
         public void Disconnect() {
-            endPoint = null;
+            Debug.Log($"{tcp.socket.Client.RemoteEndPoint} has disconnected.");
+
+            isConnected = false;
+
+            ThreadManager.ExecuteOnMainThread(() => {
+                ServerManager.instance.ClientDisconnected(clientId);
+            });
+
+            tcp.Disconnect();
+            udp.Disconnect();
         }
+
+        #endregion
     }
-
-    #endregion
-
-    #region Functions
-
-    public void Disconnect() {
-        Debug.Log($"{tcp.socket.Client.RemoteEndPoint} has disconnected.");
-
-        isConnected = false;
-
-        ThreadManager.ExecuteOnMainThread(() => {
-            ServerManager.instance.ClientDisconnected(clientId);
-        });
-
-        tcp.Disconnect();
-        udp.Disconnect();
-    }
-
-    #endregion
 }

@@ -4,6 +4,6 @@ using UnityEngine;
 
 public class ServerExample : MonoBehaviour {
     private void Start() {
-        ServerManager.instance.StartServer();
+        USNL.ServerManager.instance.StartServer();
     }
 }
