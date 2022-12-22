@@ -79,7 +79,7 @@ namespace USNL {
         }
 
         private void SendClientInputPacket() {
-            if (Package.Client.instance.IsConnected && (keycodesDown.Count > 0 || keycodesUp.Count > 0)) {
+            if (USNL.Package.Client.instance.IsConnected && (keycodesDown.Count > 0 || keycodesUp.Count > 0)) {
                 USNL.Package.PacketSend.ClientInput(keycodesDown.ToArray(), keycodesUp.ToArray());
 
                 // Clear lists to allow for new values and no duplicates next time this function is run

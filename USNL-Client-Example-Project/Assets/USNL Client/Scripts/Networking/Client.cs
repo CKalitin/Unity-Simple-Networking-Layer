@@ -10,11 +10,8 @@ namespace USNL.Package {
         #region Variables
 
         public static Client instance;
-
-        //[Header("Connection Info")]
-        /*public*/
+        
         string ip = "127.0.0.1";
-        /*public*/
         int port = 26950;
         [Space]
         public static int dataBufferSize = 4096;
@@ -65,6 +62,10 @@ namespace USNL.Package {
             private Packet receivedData;
             private byte[] receiveBuffer;
 
+            private DateTime lastPacketTime; // Time when the last packet was received
+            
+            public DateTime LastPacketTime { get => lastPacketTime; set => lastPacketTime = value; }
+
             public void Connect() {
                 socket = new TcpClient {
                     ReceiveBufferSize = dataBufferSize,
@@ -89,6 +90,8 @@ namespace USNL.Package {
                 stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
 
                 instance.udp.Connect(((IPEndPoint)instance.tcp.socket.Client.LocalEndPoint).Port);
+
+                lastPacketTime = DateTime.Now;
 
                 instance.isConnected = true;
 
@@ -145,6 +148,8 @@ namespace USNL.Package {
                     // Using ThreadManager because functions can't be called here without breaking the TCP listener because this is a callback function, can't start a stack trace here
                     USNL.Package.ThreadManager.ExecuteOnPacketHandleThread(() => {
                         using (Packet _packet = new Packet(_packetBytes)) {
+                            lastPacketTime = DateTime.Now;
+                            
                             _packet.PacketId = _packet.ReadInt();
                             USNL.Package.PacketHandlers.packetHandlers[_packet.PacketId](_packet);
                             USNL.NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length() + 4); // +4 for packet length

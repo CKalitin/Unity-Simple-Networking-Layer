@@ -94,7 +94,7 @@ namespace USNL {
         }
 
         private IEnumerator UpdateSyncedObjects() {
-            while (Package.Server.ServerData.IsServerActive) {
+            while (USNL.Package.Server.ServerData.IsServerActive) {
                 yield return new WaitForSeconds(syncedObjectClientUpdateRate);
                 SendSyncedObjectUpdatePackets();
 
@@ -187,18 +187,18 @@ namespace USNL {
         }
 
         private void SendAllSyncedObjectsToClient(int _toClient) {
-            Package.PacketSend.SyncedObjectInterpolationMode(_toClient, serverSideInterpolation);
+            USNL.Package.PacketSend.SyncedObjectInterpolationMode(_toClient, serverSideInterpolation);
             for (int i = 0; i < syncedObjects.Count; i++) {
-                Package.PacketSend.SyncedObjectInstantiate(_toClient, syncedObjects[i].SyncedObjectTag, syncedObjects[i].SyncedObjectUUID, syncedObjects[i].transform.position, syncedObjects[i].transform.rotation, syncedObjects[i].transform.lossyScale);
+                USNL.Package.PacketSend.SyncedObjectInstantiate(_toClient, syncedObjects[i].SyncedObjectTag, syncedObjects[i].SyncedObjectUUID, syncedObjects[i].transform.position, syncedObjects[i].transform.rotation, syncedObjects[i].transform.lossyScale);
             }
         }
 
         public void InstantiateSyncedObject(SyncedObject _so) {
             syncedObjects.Add(_so);
 
-            for (int i = 0; i < Package.Server.MaxClients; i++) {
-                if (Package.Server.Clients[i].IsConnected) {
-                    Package.PacketSend.SyncedObjectInstantiate(i, _so.SyncedObjectTag, _so.SyncedObjectUUID, _so.transform.position, _so.transform.rotation, _so.transform.lossyScale);
+            for (int i = 0; i < USNL.Package.Server.MaxClients; i++) {
+                if (USNL.Package.Server.Clients[i].IsConnected) {
+                    USNL.Package.PacketSend.SyncedObjectInstantiate(i, _so.SyncedObjectTag, _so.SyncedObjectUUID, _so.transform.position, _so.transform.rotation, _so.transform.lossyScale);
                 }
             }
         }
@@ -206,9 +206,9 @@ namespace USNL {
         public void DestroySyncedObject(SyncedObject _so) {
             syncedObjects.Remove(_so);
 
-            for (int i = 0; i < Package.Server.MaxClients; i++) {
-                if (Package.Server.Clients[i].IsConnected) {
-                    Package.PacketSend.SyncedObjectDestroy(i, _so.SyncedObjectUUID);
+            for (int i = 0; i < USNL.Package.Server.MaxClients; i++) {
+                if (USNL.Package.Server.Clients[i].IsConnected) {
+                    USNL.Package.PacketSend.SyncedObjectDestroy(i, _so.SyncedObjectUUID);
                 }
             }
         }

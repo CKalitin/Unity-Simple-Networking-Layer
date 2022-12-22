@@ -31,6 +31,8 @@ namespace USNL {
 
         [Header("Other")]
         [SerializeField] private TimeSpan timeConnected;
+        [Tooltip("Tiem between updates of per second data.\nThis is also the time between pings.")]
+        [SerializeField] private float updatesPerSecond;
 
         private List<int> packetRTTs = new List<int>();
         private float packetPingSentTime = -1; // Seconds since startup when ping packet was sent
@@ -51,6 +53,8 @@ namespace USNL {
         private int[] tempBytesReceivedByPacketPerSecond = new int[Enum.GetNames(typeof(USNL.ServerPackets)).Length];
         private int[] tempPacketsSentPerSecond = new int[Enum.GetNames(typeof(USNL.ClientPackets)).Length];
         private int[] tempPacketsReceivedPerSecond = new int[Enum.GetNames(typeof(USNL.ServerPackets)).Length];
+
+        private int missedPings; // Number of sequential ping attempts that have not received a response
 
         public int TotalBytesSent { get => totalBytesSent; set => totalBytesSent = value; }
         public int TotalBytesReceived { get => totalBytesReceived; set => totalBytesReceived = value; }
@@ -81,6 +85,8 @@ namespace USNL {
         public int[] TempBytesReceivedByPacketPerSecond { get => tempBytesReceivedByPacketPerSecond; set => tempBytesReceivedByPacketPerSecond = value; }
         public int[] TempPacketsSentPerSecond { get => tempPacketsSentPerSecond; set => tempPacketsSentPerSecond = value; }
         public int[] TempPacketsReceivedPerSecond { get => tempPacketsReceivedPerSecond; set => tempPacketsReceivedPerSecond = value; }
+        
+        public int MissedPings { get => missedPings; set => missedPings = value; }
 
         #endregion
 
@@ -119,7 +125,7 @@ namespace USNL {
 
         private IEnumerator BytesAndPacketsPerSecondCoroutine() {
             while (true) {
-                if (Package.Client.instance.IsConnected) { SendPingPacket(); }
+                if (USNL.Package.Client.instance.IsConnected) { SendPingPacket(); }
 
                 // Clear existing data
                 bytesSentPerSecond = 0;
@@ -193,6 +199,7 @@ namespace USNL {
             if (packetPingSentTime < 0) {
                 packetPingSentTime = Time.realtimeSinceStartup;
                 USNL.Package.PacketSend.Ping(true);
+                missedPings = 0;
             } else {
                 // Set smoothPacketRTT
                 if (packetRTTs.Count > 5) { packetRTTs.RemoveAt(0); }
@@ -200,6 +207,8 @@ namespace USNL {
                 smoothPacketRTT = packetRTTs.Sum() / packetRTTs.Count;
 
                 Debug.Log("Packet RTT/ping is greater than 1000ms");
+
+                missedPings++;
             }
         }
 
@@ -264,6 +273,7 @@ namespace USNL {
             tempPacketsSentPerSecond = new int[Enum.GetNames(typeof(USNL.ClientPackets)).Length];
             tempPacketsReceivedPerSecond = new int[Enum.GetNames(typeof(USNL.ServerPackets)).Length];
 
+            missedPings = 0;
         }
 
         #endregion

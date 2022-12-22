@@ -28,6 +28,7 @@ namespace USNL.Package {
         [Header("Connection")]
         [SerializeField] private TextMeshProUGUI uptime;
         [SerializeField] private TextMeshProUGUI clientsConnected;
+        [SerializeField] private TextMeshProUGUI clientsInWaitingLobby;
 
         private void Update() {
             // Toggle debug menu visible
@@ -54,8 +55,10 @@ namespace USNL.Package {
                 totalPacketsSentPerSecond.text = String.Format("{0:n0}", NetworkDebugInfo.instance.TotalPacketsSentPerSecond);
                 totalPacketsReceivedPerSecond.text = String.Format("{0:n0}", NetworkDebugInfo.instance.TotalPacketsReceivedPerSecond);
 
-                uptime.text = NetworkDebugInfo.instance.Uptime.ToString(@"hh\:mm\:ss");
-                clientsConnected.text = $"{Server.GetConnectedClients()}/{ServerManager.instance.ServerConfig.MaxPlayers}";
+                if (ServerManager.instance.ServerActive) uptime.text = NetworkDebugInfo.instance.Uptime.ToString(@"hh\:mm\:ss");
+                else uptime.text = "00:00:00";
+                clientsConnected.text = $"{USNL.ServerManager.GetNumberOfConnectedClients()}/{ServerManager.instance.ServerConfig.MaxClients}";
+                clientsInWaitingLobby.text = $"{USNL.ServerManager.instance.ClientsInWaitingLobby }";
                 #endregion
 
                 // Read text from json file
@@ -78,12 +81,20 @@ namespace USNL.Package {
             return output;
         }
 
-        public void OnCloseButton() {
+        public void CloseButton() {
             debugMenuParent.SetActive(false);
         }
 
-        public void OnOpenButton() {
+        public void OpenButton() {
             debugMenuParent.SetActive(true);
+        }
+
+        public void StartServerButton() {
+            USNL.ServerManager.instance.StartServer();
+        }
+
+        public void StopServerButton() {
+            USNL.ServerManager.instance.StopServer();
         }
     }
 }

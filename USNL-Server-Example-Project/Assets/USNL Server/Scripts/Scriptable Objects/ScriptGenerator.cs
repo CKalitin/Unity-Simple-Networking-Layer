@@ -38,7 +38,17 @@ namespace USNL.Package {
         private ServerPacketConfig[] libServerPackets = {
         new ServerPacketConfig(
             "Welcome",
-            new PacketVariable[] { new PacketVariable("Welcome Message", PacketVarType.String), new PacketVariable("Server Name", PacketVarType.String), new PacketVariable("Client Id", PacketVarType.Int) },
+            new PacketVariable[] { new PacketVariable("lobbyClientId", PacketVarType.Int), new PacketVariable("welcomeMessage", PacketVarType.String) },
+            ServerPacketType.SendToClient,
+            Protocol.TCP),
+        new ServerPacketConfig(
+            "ConnectReceived",
+            new PacketVariable[] { new PacketVariable("clientId", PacketVarType.Int), new PacketVariable("connectMessage", PacketVarType.String) },
+            ServerPacketType.SendToClient,
+            Protocol.TCP),
+        new ServerPacketConfig(
+            "ServerInfo",
+            new PacketVariable[] { new PacketVariable("Server Name", PacketVarType.String), new PacketVariable("connectedClientsIds", PacketVarType.IntArray), new PacketVariable("maxClients", PacketVarType.Int), new PacketVariable("serverFull", PacketVarType.Bool) },
             ServerPacketType.SendToClient,
             Protocol.TCP),
         new ServerPacketConfig(
@@ -133,11 +143,19 @@ namespace USNL.Package {
             Protocol.UDP),
         #endregion
         #endregion
-    };
+        };
         private ClientPacketConfig[] libClientPackets = {
         new ClientPacketConfig(
-            "Welcome Received",
-            new PacketVariable[] { new PacketVariable("Client Id Check", PacketVarType.Int) },
+            "WelcomeReceived",
+            new PacketVariable[] { new PacketVariable("lobbyClientIdCheck", PacketVarType.Int) },
+            Protocol.TCP),
+        new ClientPacketConfig(
+            "Connect",
+            new PacketVariable[] { new PacketVariable("VariablesListCantBeNull", PacketVarType.Int) },
+            Protocol.TCP),
+        new ClientPacketConfig(
+            "ConnectionConfirmed",
+            new PacketVariable[] { new PacketVariable("clientIdCheck", PacketVarType.Int) },
             Protocol.TCP),
         new ClientPacketConfig(
             "Ping",
@@ -147,7 +165,7 @@ namespace USNL.Package {
             "ClientInput",
             new PacketVariable[] { new PacketVariable("KeycodesDown", PacketVarType.IntArray), new PacketVariable("KeycodesUp", PacketVarType.IntArray) },
             Protocol.TCP),
-    };
+        };
 
         Dictionary<PacketVarType, string> packetTypes = new Dictionary<PacketVarType, string>()
         { { PacketVarType.Byte, "byte"},
@@ -574,8 +592,13 @@ namespace USNL.Package {
                 "\n    " +
                 "\n        private static void SendTCPData(int _toClient, USNL.Package.Packet _packet) {" +
                 "\n            _packet.WriteLength();" +
-                "\n            USNL.Package.Server.Clients[_toClient].Tcp.SendData(_packet);" +
-                "\n            if (USNL.Package.Server.Clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
+                "\n    " +
+                "\n            Client client = null;" +
+                "\n            if (_toClient >= 1000000) client = USNL.Package.Server.WaitingLobbyClients[_toClient % 1000000];" +
+                "\n            else client = USNL.Package.Server.Clients[_toClient];" +
+                "\n    " +
+                "\n            client.Tcp.SendData(_packet);" +
+                "\n            if (client.IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
                 "\n        }" +
                 "\n    " +
                 "\n        private static void SendTCPDataToAll(USNL.Package.Packet _packet) {" +
@@ -598,8 +621,13 @@ namespace USNL.Package {
                 "\n    " +
                 "\n        private static void SendUDPData(int _toClient, USNL.Package.Packet _packet) {" +
                 "\n            _packet.WriteLength();" +
-                "\n            USNL.Package.Server.Clients[_toClient].Udp.SendData(_packet);" +
-                "\n            if (USNL.Package.Server.Clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
+                "\n    " +
+                "\n            Client client = null;" +
+                "\n            if (_toClient >= 1000000) client = USNL.Package.Server.WaitingLobbyClients[_toClient % 1000000];" +
+                "\n            else client = USNL.Package.Server.Clients[_toClient];" +
+                "\n    " +
+                "\n            client.Udp.SendData(_packet);" +
+                "\n            if (client.IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }" +
                 "\n        }" +
                 "\n    " +
                 "\n        private static void SendUDPDataToAll(USNL.Package.Packet _packet) {" +
@@ -669,6 +697,10 @@ namespace USNL.Package {
                     Debug.LogError("Packet name cannot be empty!");
                     return false;
                 }
+                if (clientPackets[i].PacketVariables.Length <= 0) {
+                    Debug.LogError("Packet variables cannot be empty!");
+                    return false;
+                }
                 for (int x = 0; x < clientPackets[i].PacketVariables.Length; x++) {
                     if (clientPackets[i].PacketVariables[x].VariableName == "" || clientPackets[i].PacketVariables[x].VariableName == null) {
                         Debug.LogError("Variable name cannot be empty!");
@@ -680,6 +712,10 @@ namespace USNL.Package {
             for (int i = 0; i < serverPackets.Length; i++) {
                 if (serverPackets[i].PacketName == "") {
                     Debug.LogError("Packet name cannot be empty!");
+                    return false;
+                }
+                if (ServerPackets[i].PacketVariables.Length <= 0) {
+                    Debug.LogError("Packet variables cannot be empty!");
                     return false;
                 }
                 for (int x = 0; x < serverPackets[i].PacketVariables.Length; x++) {

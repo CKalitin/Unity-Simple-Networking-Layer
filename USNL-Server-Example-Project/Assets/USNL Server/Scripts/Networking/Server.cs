@@ -17,29 +17,33 @@ namespace USNL.Package {
     public struct ServerConfig {
         [SerializeField] private string serverName;
         [SerializeField] private int serverPort;
-        [SerializeField] private int maxPlayers;
+        [SerializeField] private int maxClients;
         [SerializeField] private string welcomeMessage;
         [Space]
         [SerializeField] private bool showGUI;
 
         public string ServerName { get => serverName; set => serverName = value; }
         public int ServerPort { get => serverPort; set => serverPort = value; }
-        public int MaxPlayers { get => maxPlayers; set => maxPlayers = value; }
+        public int MaxClients { get => maxClients; set => maxClients = value; }
         public string WelcomeMessage { get => welcomeMessage; set => welcomeMessage = value; }
         public bool ShowGUI { get => showGUI; set => showGUI = value; }
     }
 
     public class Server {
         #region Variables
-
+        
         public static int MaxClients { get; private set; }
 
         public static int Port { get; private set; }
 
         public static List<Client> Clients = new List<Client>();
 
+        public static List<Client> WaitingLobbyClients = new List<Client>();
+
         public static ServerData ServerData;
 
+        public static int DataBufferSize = 4096;
+        
         private static TcpListener tcpListener;
         private static UdpClient udpListener;
 
@@ -81,9 +85,12 @@ namespace USNL.Package {
         public static IEnumerator ShutdownServer() {
             float time = 0f;
             while (true) {
-                if (GetConnectedClients() <= 0 || time > 1f) {
+                if (USNL.ServerManager.GetNumberOfConnectedClients() <= 0 || time > 1f) {
                     for (int i = 0; i < Clients.Count; i++) {
                         if (Clients[i].IsConnected) Clients[i].Disconnect();
+                    }
+                    for (int i = 0; i < WaitingLobbyClients.Count; i++) {
+                        if (WaitingLobbyClients[i].IsConnected) WaitingLobbyClients[i].Disconnect();
                     }
 
                     tcpListener.Stop();
@@ -108,16 +115,9 @@ namespace USNL.Package {
             for (int i = 0; i < Clients.Count; i++) {
                 if (Clients[i].IsConnected) USNL.Package.PacketSend.DisconnectClient(i, _disconnectMessage);
             }
-        }
-
-        public static int GetConnectedClients() {
-            int result = 0;
-            for (int i = 0; i < Clients.Count; i++) {
-                if (Clients[i].IsConnected) {
-                    result++;
-                }
+            for (int i = 0; i < WaitingLobbyClients.Count; i++) {
+                if (WaitingLobbyClients[i].IsConnected) USNL.Package.PacketSend.DisconnectClient(i + 1000000, _disconnectMessage);
             }
-            return result;
         }
 
         #endregion
@@ -129,16 +129,13 @@ namespace USNL.Package {
             tcpListener.BeginAcceptTcpClient(new AsyncCallback(TCPConnectCallback), null);
             Debug.Log($"Incoming connection from {_client.Client.RemoteEndPoint}...");
 
-            for (int i = 0; i <= MaxClients; i++) {
-                if (Clients[i].Tcp.socket == null) {
-                    Clients[i].Tcp.Connect(_client);
-                    return;
-                }
-            }
-
-            Debug.Log($"{_client.Client.RemoteEndPoint} failed to connect: Server full.");
+            WaitingLobbyClients.Add(new Client(WaitingLobbyClients.Count));
+            WaitingLobbyClients[WaitingLobbyClients.Count - 1].Tcp.Connect(_client);
+            Debug.Log("ttest: " + WaitingLobbyClients[WaitingLobbyClients.Count - 1].Tcp.socket.Client.RemoteEndPoint == null + "more text");
+            Client client = WaitingLobbyClients[WaitingLobbyClients.Count - 1];
+            Debug.Log("ttest: " + client.Tcp.socket.Client.RemoteEndPoint == null);
         }
-
+        
         private static void UDPReceiveCallback(IAsyncResult _result) {
             try {
                 IPEndPoint _clientEndPoint = new IPEndPoint(IPAddress.Any, 0);

@@ -6,12 +6,16 @@ namespace USNL {
 
     public enum ClientPackets {
         WelcomeReceived,
+        Connect,
+        ConnectionConfirmed,
         Ping,
         ClientInput,
     }
 
     public enum ServerPackets {
         Welcome,
+        ConnectReceived,
+        ServerInfo,
         Ping,
         DisconnectClient,
         SyncedObjectInstantiate,
@@ -44,24 +48,26 @@ namespace USNL {
     public static class PacketHandlers {
        public delegate void PacketHandler(USNL.Package.Packet _packet);
         public static List<PacketHandler> packetHandlers = new List<PacketHandler>() {
-            { Package.PacketHandlers.Welcome },
-            { Package.PacketHandlers.Ping },
-            { Package.PacketHandlers.DisconnectClient },
-            { Package.PacketHandlers.SyncedObjectInstantiate },
-            { Package.PacketHandlers.SyncedObjectDestroy },
-            { Package.PacketHandlers.SyncedObjectInterpolationMode },
-            { Package.PacketHandlers.SyncedObjectVec2PosUpdate },
-            { Package.PacketHandlers.SyncedObjectVec3PosUpdate },
-            { Package.PacketHandlers.SyncedObjectRotZUpdate },
-            { Package.PacketHandlers.SyncedObjectRotUpdate },
-            { Package.PacketHandlers.SyncedObjectVec2ScaleUpdate },
-            { Package.PacketHandlers.SyncedObjectVec3ScaleUpdate },
-            { Package.PacketHandlers.SyncedObjectVec2PosInterpolation },
-            { Package.PacketHandlers.SyncedObjectVec3PosInterpolation },
-            { Package.PacketHandlers.SyncedObjectRotZInterpolation },
-            { Package.PacketHandlers.SyncedObjectRotInterpolation },
-            { Package.PacketHandlers.SyncedObjectVec2ScaleInterpolation },
-            { Package.PacketHandlers.SyncedObjectVec3ScaleInterpolation },
+            { USNL.Package.PacketHandlers.Welcome },
+            { USNL.Package.PacketHandlers.ConnectReceived },
+            { USNL.Package.PacketHandlers.ServerInfo },
+            { USNL.Package.PacketHandlers.Ping },
+            { USNL.Package.PacketHandlers.DisconnectClient },
+            { USNL.Package.PacketHandlers.SyncedObjectInstantiate },
+            { USNL.Package.PacketHandlers.SyncedObjectDestroy },
+            { USNL.Package.PacketHandlers.SyncedObjectInterpolationMode },
+            { USNL.Package.PacketHandlers.SyncedObjectVec2PosUpdate },
+            { USNL.Package.PacketHandlers.SyncedObjectVec3PosUpdate },
+            { USNL.Package.PacketHandlers.SyncedObjectRotZUpdate },
+            { USNL.Package.PacketHandlers.SyncedObjectRotUpdate },
+            { USNL.Package.PacketHandlers.SyncedObjectVec2ScaleUpdate },
+            { USNL.Package.PacketHandlers.SyncedObjectVec3ScaleUpdate },
+            { USNL.Package.PacketHandlers.SyncedObjectVec2PosInterpolation },
+            { USNL.Package.PacketHandlers.SyncedObjectVec3PosInterpolation },
+            { USNL.Package.PacketHandlers.SyncedObjectRotZInterpolation },
+            { USNL.Package.PacketHandlers.SyncedObjectRotInterpolation },
+            { USNL.Package.PacketHandlers.SyncedObjectVec2ScaleInterpolation },
+            { USNL.Package.PacketHandlers.SyncedObjectVec3ScaleInterpolation },
         };
 
     }
@@ -81,12 +87,16 @@ namespace USNL.Package {
     #region Packet Enums
     public enum ClientPackets {
         WelcomeReceived,
+        Connect,
+        ConnectionConfirmed,
         Ping,
         ClientInput,
     }
 
     public enum ServerPackets {
         Welcome,
+        ConnectReceived,
+        ServerInfo,
         Ping,
         DisconnectClient,
         SyncedObjectInstantiate,
@@ -110,19 +120,48 @@ namespace USNL.Package {
     #region Packet Structs
 
     public struct WelcomePacket {
+        private int lobbyClientId;
         private string welcomeMessage;
-        private string serverName;
-        private int clientId;
 
-        public WelcomePacket(string _welcomeMessage, string _serverName, int _clientId) {
+        public WelcomePacket(int _lobbyClientId, string _welcomeMessage) {
+            lobbyClientId = _lobbyClientId;
             welcomeMessage = _welcomeMessage;
-            serverName = _serverName;
-            clientId = _clientId;
         }
 
+        public int LobbyClientId { get => lobbyClientId; set => lobbyClientId = value; }
         public string WelcomeMessage { get => welcomeMessage; set => welcomeMessage = value; }
-        public string ServerName { get => serverName; set => serverName = value; }
+    }
+
+    public struct ConnectReceivedPacket {
+        private int clientId;
+        private string connectMessage;
+
+        public ConnectReceivedPacket(int _clientId, string _connectMessage) {
+            clientId = _clientId;
+            connectMessage = _connectMessage;
+        }
+
         public int ClientId { get => clientId; set => clientId = value; }
+        public string ConnectMessage { get => connectMessage; set => connectMessage = value; }
+    }
+
+    public struct ServerInfoPacket {
+        private string serverName;
+        private int[] connectedClientsIds;
+        private int maxClients;
+        private bool serverFull;
+
+        public ServerInfoPacket(string _serverName, int[] _connectedClientsIds, int _maxClients, bool _serverFull) {
+            serverName = _serverName;
+            connectedClientsIds = _connectedClientsIds;
+            maxClients = _maxClients;
+            serverFull = _serverFull;
+        }
+
+        public string ServerName { get => serverName; set => serverName = value; }
+        public int[] ConnectedClientsIds { get => connectedClientsIds; set => connectedClientsIds = value; }
+        public int MaxClients { get => maxClients; set => maxClients = value; }
+        public bool ServerFull { get => serverFull; set => serverFull = value; }
     }
 
     public struct PingPacket {
@@ -352,6 +391,8 @@ namespace USNL.Package {
        public delegate void PacketHandler(USNL.Package.Packet _packet);
         public static List<PacketHandler> packetHandlers = new List<PacketHandler>() {
             { Welcome },
+            { ConnectReceived },
+            { ServerInfo },
             { Ping },
             { DisconnectClient },
             { SyncedObjectInstantiate },
@@ -371,148 +412,165 @@ namespace USNL.Package {
             { SyncedObjectVec3ScaleInterpolation },
         };
 
-        public static void Welcome(Package.Packet _packet) {
+        public static void Welcome(USNL.Package.Packet _packet) {
+            int lobbyClientId = _packet.ReadInt();
             string welcomeMessage = _packet.ReadString();
-            string serverName = _packet.ReadString();
-            int clientId = _packet.ReadInt();
 
-            Package.WelcomePacket welcomePacket = new Package.WelcomePacket(welcomeMessage, serverName, clientId);
-            Package.PacketManager.instance.PacketReceived(_packet, welcomePacket);
+            USNL.Package.WelcomePacket welcomePacket = new USNL.Package.WelcomePacket(lobbyClientId, welcomeMessage);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, welcomePacket);
         }
 
-        public static void Ping(Package.Packet _packet) {
+        public static void ConnectReceived(USNL.Package.Packet _packet) {
+            int clientId = _packet.ReadInt();
+            string connectMessage = _packet.ReadString();
+
+            USNL.Package.ConnectReceivedPacket connectReceivedPacket = new USNL.Package.ConnectReceivedPacket(clientId, connectMessage);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, connectReceivedPacket);
+        }
+
+        public static void ServerInfo(USNL.Package.Packet _packet) {
+            string serverName = _packet.ReadString();
+            int[] connectedClientsIds = _packet.ReadInts();
+            int maxClients = _packet.ReadInt();
+            bool serverFull = _packet.ReadBool();
+
+            USNL.Package.ServerInfoPacket serverInfoPacket = new USNL.Package.ServerInfoPacket(serverName, connectedClientsIds, maxClients, serverFull);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, serverInfoPacket);
+        }
+
+        public static void Ping(USNL.Package.Packet _packet) {
             bool sendPingBack = _packet.ReadBool();
 
-            Package.PingPacket pingPacket = new Package.PingPacket(sendPingBack);
-            Package.PacketManager.instance.PacketReceived(_packet, pingPacket);
+            USNL.Package.PingPacket pingPacket = new USNL.Package.PingPacket(sendPingBack);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, pingPacket);
         }
 
-        public static void DisconnectClient(Package.Packet _packet) {
+        public static void DisconnectClient(USNL.Package.Packet _packet) {
             string disconnectMessage = _packet.ReadString();
 
-            Package.DisconnectClientPacket disconnectClientPacket = new Package.DisconnectClientPacket(disconnectMessage);
-            Package.PacketManager.instance.PacketReceived(_packet, disconnectClientPacket);
+            USNL.Package.DisconnectClientPacket disconnectClientPacket = new USNL.Package.DisconnectClientPacket(disconnectMessage);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, disconnectClientPacket);
         }
 
-        public static void SyncedObjectInstantiate(Package.Packet _packet) {
+        public static void SyncedObjectInstantiate(USNL.Package.Packet _packet) {
             string syncedObjectTag = _packet.ReadString();
             int syncedObjectUUID = _packet.ReadInt();
             Vector3 position = _packet.ReadVector3();
             Quaternion rotation = _packet.ReadQuaternion();
             Vector3 scale = _packet.ReadVector3();
 
-            Package.SyncedObjectInstantiatePacket syncedObjectInstantiatePacket = new Package.SyncedObjectInstantiatePacket(syncedObjectTag, syncedObjectUUID, position, rotation, scale);
-            Package.PacketManager.instance.PacketReceived(_packet, syncedObjectInstantiatePacket);
+            USNL.Package.SyncedObjectInstantiatePacket syncedObjectInstantiatePacket = new USNL.Package.SyncedObjectInstantiatePacket(syncedObjectTag, syncedObjectUUID, position, rotation, scale);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, syncedObjectInstantiatePacket);
         }
 
-        public static void SyncedObjectDestroy(Package.Packet _packet) {
+        public static void SyncedObjectDestroy(USNL.Package.Packet _packet) {
             int syncedObjectUUID = _packet.ReadInt();
 
-            Package.SyncedObjectDestroyPacket syncedObjectDestroyPacket = new Package.SyncedObjectDestroyPacket(syncedObjectUUID);
-            Package.PacketManager.instance.PacketReceived(_packet, syncedObjectDestroyPacket);
+            USNL.Package.SyncedObjectDestroyPacket syncedObjectDestroyPacket = new USNL.Package.SyncedObjectDestroyPacket(syncedObjectUUID);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, syncedObjectDestroyPacket);
         }
 
-        public static void SyncedObjectInterpolationMode(Package.Packet _packet) {
+        public static void SyncedObjectInterpolationMode(USNL.Package.Packet _packet) {
             bool serverInterpolation = _packet.ReadBool();
 
-            Package.SyncedObjectInterpolationModePacket syncedObjectInterpolationModePacket = new Package.SyncedObjectInterpolationModePacket(serverInterpolation);
-            Package.PacketManager.instance.PacketReceived(_packet, syncedObjectInterpolationModePacket);
+            USNL.Package.SyncedObjectInterpolationModePacket syncedObjectInterpolationModePacket = new USNL.Package.SyncedObjectInterpolationModePacket(serverInterpolation);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, syncedObjectInterpolationModePacket);
         }
 
-        public static void SyncedObjectVec2PosUpdate(Package.Packet _packet) {
+        public static void SyncedObjectVec2PosUpdate(USNL.Package.Packet _packet) {
             int[] syncedObjectUUIDs = _packet.ReadInts();
             Vector2[] positions = _packet.ReadVector2s();
 
-            Package.SyncedObjectVec2PosUpdatePacket syncedObjectVec2PosUpdatePacket = new Package.SyncedObjectVec2PosUpdatePacket(syncedObjectUUIDs, positions);
-            Package.PacketManager.instance.PacketReceived(_packet, syncedObjectVec2PosUpdatePacket);
+            USNL.Package.SyncedObjectVec2PosUpdatePacket syncedObjectVec2PosUpdatePacket = new USNL.Package.SyncedObjectVec2PosUpdatePacket(syncedObjectUUIDs, positions);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, syncedObjectVec2PosUpdatePacket);
         }
 
-        public static void SyncedObjectVec3PosUpdate(Package.Packet _packet) {
+        public static void SyncedObjectVec3PosUpdate(USNL.Package.Packet _packet) {
             int[] syncedObjectUUIDs = _packet.ReadInts();
             Vector3[] positions = _packet.ReadVector3s();
 
-            Package.SyncedObjectVec3PosUpdatePacket syncedObjectVec3PosUpdatePacket = new Package.SyncedObjectVec3PosUpdatePacket(syncedObjectUUIDs, positions);
-            Package.PacketManager.instance.PacketReceived(_packet, syncedObjectVec3PosUpdatePacket);
+            USNL.Package.SyncedObjectVec3PosUpdatePacket syncedObjectVec3PosUpdatePacket = new USNL.Package.SyncedObjectVec3PosUpdatePacket(syncedObjectUUIDs, positions);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, syncedObjectVec3PosUpdatePacket);
         }
 
-        public static void SyncedObjectRotZUpdate(Package.Packet _packet) {
+        public static void SyncedObjectRotZUpdate(USNL.Package.Packet _packet) {
             int[] syncedObjectUUIDs = _packet.ReadInts();
             float[] rotations = _packet.ReadFloats();
 
-            Package.SyncedObjectRotZUpdatePacket syncedObjectRotZUpdatePacket = new Package.SyncedObjectRotZUpdatePacket(syncedObjectUUIDs, rotations);
-            Package.PacketManager.instance.PacketReceived(_packet, syncedObjectRotZUpdatePacket);
+            USNL.Package.SyncedObjectRotZUpdatePacket syncedObjectRotZUpdatePacket = new USNL.Package.SyncedObjectRotZUpdatePacket(syncedObjectUUIDs, rotations);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, syncedObjectRotZUpdatePacket);
         }
 
-        public static void SyncedObjectRotUpdate(Package.Packet _packet) {
+        public static void SyncedObjectRotUpdate(USNL.Package.Packet _packet) {
             int[] syncedObjectUUIDs = _packet.ReadInts();
             Vector3[] rotations = _packet.ReadVector3s();
 
-            Package.SyncedObjectRotUpdatePacket syncedObjectRotUpdatePacket = new Package.SyncedObjectRotUpdatePacket(syncedObjectUUIDs, rotations);
-            Package.PacketManager.instance.PacketReceived(_packet, syncedObjectRotUpdatePacket);
+            USNL.Package.SyncedObjectRotUpdatePacket syncedObjectRotUpdatePacket = new USNL.Package.SyncedObjectRotUpdatePacket(syncedObjectUUIDs, rotations);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, syncedObjectRotUpdatePacket);
         }
 
-        public static void SyncedObjectVec2ScaleUpdate(Package.Packet _packet) {
+        public static void SyncedObjectVec2ScaleUpdate(USNL.Package.Packet _packet) {
             int[] syncedObjectUUIDs = _packet.ReadInts();
             Vector2[] scales = _packet.ReadVector2s();
 
-            Package.SyncedObjectVec2ScaleUpdatePacket syncedObjectVec2ScaleUpdatePacket = new Package.SyncedObjectVec2ScaleUpdatePacket(syncedObjectUUIDs, scales);
-            Package.PacketManager.instance.PacketReceived(_packet, syncedObjectVec2ScaleUpdatePacket);
+            USNL.Package.SyncedObjectVec2ScaleUpdatePacket syncedObjectVec2ScaleUpdatePacket = new USNL.Package.SyncedObjectVec2ScaleUpdatePacket(syncedObjectUUIDs, scales);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, syncedObjectVec2ScaleUpdatePacket);
         }
 
-        public static void SyncedObjectVec3ScaleUpdate(Package.Packet _packet) {
+        public static void SyncedObjectVec3ScaleUpdate(USNL.Package.Packet _packet) {
             int[] syncedObjectUUIDs = _packet.ReadInts();
             Vector3[] scales = _packet.ReadVector3s();
 
-            Package.SyncedObjectVec3ScaleUpdatePacket syncedObjectVec3ScaleUpdatePacket = new Package.SyncedObjectVec3ScaleUpdatePacket(syncedObjectUUIDs, scales);
-            Package.PacketManager.instance.PacketReceived(_packet, syncedObjectVec3ScaleUpdatePacket);
+            USNL.Package.SyncedObjectVec3ScaleUpdatePacket syncedObjectVec3ScaleUpdatePacket = new USNL.Package.SyncedObjectVec3ScaleUpdatePacket(syncedObjectUUIDs, scales);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, syncedObjectVec3ScaleUpdatePacket);
         }
 
-        public static void SyncedObjectVec2PosInterpolation(Package.Packet _packet) {
+        public static void SyncedObjectVec2PosInterpolation(USNL.Package.Packet _packet) {
             int[] syncedObjectUUIDs = _packet.ReadInts();
             Vector2[] interpolatePositions = _packet.ReadVector2s();
 
-            Package.SyncedObjectVec2PosInterpolationPacket syncedObjectVec2PosInterpolationPacket = new Package.SyncedObjectVec2PosInterpolationPacket(syncedObjectUUIDs, interpolatePositions);
-            Package.PacketManager.instance.PacketReceived(_packet, syncedObjectVec2PosInterpolationPacket);
+            USNL.Package.SyncedObjectVec2PosInterpolationPacket syncedObjectVec2PosInterpolationPacket = new USNL.Package.SyncedObjectVec2PosInterpolationPacket(syncedObjectUUIDs, interpolatePositions);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, syncedObjectVec2PosInterpolationPacket);
         }
 
-        public static void SyncedObjectVec3PosInterpolation(Package.Packet _packet) {
+        public static void SyncedObjectVec3PosInterpolation(USNL.Package.Packet _packet) {
             int[] syncedObjectUUIDs = _packet.ReadInts();
             Vector3[] interpolatePositions = _packet.ReadVector3s();
 
-            Package.SyncedObjectVec3PosInterpolationPacket syncedObjectVec3PosInterpolationPacket = new Package.SyncedObjectVec3PosInterpolationPacket(syncedObjectUUIDs, interpolatePositions);
-            Package.PacketManager.instance.PacketReceived(_packet, syncedObjectVec3PosInterpolationPacket);
+            USNL.Package.SyncedObjectVec3PosInterpolationPacket syncedObjectVec3PosInterpolationPacket = new USNL.Package.SyncedObjectVec3PosInterpolationPacket(syncedObjectUUIDs, interpolatePositions);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, syncedObjectVec3PosInterpolationPacket);
         }
 
-        public static void SyncedObjectRotZInterpolation(Package.Packet _packet) {
+        public static void SyncedObjectRotZInterpolation(USNL.Package.Packet _packet) {
             int[] syncedObjectUUIDs = _packet.ReadInts();
             float[] interpolateRotations = _packet.ReadFloats();
 
-            Package.SyncedObjectRotZInterpolationPacket syncedObjectRotZInterpolationPacket = new Package.SyncedObjectRotZInterpolationPacket(syncedObjectUUIDs, interpolateRotations);
-            Package.PacketManager.instance.PacketReceived(_packet, syncedObjectRotZInterpolationPacket);
+            USNL.Package.SyncedObjectRotZInterpolationPacket syncedObjectRotZInterpolationPacket = new USNL.Package.SyncedObjectRotZInterpolationPacket(syncedObjectUUIDs, interpolateRotations);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, syncedObjectRotZInterpolationPacket);
         }
 
-        public static void SyncedObjectRotInterpolation(Package.Packet _packet) {
+        public static void SyncedObjectRotInterpolation(USNL.Package.Packet _packet) {
             int[] syncedObjectUUIDs = _packet.ReadInts();
             Vector3[] interpolateRotations = _packet.ReadVector3s();
 
-            Package.SyncedObjectRotInterpolationPacket syncedObjectRotInterpolationPacket = new Package.SyncedObjectRotInterpolationPacket(syncedObjectUUIDs, interpolateRotations);
-            Package.PacketManager.instance.PacketReceived(_packet, syncedObjectRotInterpolationPacket);
+            USNL.Package.SyncedObjectRotInterpolationPacket syncedObjectRotInterpolationPacket = new USNL.Package.SyncedObjectRotInterpolationPacket(syncedObjectUUIDs, interpolateRotations);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, syncedObjectRotInterpolationPacket);
         }
 
-        public static void SyncedObjectVec2ScaleInterpolation(Package.Packet _packet) {
+        public static void SyncedObjectVec2ScaleInterpolation(USNL.Package.Packet _packet) {
             int[] syncedObjectUUIDs = _packet.ReadInts();
             Vector2[] interpolateScales = _packet.ReadVector2s();
 
-            Package.SyncedObjectVec2ScaleInterpolationPacket syncedObjectVec2ScaleInterpolationPacket = new Package.SyncedObjectVec2ScaleInterpolationPacket(syncedObjectUUIDs, interpolateScales);
-            Package.PacketManager.instance.PacketReceived(_packet, syncedObjectVec2ScaleInterpolationPacket);
+            USNL.Package.SyncedObjectVec2ScaleInterpolationPacket syncedObjectVec2ScaleInterpolationPacket = new USNL.Package.SyncedObjectVec2ScaleInterpolationPacket(syncedObjectUUIDs, interpolateScales);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, syncedObjectVec2ScaleInterpolationPacket);
         }
 
-        public static void SyncedObjectVec3ScaleInterpolation(Package.Packet _packet) {
+        public static void SyncedObjectVec3ScaleInterpolation(USNL.Package.Packet _packet) {
             int[] syncedObjectUUIDs = _packet.ReadInts();
             Vector3[] interpolateScales = _packet.ReadVector3s();
 
-            Package.SyncedObjectVec3ScaleInterpolationPacket syncedObjectVec3ScaleInterpolationPacket = new Package.SyncedObjectVec3ScaleInterpolationPacket(syncedObjectUUIDs, interpolateScales);
-            Package.PacketManager.instance.PacketReceived(_packet, syncedObjectVec3ScaleInterpolationPacket);
+            USNL.Package.SyncedObjectVec3ScaleInterpolationPacket syncedObjectVec3ScaleInterpolationPacket = new USNL.Package.SyncedObjectVec3ScaleInterpolationPacket(syncedObjectUUIDs, interpolateScales);
+            USNL.Package.PacketManager.instance.PacketReceived(_packet, syncedObjectVec3ScaleInterpolationPacket);
         }
     }
 
@@ -525,7 +583,7 @@ namespace USNL.Package {
             _packet.WriteLength();
             if (USNL.Package.Client.instance.IsConnected) {
                 USNL.Package.Client.instance.Tcp.SendData(_packet);
-                NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length());
+                USNL.NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length());
             }
         }
     
@@ -533,12 +591,28 @@ namespace USNL.Package {
             _packet.WriteLength();
             if (USNL.Package.Client.instance.IsConnected) {
                 USNL.Package.Client.instance.Udp.SendData(_packet);
-                NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length());
+                USNL.NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length());
             }
         }
     
-        public static void WelcomeReceived(int _clientIdCheck) {
-            using (Package.Packet _packet = new Package.Packet((int)USNL.Package.ClientPackets.WelcomeReceived)) {
+        public static void WelcomeReceived(int _lobbyClientIdCheck) {
+            using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)USNL.Package.ClientPackets.WelcomeReceived)) {
+                _packet.Write(_lobbyClientIdCheck);
+
+                SendTCPData(_packet);
+            }
+        }
+
+        public static void Connect(int _variablesListCantBeNull) {
+            using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)USNL.Package.ClientPackets.Connect)) {
+                _packet.Write(_variablesListCantBeNull);
+
+                SendTCPData(_packet);
+            }
+        }
+
+        public static void ConnectionConfirmed(int _clientIdCheck) {
+            using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)USNL.Package.ClientPackets.ConnectionConfirmed)) {
                 _packet.Write(_clientIdCheck);
 
                 SendTCPData(_packet);
@@ -546,7 +620,7 @@ namespace USNL.Package {
         }
 
         public static void Ping(bool _sendPingBack) {
-            using (Package.Packet _packet = new Package.Packet((int)USNL.Package.ClientPackets.Ping)) {
+            using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)USNL.Package.ClientPackets.Ping)) {
                 _packet.Write(_sendPingBack);
 
                 SendTCPData(_packet);
@@ -554,11 +628,14 @@ namespace USNL.Package {
         }
 
         public static void ClientInput(int[] _keycodesDown, int[] _keycodesUp) {
-            using (Package.Packet _packet = new Package.Packet((int)USNL.Package.ClientPackets.ClientInput)) {
+            using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)USNL.Package.ClientPackets.ClientInput)) {
                 _packet.Write(_keycodesDown);
                 _packet.Write(_keycodesUp);
 
-                SendTCPData(_packet);
+                if (!USNL.ClientManager.instance.InLobby) {
+                    Debug.Log("Here");
+                    SendTCPData(_packet);
+                }
             }
         }
     }
@@ -574,6 +651,8 @@ namespace USNL {
 
         public static CallbackEvent[] PacketCallbackEvents = {
             CallOnWelcomePacketCallbacks,
+            CallOnConnectReceivedPacketCallbacks,
+            CallOnServerInfoPacketCallbacks,
             CallOnPingPacketCallbacks,
             CallOnDisconnectClientPacketCallbacks,
             CallOnSyncedObjectInstantiatePacketCallbacks,
@@ -597,6 +676,8 @@ namespace USNL {
         public static event CallbackEvent OnDisconnected;
 
         public static event CallbackEvent OnWelcomePacket;
+        public static event CallbackEvent OnConnectReceivedPacket;
+        public static event CallbackEvent OnServerInfoPacket;
         public static event CallbackEvent OnPingPacket;
         public static event CallbackEvent OnDisconnectClientPacket;
         public static event CallbackEvent OnSyncedObjectInstantiatePacket;
@@ -619,6 +700,8 @@ namespace USNL {
         public static void CallOnDisconnectedCallbacks(object _param) { if (OnDisconnected != null) { OnDisconnected(_param); } }
 
         public static void CallOnWelcomePacketCallbacks(object _param) { if (OnWelcomePacket != null) { OnWelcomePacket(_param); } }
+        public static void CallOnConnectReceivedPacketCallbacks(object _param) { if (OnConnectReceivedPacket != null) { OnConnectReceivedPacket(_param); } }
+        public static void CallOnServerInfoPacketCallbacks(object _param) { if (OnServerInfoPacket != null) { OnServerInfoPacket(_param); } }
         public static void CallOnPingPacketCallbacks(object _param) { if (OnPingPacket != null) { OnPingPacket(_param); } }
         public static void CallOnDisconnectClientPacketCallbacks(object _param) { if (OnDisconnectClientPacket != null) { OnDisconnectClientPacket(_param); } }
         public static void CallOnSyncedObjectInstantiatePacketCallbacks(object _param) { if (OnSyncedObjectInstantiatePacket != null) { OnSyncedObjectInstantiatePacket(_param); } }

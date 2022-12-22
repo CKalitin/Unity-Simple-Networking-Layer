@@ -7,12 +7,16 @@ namespace USNL {
 
     public enum ClientPackets {
         WelcomeReceived,
+        Connect,
+        ConnectionConfirmed,
         Ping,
         ClientInput,
     }
 
     public enum ServerPackets {
         Welcome,
+        ConnectReceived,
+        ServerInfo,
         Ping,
         DisconnectClient,
         SyncedObjectInstantiate,
@@ -52,12 +56,16 @@ namespace USNL.Package {
     #region Packet Enums
     public enum ClientPackets {
         WelcomeReceived,
+        Connect,
+        ConnectionConfirmed,
         Ping,
         ClientInput,
     }
 
     public enum ServerPackets {
         Welcome,
+        ConnectReceived,
+        ServerInfo,
         Ping,
         DisconnectClient,
         SyncedObjectInstantiate,
@@ -83,9 +91,37 @@ namespace USNL.Package {
     public struct WelcomeReceivedPacket {
         private int fromClient;
 
+        private int lobbyClientIdCheck;
+
+        public WelcomeReceivedPacket(int _fromClient, int _lobbyClientIdCheck) {
+            fromClient = _fromClient;
+            lobbyClientIdCheck = _lobbyClientIdCheck;
+        }
+
+        public int FromClient { get => fromClient; set => fromClient = value; }
+        public int LobbyClientIdCheck { get => lobbyClientIdCheck; set => lobbyClientIdCheck = value; }
+    }
+
+    public struct ConnectPacket {
+        private int fromClient;
+
+        private int variablesListCantBeNull;
+
+        public ConnectPacket(int _fromClient, int _variablesListCantBeNull) {
+            fromClient = _fromClient;
+            variablesListCantBeNull = _variablesListCantBeNull;
+        }
+
+        public int FromClient { get => fromClient; set => fromClient = value; }
+        public int VariablesListCantBeNull { get => variablesListCantBeNull; set => variablesListCantBeNull = value; }
+    }
+
+    public struct ConnectionConfirmedPacket {
+        private int fromClient;
+
         private int clientIdCheck;
 
-        public WelcomeReceivedPacket(int _fromClient, int _clientIdCheck) {
+        public ConnectionConfirmedPacket(int _fromClient, int _clientIdCheck) {
             fromClient = _fromClient;
             clientIdCheck = _clientIdCheck;
         }
@@ -134,15 +170,31 @@ namespace USNL.Package {
        public delegate void PacketHandler(USNL.Package.Packet _packet);
         public static List<PacketHandler> packetHandlers = new List<PacketHandler>() {
             { WelcomeReceived },
+            { Connect },
+            { ConnectionConfirmed },
             { Ping },
             { ClientInput },
         };
 
         public static void WelcomeReceived(Packet _packet) {
+            int lobbyClientIdCheck = _packet.ReadInt();
+
+            WelcomeReceivedPacket welcomeReceivedPacket = new WelcomeReceivedPacket(_packet.FromClient, lobbyClientIdCheck);
+            PacketManager.instance.PacketReceived(_packet, welcomeReceivedPacket);
+        }
+
+        public static void Connect(Packet _packet) {
+            int variablesListCantBeNull = _packet.ReadInt();
+
+            ConnectPacket connectPacket = new ConnectPacket(_packet.FromClient, variablesListCantBeNull);
+            PacketManager.instance.PacketReceived(_packet, connectPacket);
+        }
+
+        public static void ConnectionConfirmed(Packet _packet) {
             int clientIdCheck = _packet.ReadInt();
 
-            WelcomeReceivedPacket welcomeReceivedPacket = new WelcomeReceivedPacket(_packet.FromClient, clientIdCheck);
-            PacketManager.instance.PacketReceived(_packet, welcomeReceivedPacket);
+            ConnectionConfirmedPacket connectionConfirmedPacket = new ConnectionConfirmedPacket(_packet.FromClient, clientIdCheck);
+            PacketManager.instance.PacketReceived(_packet, connectionConfirmedPacket);
         }
 
         public static void Ping(Packet _packet) {
@@ -170,8 +222,13 @@ namespace USNL.Package {
     
         private static void SendTCPData(int _toClient, USNL.Package.Packet _packet) {
             _packet.WriteLength();
-            USNL.Package.Server.Clients[_toClient].Tcp.SendData(_packet);
-            if (USNL.Package.Server.Clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+    
+            Client client = null;
+            if (_toClient >= 1000000) client = USNL.Package.Server.WaitingLobbyClients[_toClient % 1000000];
+            else client = USNL.Package.Server.Clients[_toClient];
+    
+            client.Tcp.SendData(_packet);
+            if (client.IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
         }
     
         private static void SendTCPDataToAll(USNL.Package.Packet _packet) {
@@ -194,8 +251,13 @@ namespace USNL.Package {
     
         private static void SendUDPData(int _toClient, USNL.Package.Packet _packet) {
             _packet.WriteLength();
-            USNL.Package.Server.Clients[_toClient].Udp.SendData(_packet);
-            if (USNL.Package.Server.Clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+    
+            Client client = null;
+            if (_toClient >= 1000000) client = USNL.Package.Server.WaitingLobbyClients[_toClient % 1000000];
+            else client = USNL.Package.Server.Clients[_toClient];
+    
+            client.Udp.SendData(_packet);
+            if (client.IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
         }
     
         private static void SendUDPDataToAll(USNL.Package.Packet _packet) {
@@ -218,11 +280,30 @@ namespace USNL.Package {
     
         #endregion
     
-        public static void Welcome(int _toClient, string _welcomeMessage, string _serverName, int _clientId) {
+        public static void Welcome(int _toClient, int _lobbyClientId, string _welcomeMessage) {
             using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)ServerPackets.Welcome)) {
+                _packet.Write(_lobbyClientId);
                 _packet.Write(_welcomeMessage);
-                _packet.Write(_serverName);
+
+                SendTCPData(_toClient, _packet);
+            }
+        }
+
+        public static void ConnectReceived(int _toClient, int _clientId, string _connectMessage) {
+            using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)ServerPackets.ConnectReceived)) {
                 _packet.Write(_clientId);
+                _packet.Write(_connectMessage);
+
+                SendTCPData(_toClient, _packet);
+            }
+        }
+
+        public static void ServerInfo(int _toClient, string _serverName, int[] _connectedClientsIds, int _maxClients, bool _serverFull) {
+            using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)ServerPackets.ServerInfo)) {
+                _packet.Write(_serverName);
+                _packet.Write(_connectedClientsIds);
+                _packet.Write(_maxClients);
+                _packet.Write(_serverFull);
 
                 SendTCPData(_toClient, _packet);
             }
@@ -394,6 +475,8 @@ namespace USNL {
 
         public static CallbackEvent[] PacketCallbackEvents = {
             CallOnWelcomeReceivedPacketCallbacks,
+            CallOnConnectPacketCallbacks,
+            CallOnConnectionConfirmedPacketCallbacks,
             CallOnPingPacketCallbacks,
             CallOnClientInputPacketCallbacks,
         };
@@ -404,6 +487,8 @@ namespace USNL {
         public static event CallbackEvent OnClientDisconnected;
 
         public static event CallbackEvent OnWelcomeReceivedPacket;
+        public static event CallbackEvent OnConnectPacket;
+        public static event CallbackEvent OnConnectionConfirmedPacket;
         public static event CallbackEvent OnPingPacket;
         public static event CallbackEvent OnClientInputPacket;
 
@@ -413,6 +498,8 @@ namespace USNL {
         public static void CallOnClientDisconnectedCallbacks(object _param) { if (OnClientDisconnected != null) { OnClientDisconnected(_param); } }
 
         public static void CallOnWelcomeReceivedPacketCallbacks(object _param) { if (OnWelcomeReceivedPacket != null) { OnWelcomeReceivedPacket(_param); } }
+        public static void CallOnConnectPacketCallbacks(object _param) { if (OnConnectPacket != null) { OnConnectPacket(_param); } }
+        public static void CallOnConnectionConfirmedPacketCallbacks(object _param) { if (OnConnectionConfirmedPacket != null) { OnConnectionConfirmedPacket(_param); } }
         public static void CallOnPingPacketCallbacks(object _param) { if (OnPingPacket != null) { OnPingPacket(_param); } }
         public static void CallOnClientInputPacketCallbacks(object _param) { if (OnClientInputPacket != null) { OnClientInputPacket(_param); } }
     }

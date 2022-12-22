@@ -135,7 +135,7 @@ MonoBehaviour:
   port: 26950
   connectionTimeout: 10
   timeBetweenConnectionAttempts: 3
-  serverName: 
+  missedPingsUntilDisconnect: 5
   serverExeName: USNL-Server-Example-Project.exe
   serverPath: Server\
   editorServerPath: G:\_Dev\Unity Projects\Unity-Simple-Networking-Layer\USNL-Server-Example-Project\Build\
@@ -181,3 +181,4 @@ MonoBehaviour:
   totalPacketsReceivedPerSecond: 0
   packetRTT: 0
   smoothPacketRTT: 0
+  updatesPerSecond: 0

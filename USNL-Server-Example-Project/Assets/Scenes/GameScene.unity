@@ -1786,6 +1786,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d18fd35e7c6f634482be2cef8382fdb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  runServer: 1
 --- !u!4 &594939941
 Transform:
   m_ObjectHideFlags: 0
@@ -1808,6 +1809,30 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2262372378169019342, guid: c805aff990ef69543823588555753120, type: 3}
+      propertyPath: m_fontSize
+      value: 24
+      objectReference: {fileID: 0}
+    - target: {fileID: 2262372378169019342, guid: c805aff990ef69543823588555753120, type: 3}
+      propertyPath: m_fontStyle
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2262372378169019342, guid: c805aff990ef69543823588555753120, type: 3}
+      propertyPath: m_enableAutoSizing
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3729034300028515110, guid: c805aff990ef69543823588555753120, type: 3}
+      propertyPath: m_fontSize
+      value: 24
+      objectReference: {fileID: 0}
+    - target: {fileID: 3729034300028515110, guid: c805aff990ef69543823588555753120, type: 3}
+      propertyPath: m_fontStyle
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3729034300028515110, guid: c805aff990ef69543823588555753120, type: 3}
+      propertyPath: m_enableAutoSizing
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7429124210099506866, guid: c805aff990ef69543823588555753120, type: 3}
       propertyPath: m_Name
       value: USNL Debug Menu Canvas

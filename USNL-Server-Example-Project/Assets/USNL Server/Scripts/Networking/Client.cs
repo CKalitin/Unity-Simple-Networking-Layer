@@ -37,7 +37,11 @@ namespace USNL.Package {
             private Packet receivedData;
             private byte[] receiveBuffer;
 
+            private DateTime lastPacketTime; // Time when the last packet was received
+
             Client client;
+
+            public DateTime LastPacketTime { get => lastPacketTime; set => lastPacketTime = value; }
 
             public TCP(int _id, Client _client) {
                 clientId = _id;
@@ -46,17 +50,21 @@ namespace USNL.Package {
 
             public void Connect(TcpClient _socket) {
                 socket = _socket;
-                socket.ReceiveBufferSize = ServerManager.instance.DataBufferSize;
-                socket.SendBufferSize = ServerManager.instance.DataBufferSize;
+                socket.ReceiveBufferSize = USNL.Package.Server.DataBufferSize;
+                socket.SendBufferSize = USNL.Package.Server.DataBufferSize;
 
                 stream = socket.GetStream();
 
                 receivedData = new Packet();
-                receiveBuffer = new byte[ServerManager.instance.DataBufferSize];
+                receiveBuffer = new byte[USNL.Package.Server.DataBufferSize];
 
-                stream.BeginRead(receiveBuffer, 0, ServerManager.instance.DataBufferSize, ReceiveCallback, null);
+                stream.BeginRead(receiveBuffer, 0, USNL.Package.Server.DataBufferSize, ReceiveCallback, null);
 
-                USNL.Package.PacketSend.Welcome(clientId, ServerManager.instance.ServerConfig.WelcomeMessage, ServerManager.instance.ServerConfig.ServerName, clientId);
+                lastPacketTime = DateTime.Now;
+
+                USNL.Package.PacketSend.Welcome(clientId + 1000000, clientId + 1000000, USNL.ServerManager.instance.ServerConfig.WelcomeMessage);
+
+                USNL.Package.PacketSend.ServerInfo(clientId + 1000000, USNL.ServerManager.instance.ServerConfig.ServerName, USNL.ServerManager.GetConnectedClientsIds(), USNL.ServerManager.instance.ServerConfig.MaxClients, USNL.ServerManager.GetNumberOfConnectedClients() > USNL.ServerManager.instance.ServerConfig.MaxClients);
 
                 client.isConnected = true;
             }
@@ -83,7 +91,7 @@ namespace USNL.Package {
                     Array.Copy(receiveBuffer, _data, _byteLength);
 
                     receivedData.Reset(HandleData(_data));
-                    stream.BeginRead(receiveBuffer, 0, ServerManager.instance.DataBufferSize, ReceiveCallback, null);
+                    stream.BeginRead(receiveBuffer, 0, USNL.Package.Server.DataBufferSize, ReceiveCallback, null);
                 } catch (Exception _ex) {
                     Debug.Log($"Error recieving TCP data: {_ex}");
                     Server.Clients[clientId].Disconnect();
@@ -107,6 +115,8 @@ namespace USNL.Package {
                     byte[] _packetBytes = receivedData.ReadBytes(_packetLength);
                     ThreadManager.ExecuteOnPacketHandleThread(() => {
                         using (Packet _packet = new Packet(_packetBytes)) {
+                            lastPacketTime = DateTime.Now;
+
                             _packet.PacketId = _packet.ReadInt();
                             _packet.FromClient = clientId;
                             USNL.Package.PacketHandlers.packetHandlers[_packet.PacketId](_packet);

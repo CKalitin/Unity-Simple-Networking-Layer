@@ -3,7 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class ServerExample : MonoBehaviour {
-    private void Start() {
-        USNL.ServerManager.instance.StartServer();
+    public bool runServer;
+
+    private void Update() {
+        if (runServer && !USNL.ServerManager.instance.ServerActive) {
+            USNL.ServerManager.instance.StartServer();
+        }
+        
+        if (!runServer && USNL.ServerManager.instance.ServerActive) {
+            USNL.ServerManager.instance.StopServer();
+        }
     }
 }

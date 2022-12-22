@@ -33,7 +33,7 @@ namespace USNL {
             { "Mouse4", (KeyCode)327},
             { "Mouse5", (KeyCode)328},
             { "Mouse6", (KeyCode)329},
-        };
+            };
         }
 
         #region Get Functions
@@ -133,7 +133,7 @@ namespace USNL {
 
         public void Initialize() {
             clientInputs = new ClientInput[Package.Server.MaxClients];
-            for (int i = 0; i < Package.Server.MaxClients; i++) {
+            for (int i = 0; i < USNL.Package.Server.MaxClients; i++) {
                 clientInputs[i] = new ClientInput(i);
             }
         }
@@ -160,6 +160,7 @@ namespace USNL {
         }
 
         private void OnClientInputPacket(object _packetObject) {
+            USNL.Package.ClientInputPacket asdf = (USNL.Package.ClientInputPacket)_packetObject;
             receivedClientInputPackets.Add((USNL.Package.ClientInputPacket)_packetObject);
         }
 
