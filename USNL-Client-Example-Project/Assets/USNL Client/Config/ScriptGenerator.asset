@@ -12,18 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d05a1a1c1d22ce4fb1a339517d8329e, type: 3}
   m_Name: ScriptGenerator
   m_EditorClassIdentifier: 
-  clientPackets:
-  - packetName: test
-    packetVariables:
-    - variableName: a
-      variableType: 3
-    protocol: 0
-    notes: 
-  serverPackets:
-  - packetName: testt
-    packetVariables:
-    - variableName: b
-      variableType: 2
-    sendType: 2
-    protocol: 1
-    notes: 
+  clientPackets: []
+  serverPackets: []
+  ClientPacketFoldouts: 
+  ServerPacketFoldouts: 

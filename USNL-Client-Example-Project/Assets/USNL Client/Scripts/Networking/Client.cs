@@ -13,7 +13,7 @@ namespace USNL.Package {
         
         string ip = "127.0.0.1";
         int port = 26950;
-        [Space]
+        
         public static int dataBufferSize = 4096;
 
         private int serverMaxPlayers;
@@ -63,7 +63,7 @@ namespace USNL.Package {
             private byte[] receiveBuffer;
 
             private DateTime lastPacketTime; // Time when the last packet was received
-            
+
             public DateTime LastPacketTime { get => lastPacketTime; set => lastPacketTime = value; }
 
             public void Connect() {
@@ -90,7 +90,7 @@ namespace USNL.Package {
                 stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
 
                 instance.udp.Connect(((IPEndPoint)instance.tcp.socket.Client.LocalEndPoint).Port);
-
+                
                 lastPacketTime = DateTime.Now;
 
                 instance.isConnected = true;
@@ -174,7 +174,10 @@ namespace USNL.Package {
 
             private void Disconnect() {
                 instance.Disconnect();
+                Reset();
+            }
 
+            public void Reset() {
                 stream = null;
                 receivedData = null;
                 receiveBuffer = null;
@@ -203,7 +206,6 @@ namespace USNL.Package {
                 socket.BeginReceive(ReceiveCallback, null);
 
                 using (Packet _packet = new Packet()) {
-                    _packet.Write(instance.clientId);
                     SendData(_packet);
                 }
             }
@@ -257,6 +259,10 @@ namespace USNL.Package {
 
             private void Disconnect() {
                 instance.Disconnect();
+                Reset();
+            }
+
+            public void Reset() {
 
                 endPoint = null;
                 socket = null;
@@ -297,9 +303,14 @@ namespace USNL.Package {
                     udp.socket.Close();
                 }
 
+                tcp.Reset();
+                udp.Reset();
+
                 USNL.Package.ThreadManager.StopPacketHandleThread();
 
-                ClientManager.instance.SetDisconnectedFromServer();
+                USNL.ClientManager.instance.ServerInfo = new USNL.ServerInfo();
+
+                USNL.CallbackEvents.CallOnDisconnectedCallbacks(0);
 
                 Debug.Log("Disconnected from server.");
             }

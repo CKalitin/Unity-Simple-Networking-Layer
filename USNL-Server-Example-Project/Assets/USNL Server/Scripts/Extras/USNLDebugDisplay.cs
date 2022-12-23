@@ -25,10 +25,10 @@ namespace USNL.Package {
         [SerializeField] private TextMeshProUGUI totalPacketsSentPerSecond;
         [SerializeField] private TextMeshProUGUI totalPacketsReceivedPerSecond;
 
-        [Header("Connection")]
+        [Header("Server")]
+        [SerializeField] private TextMeshProUGUI serverName;
         [SerializeField] private TextMeshProUGUI uptime;
         [SerializeField] private TextMeshProUGUI clientsConnected;
-        [SerializeField] private TextMeshProUGUI clientsInWaitingLobby;
 
         private void Update() {
             // Toggle debug menu visible
@@ -39,24 +39,25 @@ namespace USNL.Package {
             // If Debug Menu visible, update values
             if (debugMenuParent.activeSelf) {
                 #region Client Mangaer Bool Values
-                isRunning.SetActive(Server.ServerActive);
+                isRunning.SetActive(Server.ServerData.IsServerActive);
                 isMigratingHost.SetActive(ServerManager.instance.IsMigratingHost);
                 #endregion
 
                 #region Network Info
-                totalBytesSent.text = RoundBytesToString(NetworkDebugInfo.instance.TotalBytesSent);
-                totalBytesReceived.text = RoundBytesToString(NetworkDebugInfo.instance.TotalBytesReceived);
-                bytesSentPerSecond.text = RoundBytesToString(NetworkDebugInfo.instance.BytesSentPerSecond);
-                bytesReceivedPerSecond.text = RoundBytesToString(NetworkDebugInfo.instance.BytesReceivedPerSecond);
+                totalBytesSent.text = RoundBytesToString(USNL.NetworkDebugInfo.instance.TotalBytesSent);
+                totalBytesReceived.text = RoundBytesToString(USNL.NetworkDebugInfo.instance.TotalBytesReceived);
+                bytesSentPerSecond.text = RoundBytesToString(USNL.NetworkDebugInfo.instance.BytesSentPerSecond);
+                bytesReceivedPerSecond.text = RoundBytesToString(USNL.NetworkDebugInfo.instance.BytesReceivedPerSecond);
 
-                totalPacketsSent.text = String.Format("{0:n0}", NetworkDebugInfo.instance.TotalPacketsSent);
-                totalPacketsReceived.text = String.Format("{0:n0}", NetworkDebugInfo.instance.TotalPacketsReceived);
+                totalPacketsSent.text = String.Format("{0:n0}", USNL.NetworkDebugInfo.instance.TotalPacketsSent);
+                totalPacketsReceived.text = String.Format("{0:n0}", USNL.NetworkDebugInfo.instance.TotalPacketsReceived);
 
-                totalPacketsSentPerSecond.text = String.Format("{0:n0}", NetworkDebugInfo.instance.TotalPacketsSentPerSecond);
-                totalPacketsReceivedPerSecond.text = String.Format("{0:n0}", NetworkDebugInfo.instance.TotalPacketsReceivedPerSecond);
+                totalPacketsSentPerSecond.text = String.Format("{0:n0}", USNL.NetworkDebugInfo.instance.TotalPacketsSentPerSecond);
+                totalPacketsReceivedPerSecond.text = String.Format("{0:n0}", USNL.NetworkDebugInfo.instance.TotalPacketsReceivedPerSecond);
 
-                uptime.text = NetworkDebugInfo.instance.Uptime.ToString(@"hh\:mm\:ss");
-                clientsConnected.text = $"{Server.GetConnectedClients()}/{ServerManager.instance.MaxPlayers}";
+                serverName.text = USNL.ServerManager.instance.ServerConfig.ServerName;
+                uptime.text = USNL.NetworkDebugInfo.instance.Uptime.ToString(@"hh\:mm\:ss");
+                clientsConnected.text = $"{USNL.ServerManager.GetNumberOfConnectedClients()}/{USNL.ServerManager.instance.ServerConfig.MaxClients}";
                 #endregion
 
                 // Read text from json file
@@ -79,20 +80,12 @@ namespace USNL.Package {
             return output;
         }
 
-        public void CloseButton() {
+        public void OnCloseButton() {
             debugMenuParent.SetActive(false);
         }
 
-        public void OpenButton() {
+        public void OnOpenButton() {
             debugMenuParent.SetActive(true);
-        }
-
-        public void StartServerButton() {
-            USNL.ServerManager.instance.StartServer();
-        }
-
-        public void StopServerButton() {
-            USNL.ServerManager.instance.StopServer();
         }
     }
 }

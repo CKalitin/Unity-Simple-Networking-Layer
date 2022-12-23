@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using System.Linq;
 using UnityEngine;
 
 namespace USNL.Package {
@@ -32,19 +31,17 @@ namespace USNL.Package {
 
     public class Server {
         #region Variables
-        
+
         public static int MaxClients { get; private set; }
 
         public static int Port { get; private set; }
 
         public static List<Client> Clients = new List<Client>();
 
-        public static List<Client> WaitingLobbyClients = new List<Client>();
-
         public static ServerData ServerData;
 
         public static int DataBufferSize = 4096;
-        
+
         private static TcpListener tcpListener;
         private static UdpClient udpListener;
 
@@ -70,38 +67,48 @@ namespace USNL.Package {
 
             InputManager.instance.Initialize();
 
-            ServerActive = true;
-
-            USNL.CallbackEvents.CallOnServerStartedCallbacks(0);
+            ServerData.IsServerActive = true;
 
             Debug.Log($"Server started on port {Port}.");
+
+            USNL.CallbackEvents.CallOnServerStartedCallbacks(0);
         }
 
         private static void InitializeServerData() {
-            for (int i = 0; i < MaxClients; i++) {
+            for (int i = 0; i <= MaxClients; i++) {
                 Clients.Add(new Client(i));
             }
         }
+        
+        public static IEnumerator ShutdownServer() {
+            float time = 0f;
+            while (true) {
+                if (USNL.ServerManager.GetNumberOfConnectedClients() <= 0 || time > 1f) {
+                    for (int i = 0; i < Clients.Count; i++) {
+                        if (Clients[i].IsConnected) Clients[i].Disconnect();
+                    }
+                    
+                    tcpListener.Stop();
+                    udpListener.Close();
 
-        public static void Stop() {
-            tcpListener.Stop();
-            udpListener.Close();
+                    ThreadManager.StopPacketHandleThread();
 
-            ThreadManager.StopPacketHandleThread();
+                    ServerData.IsServerActive = false;
 
-            ServerActive = false;
+                    USNL.CallbackEvents.CallOnServerStoppedCallbacks(0);
 
-            USNL.CallbackEvents.CallOnServerStoppedCallbacks(0);
-
-            Debug.Log("Server stopped.");
+                    Debug.Log("Server stopped.");
+                    
+                    break;
+                }
+                yield return new WaitForEndOfFrame();
+                time += Time.deltaTime;
+            }
         }
 
-        public static void DisconnectAllClients() {
+        public static void CommandDisconnectAllClients(string _disconnectMessage) {
             for (int i = 0; i < Clients.Count; i++) {
-                if (Clients[i].IsConnected) Clients[i].Disconnect();
-            }
-            for (int i = 0; i < WaitingLobbyClients.Count; i++) {
-                if (WaitingLobbyClients[i].IsConnected) USNL.Package.PacketSend.DisconnectClient(WaitingLobbyClients[i].ClientId, _disconnectMessage);
+                if (Clients[i].IsConnected) USNL.Package.PacketSend.DisconnectClient(i, _disconnectMessage);
             }
         }
 
@@ -114,10 +121,16 @@ namespace USNL.Package {
             tcpListener.BeginAcceptTcpClient(new AsyncCallback(TCPConnectCallback), null);
             Debug.Log($"Incoming connection from {_client.Client.RemoteEndPoint}...");
 
-            WaitingLobbyClients.Add(new Client(WaitingLobbyClients.Count + 1000000));
-            WaitingLobbyClients[WaitingLobbyClients.Count - 1].Tcp.Connect(_client);
+            for (int i = 0; i <= MaxClients; i++) {
+                if (Clients[i].Tcp.socket == null) {
+                    Clients[i].Tcp.Connect(_client);
+                    return;
+                }
+            }
+
+            Debug.Log($"{_client.Client.RemoteEndPoint} failed to connect: Server full.");
         }
-        
+
         private static void UDPReceiveCallback(IAsyncResult _result) {
             try {
                 IPEndPoint _clientEndPoint = new IPEndPoint(IPAddress.Any, 0);
@@ -127,21 +140,18 @@ namespace USNL.Package {
                 if (_data.Length < 4) {
                     return;
                 }
-                Debug.Log("1");
+
                 using (Packet _packet = new Packet(_data)) {
                     int _clientId = _packet.ReadInt();
-                    Debug.Log("2");
-                    Client clientInLobby = ServerManager.GetClientFromClientId(_clientId + 1000000);
-                    if (clientInLobby != null && clientInLobby.Udp.endPoint == null) {
-                        clientInLobby.Udp.Connect(_clientEndPoint);
+
+                    if (Clients[_clientId].Udp.endPoint == null) {
+                        Clients[_clientId].Udp.Connect(_clientEndPoint);
                         return;
                     }
-                    Debug.Log("3");
-                    Client client = ServerManager.GetClientFromClientId(_clientId);
-                    if (client.Udp.endPoint.ToString() == _clientEndPoint.ToString()) {
-                        client.Udp.HandleData(_packet);
+
+                    if (Clients[_clientId].Udp.endPoint.ToString() == _clientEndPoint.ToString()) {
+                        Clients[_clientId].Udp.HandleData(_packet);
                     }
-                    Debug.Log("4");
                 }
             } catch (Exception _ex) {
                 Debug.Log($"Error receoving UDP data: {_ex}");
@@ -150,8 +160,9 @@ namespace USNL.Package {
 
         public static void SendUDPData(IPEndPoint _clientEndPoint, Packet _packet) {
             try {
-                if (_clientEndPoint != null)
+                if (_clientEndPoint != null) {
                     udpListener.BeginSend(_packet.ToArray(), _packet.Length(), _clientEndPoint, null, null);
+                }
             } catch (Exception _ex) {
                 Debug.Log($"Error sending data tp {_clientEndPoint} via UDP {_ex}");
             }

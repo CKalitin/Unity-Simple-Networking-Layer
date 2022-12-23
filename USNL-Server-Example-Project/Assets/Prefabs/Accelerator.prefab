@@ -139,7 +139,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 349a82be78bd7c74e9104b90ff1641c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  prefabId: 2
+  syncedObjectTag: Accelerator
   useLocalChangeValues: 0
   minPosChange: 0.001
   minRotChange: 0.001

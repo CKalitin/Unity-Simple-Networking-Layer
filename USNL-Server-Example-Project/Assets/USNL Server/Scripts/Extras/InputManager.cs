@@ -33,7 +33,7 @@ namespace USNL {
             { "Mouse4", (KeyCode)327},
             { "Mouse5", (KeyCode)328},
             { "Mouse6", (KeyCode)329},
-            };
+        };
         }
 
         #region Get Functions
@@ -133,7 +133,7 @@ namespace USNL {
 
         public void Initialize() {
             clientInputs = new ClientInput[Package.Server.MaxClients];
-            for (int i = 0; i < USNL.Package.Server.MaxClients; i++) {
+            for (int i = 0; i < Package.Server.MaxClients; i++) {
                 clientInputs[i] = new ClientInput(i);
             }
         }
@@ -160,14 +160,12 @@ namespace USNL {
         }
 
         private void OnClientInputPacket(object _packetObject) {
-            USNL.Package.ClientInputPacket _cip = (USNL.Package.ClientInputPacket)_packetObject;
-            Debug.Log($"OnConnected {_cip.FromClient}");
-            receivedClientInputPackets.Add(_cip);
+            receivedClientInputPackets.Add((USNL.Package.ClientInputPacket)_packetObject);
         }
 
         private void OnClientDisconnected(object _clientIdObject) {
             int _clientId = (int)_clientIdObject;
-            Debug.Log($"OnDisconnected: {_clientId}");
+
             clientInputs[_clientId].KeycodesDown.Clear();
             clientInputs[_clientId].KeycodesUp.Clear();
             clientInputs[_clientId].KeycodesPressed.Clear();

@@ -9,7 +9,7 @@ namespace USNL {
 
         [Header("Synced Object")]
         [Tooltip("This is used to spawn this Synced Object on the Client")]
-        [SerializeField] private int prefabId;
+        [SerializeField] private string syncedObjectTag;
         [Space]
         [Tooltip("If you want a Synced Object to Update it's position at it's own rate (Not the one set in Synced Object Manager).\nGame restart needed to take effect.")]
         [SerializeField] private bool useLocalChangeValues = false;
@@ -51,7 +51,7 @@ namespace USNL {
         private Vector3 prevSOUpdateRot;
         private Vector3 prevSOUpdateScale;
 
-        public int PrefabId { get => prefabId; set => prefabId = value; }
+        public string SyncedObjectTag { get => syncedObjectTag; set => syncedObjectTag = value; }
         public int SyncedObjectUUID { get => syncedObjectUUID; set => syncedObjectUUID = value; }
 
         public Vector3 PositionInterpolation { get => positionInterpolation; set => positionInterpolation = value; }

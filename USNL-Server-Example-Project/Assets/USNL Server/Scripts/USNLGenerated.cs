@@ -7,18 +7,15 @@ namespace USNL {
 
     public enum ClientPackets {
         WelcomeReceived,
-        Connect,
-        ConnectionConfirmed,
         Ping,
         ClientInput,
-        Test,
     }
 
     public enum ServerPackets {
         Welcome,
-        ConnectReceived,
-        ServerInfo,
         Ping,
+        ServerInfo,
+        DisconnectClient,
         SyncedObjectInstantiate,
         SyncedObjectDestroy,
         SyncedObjectInterpolationMode,
@@ -34,27 +31,137 @@ namespace USNL {
         SyncedObjectRotInterpolation,
         SyncedObjectVec2ScaleInterpolation,
         SyncedObjectVec3ScaleInterpolation,
-        Testtwo,
     }
 
     #endregion
 
     #region Packet Structs
 
-    public struct TestPacket {
+
+    #endregion
+
+    #region Packet Send
+
+    public static class PacketSend {
+
+        }
+
+    #endregion
+}
+
+namespace USNL.Package {
+    #region Packet Enums
+    public enum ClientPackets {
+        WelcomeReceived,
+        Ping,
+        ClientInput,
+    }
+
+    public enum ServerPackets {
+        Welcome,
+        Ping,
+        ServerInfo,
+        DisconnectClient,
+        SyncedObjectInstantiate,
+        SyncedObjectDestroy,
+        SyncedObjectInterpolationMode,
+        SyncedObjectVec2PosUpdate,
+        SyncedObjectVec3PosUpdate,
+        SyncedObjectRotZUpdate,
+        SyncedObjectRotUpdate,
+        SyncedObjectVec2ScaleUpdate,
+        SyncedObjectVec3ScaleUpdate,
+        SyncedObjectVec2PosInterpolation,
+        SyncedObjectVec3PosInterpolation,
+        SyncedObjectRotZInterpolation,
+        SyncedObjectRotInterpolation,
+        SyncedObjectVec2ScaleInterpolation,
+        SyncedObjectVec3ScaleInterpolation,
+    }
+    #endregion
+
+    #region Packet Structs
+
+    public struct WelcomeReceivedPacket {
         private int fromClient;
 
-        private long a;
+        private int clientIdCheck;
 
-        public TestPacket(int _fromClient, long _a) {
+        public WelcomeReceivedPacket(int _fromClient, int _clientIdCheck) {
             fromClient = _fromClient;
-            a = _a;
+            clientIdCheck = _clientIdCheck;
         }
 
         public int FromClient { get => fromClient; set => fromClient = value; }
-        public long A { get => a; set => a = value; }
+        public int ClientIdCheck { get => clientIdCheck; set => clientIdCheck = value; }
     }
 
+    public struct PingPacket {
+        private int fromClient;
+
+        private bool sendPingBack;
+
+        public PingPacket(int _fromClient, bool _sendPingBack) {
+            fromClient = _fromClient;
+            sendPingBack = _sendPingBack;
+        }
+
+        public int FromClient { get => fromClient; set => fromClient = value; }
+        public bool SendPingBack { get => sendPingBack; set => sendPingBack = value; }
+    }
+
+    public struct ClientInputPacket {
+        private int fromClient;
+
+        private int[] keycodesDown;
+        private int[] keycodesUp;
+
+        public ClientInputPacket(int _fromClient, int[] _keycodesDown, int[] _keycodesUp) {
+            fromClient = _fromClient;
+            keycodesDown = _keycodesDown;
+            keycodesUp = _keycodesUp;
+        }
+
+        public int FromClient { get => fromClient; set => fromClient = value; }
+        public int[] KeycodesDown { get => keycodesDown; set => keycodesDown = value; }
+        public int[] KeycodesUp { get => keycodesUp; set => keycodesUp = value; }
+    }
+
+
+    #endregion
+
+    #region Packet Handlers
+
+    public static class PacketHandlers {
+       public delegate void PacketHandler(USNL.Package.Packet _packet);
+        public static List<PacketHandler> packetHandlers = new List<PacketHandler>() {
+            { WelcomeReceived },
+            { Ping },
+            { ClientInput },
+        };
+
+        public static void WelcomeReceived(Packet _packet) {
+            int clientIdCheck = _packet.ReadInt();
+
+            WelcomeReceivedPacket welcomeReceivedPacket = new WelcomeReceivedPacket(_packet.FromClient, clientIdCheck);
+            PacketManager.instance.PacketReceived(_packet, welcomeReceivedPacket);
+        }
+
+        public static void Ping(Packet _packet) {
+            bool sendPingBack = _packet.ReadBool();
+
+            PingPacket pingPacket = new PingPacket(_packet.FromClient, sendPingBack);
+            PacketManager.instance.PacketReceived(_packet, pingPacket);
+        }
+
+        public static void ClientInput(Packet _packet) {
+            int[] keycodesDown = _packet.ReadInts();
+            int[] keycodesUp = _packet.ReadInts();
+
+            ClientInputPacket clientInputPacket = new ClientInputPacket(_packet.FromClient, keycodesDown, keycodesUp);
+            PacketManager.instance.PacketReceived(_packet, clientInputPacket);
+        }
+    }
 
     #endregion
 
@@ -113,268 +220,19 @@ namespace USNL {
     
         #endregion
     
-        public static void Testtwo(int _exceptClient, int _b) {
-            using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)ServerPackets.Testtwo)) {
-                _packet.Write(_b);
-
-                SendUDPDataToAll(_exceptClient, _packet);
-            }
-        }
-        }
-
-    #endregion
-}
-
-namespace USNL.Package {
-    #region Packet Enums
-    public enum ClientPackets {
-        WelcomeReceived,
-        Connect,
-        ConnectionConfirmed,
-        Ping,
-        ClientInput,
-        Test,
-    }
-
-    public enum ServerPackets {
-        Welcome,
-        ConnectReceived,
-        ServerInfo,
-        Ping,
-        SyncedObjectInstantiate,
-        SyncedObjectDestroy,
-        SyncedObjectInterpolationMode,
-        SyncedObjectVec2PosUpdate,
-        SyncedObjectVec3PosUpdate,
-        SyncedObjectRotZUpdate,
-        SyncedObjectRotUpdate,
-        SyncedObjectVec2ScaleUpdate,
-        SyncedObjectVec3ScaleUpdate,
-        SyncedObjectVec2PosInterpolation,
-        SyncedObjectVec3PosInterpolation,
-        SyncedObjectRotZInterpolation,
-        SyncedObjectRotInterpolation,
-        SyncedObjectVec2ScaleInterpolation,
-        SyncedObjectVec3ScaleInterpolation,
-        Testtwo,
-    }
-    #endregion
-
-    #region Packet Structs
-
-    public struct WelcomeReceivedPacket {
-        private int fromClient;
-
-        private int lobbyClientIdCheck;
-
-        public WelcomeReceivedPacket(int _fromClient, int _lobbyClientIdCheck) {
-            fromClient = _fromClient;
-            lobbyClientIdCheck = _lobbyClientIdCheck;
-        }
-
-        public int FromClient { get => fromClient; set => fromClient = value; }
-        public int LobbyClientIdCheck { get => lobbyClientIdCheck; set => lobbyClientIdCheck = value; }
-    }
-
-    public struct ConnectPacket {
-        private int fromClient;
-
-        private int variablesListCantBeNull;
-
-        public ConnectPacket(int _fromClient, int _variablesListCantBeNull) {
-            fromClient = _fromClient;
-            variablesListCantBeNull = _variablesListCantBeNull;
-        }
-
-        public int FromClient { get => fromClient; set => fromClient = value; }
-        public int VariablesListCantBeNull { get => variablesListCantBeNull; set => variablesListCantBeNull = value; }
-    }
-
-    public struct ConnectionConfirmedPacket {
-        private int fromClient;
-
-        private int clientIdCheck;
-
-        public ConnectionConfirmedPacket(int _fromClient, int _clientIdCheck) {
-            fromClient = _fromClient;
-            clientIdCheck = _clientIdCheck;
-        }
-
-        public int FromClient { get => fromClient; set => fromClient = value; }
-        public int ClientIdCheck { get => clientIdCheck; set => clientIdCheck = value; }
-    }
-
-    public struct PingPacket {
-        private int fromClient;
-
-        private bool sendPingBack;
-
-        public PingPacket(int _fromClient, bool _sendPingBack) {
-            fromClient = _fromClient;
-            sendPingBack = _sendPingBack;
-        }
-
-        public int FromClient { get => fromClient; set => fromClient = value; }
-        public bool SendPingBack { get => sendPingBack; set => sendPingBack = value; }
-    }
-
-    public struct ClientInputPacket {
-        private int fromClient;
-
-        private int[] keycodesDown;
-        private int[] keycodesUp;
-
-        public ClientInputPacket(int _fromClient, int[] _keycodesDown, int[] _keycodesUp) {
-            fromClient = _fromClient;
-            keycodesDown = _keycodesDown;
-            keycodesUp = _keycodesUp;
-        }
-
-        public int FromClient { get => fromClient; set => fromClient = value; }
-        public int[] KeycodesDown { get => keycodesDown; set => keycodesDown = value; }
-        public int[] KeycodesUp { get => keycodesUp; set => keycodesUp = value; }
-    }
-
-
-    #endregion
-
-    #region Packet Handlers
-
-    public static class PacketHandlers {
-       public delegate void PacketHandler(USNL.Package.Packet _packet);
-        public static List<PacketHandler> packetHandlers = new List<PacketHandler>() {
-            { WelcomeReceived },
-            { Connect },
-            { ConnectionConfirmed },
-            { Ping },
-            { ClientInput },
-            { Test },
-        };
-
-        public static void WelcomeReceived(Packet _packet) {
-            int lobbyClientIdCheck = _packet.ReadInt();
-
-            WelcomeReceivedPacket welcomeReceivedPacket = new WelcomeReceivedPacket(_packet.FromClient, lobbyClientIdCheck);
-            PacketManager.instance.PacketReceived(_packet, welcomeReceivedPacket);
-        }
-
-        public static void Connect(Packet _packet) {
-            int variablesListCantBeNull = _packet.ReadInt();
-
-            ConnectPacket connectPacket = new ConnectPacket(_packet.FromClient, variablesListCantBeNull);
-            PacketManager.instance.PacketReceived(_packet, connectPacket);
-        }
-
-        public static void ConnectionConfirmed(Packet _packet) {
-            int clientIdCheck = _packet.ReadInt();
-
-            ConnectionConfirmedPacket connectionConfirmedPacket = new ConnectionConfirmedPacket(_packet.FromClient, clientIdCheck);
-            PacketManager.instance.PacketReceived(_packet, connectionConfirmedPacket);
-        }
-
-        public static void Ping(Packet _packet) {
-            bool sendPingBack = _packet.ReadBool();
-
-            PingPacket pingPacket = new PingPacket(_packet.FromClient, sendPingBack);
-            PacketManager.instance.PacketReceived(_packet, pingPacket);
-        }
-
-        public static void ClientInput(Packet _packet) {
-            int[] keycodesDown = _packet.ReadInts();
-            int[] keycodesUp = _packet.ReadInts();
-
-            ClientInputPacket clientInputPacket = new ClientInputPacket(_packet.FromClient, keycodesDown, keycodesUp);
-            PacketManager.instance.PacketReceived(_packet, clientInputPacket);
-        }
-
-        public static void Test(Packet _packet) {
-            long a = _packet.ReadLong();
-
-            TestPacket testPacket = new TestPacket(_packet.FromClient, a);
-            PacketManager.instance.PacketReceived(_packet, testPacket);
-        }
-    }
-
-    #endregion
-
-    #region Packet Send
-
-    public static class PacketSend {
-        #region TCP & UDP Send Functions
-    
-        private static void SendTCPData(int _toClient, USNL.Package.Packet _packet) {
-            _packet.WriteLength();
-    
-            Client client = null;
-            if (_toClient >= 1000000) client = USNL.Package.Server.WaitingLobbyClients[_toClient % 1000000];
-            else client = USNL.Package.Server.Clients[_toClient];
-    
-            client.Tcp.SendData(_packet);
-            if (client.IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
-        }
-    
-        private static void SendTCPDataToAll(USNL.Package.Packet _packet) {
-            _packet.WriteLength();
-            for (int i = 0; i < USNL.Package.Server.MaxClients; i++) {
-                USNL.Package.Server.Clients[i].Tcp.SendData(_packet);
-                if (USNL.Package.Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
-            }
-        }
-    
-        private static void SendTCPDataToAll(int _excpetClient, USNL.Package.Packet _packet) {
-            _packet.WriteLength();
-            for (int i = 0; i < USNL.Package.Server.MaxClients; i++) {
-                if (i != _excpetClient) {
-                    USNL.Package.Server.Clients[i].Tcp.SendData(_packet);
-                    if (USNL.Package.Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
-                }
-            }
-        }
-    
-        private static void SendUDPData(int _toClient, USNL.Package.Packet _packet) {
-            _packet.WriteLength();
-    
-            Client client = null;
-            if (_toClient >= 1000000) client = USNL.Package.Server.WaitingLobbyClients[_toClient % 1000000];
-            else client = USNL.Package.Server.Clients[_toClient];
-    
-            client.Udp.SendData(_packet);
-            if (client.IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
-        }
-    
-        private static void SendUDPDataToAll(USNL.Package.Packet _packet) {
-            _packet.WriteLength();
-            for (int i = 0; i < USNL.Package.Server.MaxClients; i++) {
-                USNL.Package.Server.Clients[i].Udp.SendData(_packet);
-                if (USNL.Package.Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
-            }
-        }
-    
-        private static void SendUDPDataToAll(int _excpetClient, USNL.Package.Packet _packet) {
-            _packet.WriteLength();
-            for (int i = 0; i < USNL.Package.Server.MaxClients; i++) {
-                if (i != _excpetClient) {
-                    USNL.Package.Server.Clients[i].Udp.SendData(_packet);
-                    if (USNL.Package.Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
-                }
-            }
-        }
-    
-        #endregion
-    
-        public static void Welcome(int _toClient, int _lobbyClientId, string _welcomeMessage) {
+        public static void Welcome(int _toClient, string _welcomeMessage, string _serverName, int _clientId) {
             using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)ServerPackets.Welcome)) {
-                _packet.Write(_lobbyClientId);
                 _packet.Write(_welcomeMessage);
+                _packet.Write(_serverName);
+                _packet.Write(_clientId);
 
                 SendTCPData(_toClient, _packet);
             }
         }
 
-        public static void ConnectReceived(int _toClient, int _clientId, string _connectMessage) {
-            using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)ServerPackets.ConnectReceived)) {
-                _packet.Write(_clientId);
-                _packet.Write(_connectMessage);
+        public static void Ping(int _toClient, bool _sendPingBack) {
+            using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)ServerPackets.Ping)) {
+                _packet.Write(_sendPingBack);
 
                 SendTCPData(_toClient, _packet);
             }
@@ -391,17 +249,17 @@ namespace USNL.Package {
             }
         }
 
-        public static void Ping(int _toClient, bool _sendPingBack) {
-            using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)ServerPackets.Ping)) {
-                _packet.Write(_sendPingBack);
+        public static void DisconnectClient(int _toClient, string _disconnectMessage) {
+            using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)ServerPackets.DisconnectClient)) {
+                _packet.Write(_disconnectMessage);
 
                 SendTCPData(_toClient, _packet);
             }
         }
 
-        public static void SyncedObjectInstantiate(int _toClient, int _syncedObjectPrefebId, int _syncedObjectUUID, Vector3 _position, Quaternion _rotation, Vector3 _scale) {
+        public static void SyncedObjectInstantiate(int _toClient, string _syncedObjectTag, int _syncedObjectUUID, Vector3 _position, Quaternion _rotation, Vector3 _scale) {
             using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)ServerPackets.SyncedObjectInstantiate)) {
-                _packet.Write(_syncedObjectPrefebId);
+                _packet.Write(_syncedObjectTag);
                 _packet.Write(_syncedObjectUUID);
                 _packet.Write(_position);
                 _packet.Write(_rotation);
@@ -549,11 +407,8 @@ namespace USNL {
 
         public static CallbackEvent[] PacketCallbackEvents = {
             CallOnWelcomeReceivedPacketCallbacks,
-            CallOnConnectPacketCallbacks,
-            CallOnConnectionConfirmedPacketCallbacks,
             CallOnPingPacketCallbacks,
             CallOnClientInputPacketCallbacks,
-            CallOnTestPacketCallbacks,
         };
 
         public static event CallbackEvent OnServerStarted;
@@ -562,11 +417,8 @@ namespace USNL {
         public static event CallbackEvent OnClientDisconnected;
 
         public static event CallbackEvent OnWelcomeReceivedPacket;
-        public static event CallbackEvent OnConnectPacket;
-        public static event CallbackEvent OnConnectionConfirmedPacket;
         public static event CallbackEvent OnPingPacket;
         public static event CallbackEvent OnClientInputPacket;
-        public static event CallbackEvent OnTestPacket;
 
         public static void CallOnServerStartedCallbacks(object _param) { if (OnServerStarted != null) { OnServerStarted(_param); } }
         public static void CallOnServerStoppedCallbacks(object _param) { if (OnServerStopped != null) { OnServerStopped(_param); } }
@@ -574,11 +426,8 @@ namespace USNL {
         public static void CallOnClientDisconnectedCallbacks(object _param) { if (OnClientDisconnected != null) { OnClientDisconnected(_param); } }
 
         public static void CallOnWelcomeReceivedPacketCallbacks(object _param) { if (OnWelcomeReceivedPacket != null) { OnWelcomeReceivedPacket(_param); } }
-        public static void CallOnConnectPacketCallbacks(object _param) { if (OnConnectPacket != null) { OnConnectPacket(_param); } }
-        public static void CallOnConnectionConfirmedPacketCallbacks(object _param) { if (OnConnectionConfirmedPacket != null) { OnConnectionConfirmedPacket(_param); } }
         public static void CallOnPingPacketCallbacks(object _param) { if (OnPingPacket != null) { OnPingPacket(_param); } }
         public static void CallOnClientInputPacketCallbacks(object _param) { if (OnClientInputPacket != null) { OnClientInputPacket(_param); } }
-        public static void CallOnTestPacketCallbacks(object _param) { if (OnTestPacket != null) { OnTestPacket(_param); } }
     }
 }
 

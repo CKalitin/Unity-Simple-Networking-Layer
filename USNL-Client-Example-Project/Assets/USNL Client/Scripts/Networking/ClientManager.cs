@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using UnityEngine;
 
 namespace USNL {
+    [Serializable]
     public enum IPType {
         WAN,
         LAN,
@@ -37,6 +38,8 @@ namespace USNL {
         [Space]
         [Tooltip("In seconds.")]
         [SerializeField] private float timeoutTime = 5f;
+        [Space]
+        [SerializeField] private ServerInfo serverInfo;
 
         private int wanClientId;
         private int lanClientId;
@@ -49,11 +52,9 @@ namespace USNL {
         private bool isMigratingHost = false;
         private bool isBecomingHost = false;
 
-        private bool inLobby = true;
-
         private DateTime timeOfConnection;
 
-        [SerializeField] private string serverName;
+        private string serverName;
 
         [Header("Server Host")]
         [SerializeField] private string serverExeName = "USNL-Server-Example-Project.exe";
@@ -63,10 +64,7 @@ namespace USNL {
         [SerializeField] private string editorServerPath = "Server";
         [Tooltip("When the project is built this tick adds the path to the game files before the server path.\nIf server files are in a child folder of the game files, tick this.")]
         [SerializeField] private bool useApplicationPath = false;
-        [SerializeField] private USNL.Package.ServerConfig serverConfig;
-
-        [Header("Server Info")]
-        [SerializeField] private ServerInfo serverInfo;
+        [SerializeField] private Package.ServerConfig serverConfig;
 
         public int WanClientId { get => wanClientId; set => wanClientId = value; }
         public int LanClientId { get => lanClientId; set => lanClientId = value; }
@@ -75,8 +73,7 @@ namespace USNL {
         
         public bool IsConnected { get => Package.Client.instance.IsConnected; }
         public bool IsAttempingConnection { get => isAttempingConnection; }
-        public bool InLobby { get => inLobby && USNL.Package.Client.instance.IsConnected; set => inLobby = value; }
-        public bool IsHost { get => USNL.Package.Client.instance.IsHost; }
+        public bool IsHost { get => Package.Client.instance.IsHost; }
         public bool IsMigratingHost { get => isMigratingHost; }
         public bool IsBecomingHost { get => isBecomingHost; }
         public DateTime TimeOfConnection { get => timeOfConnection; set => timeOfConnection = value; }
@@ -86,14 +83,14 @@ namespace USNL {
         public string EditorServerPath { get => editorServerPath; set => editorServerPath = value; }
         public bool UseApplicationPath { get => useApplicationPath; set => useApplicationPath = value; }
 
-        public USNL.Package.ServerConfig ServerConfig { get => serverConfig; set => serverConfig = value; }
-        public USNL.Package.ServerData ServerData { get => USNL.Package.ServerHost.GetServerData(); }
+        public Package.ServerConfig ServerConfig { get => serverConfig; set => serverConfig = value; }
+        public Package.ServerData ServerData { get => Package.ServerHost.GetServerData(); }
 
-        public bool IsServerRunning { get => USNL.Package.ServerHost.IsServerRunning(); }
+        public bool IsServerRunning { get => Package.ServerHost.IsServerRunning(); }
         public string ServerName { get => serverName; set => serverName = value; }
         public ServerInfo ServerInfo { get => serverInfo; set => serverInfo = value; }
 
-        public bool IsServerActive() { USNL.Package.ServerHost.ReadServerDataFile(); return USNL.Package.ServerHost.GetServerData().IsServerActive; }
+        public bool IsServerActive() { Package.ServerHost.ReadServerDataFile(); return Package.ServerHost.GetServerData().IsServerActive; }
 
         #endregion
 
@@ -118,7 +115,7 @@ namespace USNL {
 
         private void Update() {
             CheckServerLaunchSuccessful();
-            if (USNL.Package.ServerHost.GetServerData().IsServerActive == false && !USNL.Package.ServerHost.LaunchingServer) USNL.Package.Client.instance.IsHost = false;
+            if (Package.ServerHost.GetServerData().IsServerActive == false && !Package.ServerHost.LaunchingServer) Package.Client.instance.IsHost = false;
 
             if (-USNL.Package.Client.instance.Tcp.LastPacketTime.Subtract(DateTime.Now).TotalSeconds >= timeoutTime & USNL.Package.Client.instance.IsConnected) {
                 Debug.Log("Timed out.");
@@ -126,8 +123,17 @@ namespace USNL {
             }
         }
 
-        private void OnEnable() { USNL.CallbackEvents.OnWelcomePacket += OnWelcomePacket; }
-        private void OnDisable() { USNL.CallbackEvents.OnWelcomePacket -= OnWelcomePacket; }
+        private void OnEnable() {
+            USNL.CallbackEvents.OnWelcomePacket += OnWelcomePacket;
+            USNL.CallbackEvents.OnDisconnectClientPacket += OnDisconnectClientPacket;
+            USNL.CallbackEvents.OnServerInfoPacket += OnServerInfoPacket;
+        }
+
+        private void OnDisable() {
+            USNL.CallbackEvents.OnWelcomePacket -= OnWelcomePacket;
+            USNL.CallbackEvents.OnDisconnectClientPacket -= OnDisconnectClientPacket;
+            USNL.CallbackEvents.OnServerInfoPacket -= OnServerInfoPacket;
+        }
 
         private void OnApplicationQuit() {
             CloseServer();
@@ -135,23 +141,26 @@ namespace USNL {
 
         #endregion
 
-        #region Client to Server Functions
+        #region Connection Functions
 
-        public void ConnectToServerLobby() {
-            USNL.Package.Client.instance.SetIP(serverID, port);
+        public void ConnectToServer() {
+            Package.Client.instance.SetIP(serverID, port);
             StartCoroutine(AttemptingConnection());
         }
 
-        public void ConnectToServerLobby(int _id, int _port) {
+        /// <summary> Attempts to connect to the server with ip and port provided. </summary>
+        /// <param name="_id">IP Address</param>
+        /// <param name="_port">Port</param>
+        public void ConnectToServer(int _id, int _port) {
             serverID = _id;
             port = _port;
 
-            USNL.Package.Client.instance.SetIP(serverID, port);
+            Package.Client.instance.SetIP(serverID, port);
             StartCoroutine(AttemptingConnection());
         }
 
         public void DisconnectFromServer() {
-            USNL.Package.Client.instance.Disconnect();
+            Package.Client.instance.Disconnect();
         }
 
         public void StopAttemptingConnection() {
@@ -168,11 +177,11 @@ namespace USNL {
             while (timer < connectionTimeout && attemptConnection) {
                 yield return new WaitForEndOfFrame();
 
-                if (USNL.Package.Client.instance.IsConnected)
+                if (Package.Client.instance.IsConnected)
                     break;
 
                 if (timer > connectionsAttempted * timeBetweenConnectionAttempts) {
-                    USNL.Package.Client.instance.ConnectToServer();
+                    Package.Client.instance.ConnectToServer();
                     connectionsAttempted++;
                 }
 
@@ -180,16 +189,6 @@ namespace USNL {
             }
 
             isAttempingConnection = false;
-        }
-
-        // Exit lobby
-        public void FullyConnectToServer() {
-            if (!USNL.Package.Client.instance.IsConnected) {
-                Debug.Log("Cannot fully connect to server, not connected to server.");
-                return;
-            }
-            
-            USNL.Package.PacketSend.Connect(0);
         }
 
         #endregion
@@ -200,8 +199,8 @@ namespace USNL {
             wanClientIp = GetWanIP();
             lanClientIp = GetLanIP();
 
-            wanClientId = USNL.Package.Client.instance.IPToID(wanClientIp);
-            lanClientId = USNL.Package.Client.instance.IPToID(lanClientIp);
+            wanClientId = Package.Client.instance.IPToID(wanClientIp);
+            lanClientId = Package.Client.instance.IPToID(lanClientIp);
         }
 
         private string GetWanIP() {
@@ -246,44 +245,44 @@ namespace USNL {
         #region Server Host Functions
 
         public void LaunchServer() {
-            USNL.Package.ServerHost.LaunchServer();
+            Package.ServerHost.LaunchServer();
         }
 
         public void CloseServer() {
-            USNL.Package.ServerHost.CloseServer();
+            Package.ServerHost.CloseServer();
         }
 
         private void CheckServerLaunchSuccessful() {
-            if (USNL.Package.ServerHost.LaunchingServer && ServerData.IsServerActive) {
-                USNL.Package.ServerHost.LaunchingServer = false;
+            if (Package.ServerHost.LaunchingServer && ServerData.IsServerActive) {
+                Package.ServerHost.LaunchingServer = false;
                 Debug.Log("Successfuly launched server. Server is Active.");
             }
         }
 
         #endregion
 
-        #region Packet Handlers
+        #region Management Functions
 
         private void OnWelcomePacket(object _packetObject) {
             USNL.Package.WelcomePacket _wp = (USNL.Package.WelcomePacket)_packetObject;
 
-            Debug.Log($"Welcome message from Server: {_wp.WelcomeMessage}, Client Id: {_wp.ClientId}");
+            Debug.Log($"Welcome message from Server {_wp.ServerName}: {_wp.WelcomeMessage}, Client Id: {_wp.ClientId}");
             Package.Client.instance.ClientId = _wp.ClientId;
             serverName = _wp.ServerName;
 
-            Debug.Log($"Connection message from Server: {_cr.ConnectMessage}, Client Id: {_cr.ClientId}");
-            USNL.Package.Client.instance.ClientId = _cr.ClientId;
             timeOfConnection = DateTime.Now;
-            
-            inLobby = false;
 
-            USNL.Package.PacketSend.ConnectionConfirmed(_cr.ClientId);
+            USNL.Package.PacketSend.WelcomeReceived(_wp.ClientId);
 
             USNL.CallbackEvents.CallOnConnectedCallbacks(0);
         }
 
-        public void SetDisconnectedFromServer() {
-            USNL.CallbackEvents.CallOnDisconnectedCallbacks(0);
+        private void OnDisconnectClientPacket(object _packetObject) {
+            USNL.Package.DisconnectClientPacket _dcp = (USNL.Package.DisconnectClientPacket)_packetObject;
+
+            Debug.Log($"Disconnection commanded from server.\nMessage: {_dcp.DisconnectMessage}");
+
+            USNL.Package.Client.instance.Disconnect();
         }
 
         private void OnServerInfoPacket(object _packetObject) {

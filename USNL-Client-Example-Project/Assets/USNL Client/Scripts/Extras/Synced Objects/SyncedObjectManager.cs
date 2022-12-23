@@ -23,6 +23,8 @@ namespace USNL {
                 Debug.Log("Synced Object Manager instance already exists, destroying object!");
                 Destroy(this);
             }
+
+            syncedObjectsPrefabs.GenerateSyncedObjectsDict();
         }
 
         private void OnEnable() {
@@ -83,7 +85,7 @@ namespace USNL {
         private void OnSyncedObjectInstantiatePacket(object _packetObject) {
             USNL.Package.SyncedObjectInstantiatePacket _packet = (USNL.Package.SyncedObjectInstantiatePacket)_packetObject;
 
-            GameObject newSyncedObject = Instantiate(syncedObjectsPrefabs.SyncedObjectsPrefabs[_packet.SyncedObjectPrefebId], _packet.Position, _packet.Rotation);
+            GameObject newSyncedObject = Instantiate(syncedObjectsPrefabs.SyncedObjects[_packet.SyncedObjectTag], _packet.Position, _packet.Rotation);
             newSyncedObject.transform.localScale = _packet.Scale;
 
             // If object does not have a Syncede Object Component
@@ -96,8 +98,10 @@ namespace USNL {
         private void OnSyncedObjectDestroyPacket(object _packetObject) {
             USNL.Package.SyncedObjectDestroyPacket _packet = (USNL.Package.SyncedObjectDestroyPacket)_packetObject;
 
-            Destroy(syncedObjects[_packet.SyncedObjectUUID].gameObject);
-            syncedObjects.Remove(_packet.SyncedObjectUUID);
+            if (syncedObjects.ContainsKey(_packet.SyncedObjectUUID)){
+                Destroy(syncedObjects[_packet.SyncedObjectUUID].gameObject);
+                syncedObjects.Remove(_packet.SyncedObjectUUID);
+            }
         }
 
         private void DisconnectedFromServer(object _object) {

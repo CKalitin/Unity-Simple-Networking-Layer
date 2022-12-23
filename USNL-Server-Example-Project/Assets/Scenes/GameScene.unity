@@ -1809,29 +1809,29 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2262372378169019342, guid: c805aff990ef69543823588555753120, type: 3}
-      propertyPath: m_fontSize
-      value: 24
-      objectReference: {fileID: 0}
-    - target: {fileID: 2262372378169019342, guid: c805aff990ef69543823588555753120, type: 3}
-      propertyPath: m_fontStyle
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2262372378169019342, guid: c805aff990ef69543823588555753120, type: 3}
-      propertyPath: m_enableAutoSizing
+    - target: {fileID: 1626272101894213459, guid: c805aff990ef69543823588555753120, type: 3}
+      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3729034300028515110, guid: c805aff990ef69543823588555753120, type: 3}
-      propertyPath: m_fontSize
-      value: 24
-      objectReference: {fileID: 0}
-    - target: {fileID: 3729034300028515110, guid: c805aff990ef69543823588555753120, type: 3}
-      propertyPath: m_fontStyle
+    - target: {fileID: 1720911414000644866, guid: c805aff990ef69543823588555753120, type: 3}
+      propertyPath: m_HorizontalAlignment
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 3729034300028515110, guid: c805aff990ef69543823588555753120, type: 3}
-      propertyPath: m_enableAutoSizing
+    - target: {fileID: 3950353814483065475, guid: c805aff990ef69543823588555753120, type: 3}
+      propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4879803353104102787, guid: c805aff990ef69543823588555753120, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 260
+      objectReference: {fileID: 0}
+    - target: {fileID: 6257965260984475386, guid: c805aff990ef69543823588555753120, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -215
+      objectReference: {fileID: 0}
+    - target: {fileID: 6257965260984475386, guid: c805aff990ef69543823588555753120, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -70
       objectReference: {fileID: 0}
     - target: {fileID: 7429124210099506866, guid: c805aff990ef69543823588555753120, type: 3}
       propertyPath: m_Name
@@ -1919,10 +1919,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7429124210099506870, guid: c805aff990ef69543823588555753120, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7429124210809030084, guid: c805aff990ef69543823588555753120, type: 3}
-      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

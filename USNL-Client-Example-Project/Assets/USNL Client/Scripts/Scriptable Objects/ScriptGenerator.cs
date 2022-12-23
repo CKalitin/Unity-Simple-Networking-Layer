@@ -23,6 +23,10 @@ namespace USNL.Package {
         "OnDisconnected"
     };
 
+        // For editor script:
+        public bool[] ClientPacketFoldouts;
+        public bool[] ServerPacketFoldouts;
+
         public ClientPacketConfig[] ClientPackets { get => clientPackets; set => clientPackets = value; }
         public ServerPacketConfig[] ServerPackets { get => serverPackets; set => serverPackets = value; }
 
@@ -34,6 +38,11 @@ namespace USNL.Package {
             "Welcome",
             new PacketVariable[] {
                 new PacketVariable("Welcome Message", PacketVarType.String), new PacketVariable("Server Name", PacketVarType.String), new PacketVariable("Client Id", PacketVarType.Int) },
+            ServerPacketType.SendToClient,
+            Protocol.TCP),
+        new ServerPacketConfig(
+            "Ping",
+            new PacketVariable[] { new PacketVariable("Send Ping Back", PacketVarType.Bool) },
             ServerPacketType.SendToClient,
             Protocol.TCP),
         new ServerPacketConfig(
@@ -49,7 +58,7 @@ namespace USNL.Package {
         #region Synced Objects
         new ServerPacketConfig(
             "SyncedObjectInstantiate",
-            new PacketVariable[] {new PacketVariable("Synced Object Prefeb Id", PacketVarType.Int), new PacketVariable("Synced Object UUID", PacketVarType.Int), new PacketVariable("Position", PacketVarType.Vector3), new PacketVariable("Rotation", PacketVarType.Quaternion), new PacketVariable("Scale", PacketVarType.Vector3) },
+            new PacketVariable[] { new PacketVariable("Synced Object Tag", PacketVarType.String), new PacketVariable("Synced Object UUID", PacketVarType.Int), new PacketVariable("Position", PacketVarType.Vector3), new PacketVariable("Rotation", PacketVarType.Quaternion), new PacketVariable("Scale", PacketVarType.Vector3) },
             ServerPacketType.SendToClient,
             Protocol.TCP),
         new ServerPacketConfig(
@@ -128,19 +137,11 @@ namespace USNL.Package {
             Protocol.UDP),
         #endregion
         #endregion
-        };
+    };
         private ClientPacketConfig[] libClientPackets = {
         new ClientPacketConfig(
-            "WelcomeReceived",
-            new PacketVariable[] { new PacketVariable("lobbyClientIdCheck", PacketVarType.Int) },
-            Protocol.TCP),
-        new ClientPacketConfig(
-            "Connect",
-            new PacketVariable[] { new PacketVariable("VariablesListCantBeNull", PacketVarType.Int) },
-            Protocol.TCP),
-        new ClientPacketConfig(
-            "ConnectionConfirmed",
-            new PacketVariable[] { new PacketVariable("clientIdCheck", PacketVarType.Int) },
+            "Welcome Received",
+            new PacketVariable[] { new PacketVariable("Client Id Check", PacketVarType.Int) },
             Protocol.TCP),
         new ClientPacketConfig(
             "Ping",
@@ -150,60 +151,52 @@ namespace USNL.Package {
             "ClientInput",
             new PacketVariable[] { new PacketVariable("KeycodesDown", PacketVarType.IntArray), new PacketVariable("KeycodesUp", PacketVarType.IntArray) },
             Protocol.TCP),
-        };
-
-        // Packets can't be sent if the client is in the lobby. These packet names are excluded from this.
-        private string[] inLobbyExceptions = {
-            "WelcomeReceived",
-            "Connect",
-            "ConnectionConfirmed",
-            "Ping"
-        };
+    };
 
         Dictionary<PacketVarType, string> packetTypes = new Dictionary<PacketVarType, string>()
         { { PacketVarType.Byte, "byte"},
-    { PacketVarType.Short, "short"},
-    { PacketVarType.Int, "int"},
-    { PacketVarType.Long, "long"},
-    { PacketVarType.Float, "float"},
-    { PacketVarType.Bool, "bool"},
-    { PacketVarType.String, "string"},
-    { PacketVarType.Vector2, "Vector2"},
-    { PacketVarType.Vector3, "Vector3"},
-    { PacketVarType.Quaternion, "Quaternion"},
-    { PacketVarType.ByteArray, "byte[]"},
-    { PacketVarType.ShortArray, "short[]"},
-    { PacketVarType.IntArray, "int[]"},
-    { PacketVarType.LongArray, "long[]"},
-    { PacketVarType.FloatArray, "float[]"},
-    { PacketVarType.BoolArray, "bool[]"},
-    { PacketVarType.StringArray, "string[]"},
-    { PacketVarType.Vector2Array, "Vector2[]"},
-    { PacketVarType.Vector3Array, "Vector3[]"},
-    { PacketVarType.QuaternionArray, "Quaternion[]"},
-    };
+        { PacketVarType.Short, "short"},
+        { PacketVarType.Int, "int"},
+        { PacketVarType.Long, "long"},
+        { PacketVarType.Float, "float"},
+        { PacketVarType.Bool, "bool"},
+        { PacketVarType.String, "string"},
+        { PacketVarType.Vector2, "Vector2"},
+        { PacketVarType.Vector3, "Vector3"},
+        { PacketVarType.Quaternion, "Quaternion"},
+        { PacketVarType.ByteArray, "byte[]"},
+        { PacketVarType.ShortArray, "short[]"},
+        { PacketVarType.IntArray, "int[]"},
+        { PacketVarType.LongArray, "long[]"},
+        { PacketVarType.FloatArray, "float[]"},
+        { PacketVarType.BoolArray, "bool[]"},
+        { PacketVarType.StringArray, "string[]"},
+        { PacketVarType.Vector2Array, "Vector2[]"},
+        { PacketVarType.Vector3Array, "Vector3[]"},
+        { PacketVarType.QuaternionArray, "Quaternion[]"},
+        };
         Dictionary<PacketVarType, string> packetReadTypes = new Dictionary<PacketVarType, string>()
         { { PacketVarType.Byte, "Byte"},
-    { PacketVarType.Short, "Short"},
-    { PacketVarType.Int, "Int"},
-    { PacketVarType.Long, "Long"},
-    { PacketVarType.Float, "Float"},
-    { PacketVarType.Bool, "Bool"},
-    { PacketVarType.String, "String"},
-    { PacketVarType.Vector2, "Vector2"},
-    { PacketVarType.Vector3, "Vector3"},
-    { PacketVarType.Quaternion, "Quaternion"},
-    { PacketVarType.ByteArray, "Bytes"},
-    { PacketVarType.ShortArray, "Shorts"},
-    { PacketVarType.IntArray, "Ints"},
-    { PacketVarType.LongArray, "Longs"},
-    { PacketVarType.FloatArray, "Floats"},
-    { PacketVarType.BoolArray, "Bools"},
-    { PacketVarType.StringArray, "Strings"},
-    { PacketVarType.Vector2Array, "Vector2s"},
-    { PacketVarType.Vector3Array, "Vector3s"},
-    { PacketVarType.QuaternionArray, "Quaternions"}
-    };
+        { PacketVarType.Short, "Short"},
+        { PacketVarType.Int, "Int"},
+        { PacketVarType.Long, "Long"},
+        { PacketVarType.Float, "Float"},
+        { PacketVarType.Bool, "Bool"},
+        { PacketVarType.String, "String"},
+        { PacketVarType.Vector2, "Vector2"},
+        { PacketVarType.Vector3, "Vector3"},
+        { PacketVarType.Quaternion, "Quaternion"},
+        { PacketVarType.ByteArray, "Bytes"},
+        { PacketVarType.ShortArray, "Shorts"},
+        { PacketVarType.IntArray, "Ints"},
+        { PacketVarType.LongArray, "Longs"},
+        { PacketVarType.FloatArray, "Floats"},
+        { PacketVarType.BoolArray, "Bools"},
+        { PacketVarType.StringArray, "Strings"},
+        { PacketVarType.Vector2Array, "Vector2s"},
+        { PacketVarType.Vector3Array, "Vector3s"},
+        { PacketVarType.QuaternionArray, "Quaternions"}
+        };
 
         public enum PacketVarType {
             Byte,
@@ -306,6 +299,8 @@ namespace USNL.Package {
         #region Generation
 
         public void GenerateScript() {
+            if (!CheckUserPacketsValid()) return;
+
             string scriptText = "";
 
             #region Using Statements
@@ -348,8 +343,8 @@ namespace USNL.Package {
             string packetStructs = GeneratePacketStructs(serverPackets);
             string pPacketStructs = GeneratePacketStructs(libServerPackets);
 
-            string packetHandlers = GeneratePacketHandlers(serverPackets, "USNL.", libServerPackets, "USNL.Package.", true);
-            string pPacketHandlers = GeneratePacketHandlers(libServerPackets, "USNL.Package.", serverPackets, "USNL.", false);
+            string packetHandlers = GeneratePacketHandlers(serverPackets, "USNL.", libServerPackets, "Package.", true);
+            string pPacketHandlers = GeneratePacketHandlers(libServerPackets, "Package.", serverPackets, "USNL.", false);
 
             string packetSends = GeneratePacketSends(clientPackets, "USNL.");
             string pPacketSends = GeneratePacketSends(libClientPackets, "USNL.Package.");
@@ -514,7 +509,6 @@ namespace USNL.Package {
                     psts += $"\n        private {varType} {varName};";
                 }
 
-
                 // Constructor:
                 psts += "\n";
                 string constructorParameters = "";
@@ -564,7 +558,7 @@ namespace USNL.Package {
             for (int i = 0; i < spcs.Length; i++) {
                 string upPacketName = Upper(spcs[i].PacketName);
                 string loPacketName = Lower(spcs[i].PacketName);
-                phs += $"\n        public static void {upPacketName}(USNL.Package.Packet _packet) {{";
+                phs += $"\n        public static void {upPacketName}(Package.Packet _packet) {{";
 
                 for (int x = 0; x < spcs[i].PacketVariables.Length; x++) {
                     phs += $"\n            {packetTypes[spcs[i].PacketVariables[x].VariableType]} {Lower(spcs[i].PacketVariables[x].VariableName)} = _packet.Read{packetReadTypes[spcs[i].PacketVariables[x].VariableType]}();";
@@ -579,7 +573,7 @@ namespace USNL.Package {
                 packetParameters = packetParameters.Substring(0, packetParameters.Length - 2);
 
                 phs += $"\n            {usingStatement}{upPacketName}Packet {loPacketName}Packet = new {usingStatement}{upPacketName}Packet({packetParameters});";
-                phs += $"\n            USNL.Package.PacketManager.instance.PacketReceived(_packet, {loPacketName}Packet);";
+                phs += $"\n            Package.PacketManager.instance.PacketReceived(_packet, {loPacketName}Packet);";
 
                 phs += "\n        }\n";
             }
@@ -597,7 +591,7 @@ namespace USNL.Package {
                     "\n            _packet.WriteLength();" +
                     "\n            if (USNL.Package.Client.instance.IsConnected) {" +
                     "\n                USNL.Package.Client.instance.Tcp.SendData(_packet);" +
-                    "\n                USNL.NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length());" +
+                    "\n                NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length());" +
                     "\n            }" +
                     "\n        }" +
                     "\n    " +
@@ -605,7 +599,7 @@ namespace USNL.Package {
                     "\n            _packet.WriteLength();" +
                     "\n            if (USNL.Package.Client.instance.IsConnected) {" +
                     "\n                USNL.Package.Client.instance.Udp.SendData(_packet);" +
-                    "\n                USNL.NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length());" +
+                    "\n                NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length());" +
                     "\n            }" +
                     "\n        }" +
                     "\n    ";
@@ -621,7 +615,7 @@ namespace USNL.Package {
                 pas = pas.Substring(0, pas.Length - 2);
 
                 pss += $"\n        public static void {Upper(cpcs[i].PacketName)}({pas}) {{";
-                pss += $"\n            using (USNL.Package.Packet _packet = new USNL.Package.Packet((int){usingStatement}ClientPackets.{Upper(cpcs[i].PacketName)})) {{";
+                pss += $"\n            using (Package.Packet _packet = new Package.Packet((int){usingStatement}ClientPackets.{Upper(cpcs[i].PacketName)})) {{";
 
                 string pws = ""; // Packet writes
                 for (int x = 0; x < cpcs[i].PacketVariables.Length; x++) {
@@ -630,22 +624,11 @@ namespace USNL.Package {
                 pss += pws;
                 pss += "\n";
 
-                bool excludeInLobby = false;
-                for (int j = 0; j < inLobbyExceptions.Length; j++) {
-                    if (Upper(inLobbyExceptions[j]) == Upper(cpcs[i].PacketName)) excludeInLobby = true;
-                }
-
-                string includeInLobbyText = "";
-                if (!excludeInLobby) includeInLobbyText = "    ";
-                if (!excludeInLobby) { pss += "\n                if (!USNL.ClientManager.instance.InLobby) {"; }
-                
                 if (cpcs[i].Protocol == Protocol.TCP) {
-                    pss += $"\n{includeInLobbyText}                SendTCPData(_packet);";
+                    pss += "\n                SendTCPData(_packet);";
                 } else {
-                    pss += $"\n{includeInLobbyText}                SendUDPData(_packet);";
+                    pss += "\n                SendUDPData(_packet);";
                 }
-
-                if (!excludeInLobby) { pss += "\n                }"; }
 
                 pss += "\n            }\n        }\n"; // Close functions and using statements
             }
@@ -689,7 +672,7 @@ namespace USNL.Package {
             }
             return true;
         }
-        
+
         private string Upper(string _input) {
             string output = String.Concat(_input.Where(c => !Char.IsWhiteSpace(c))); // Remove whitespace
             return $"{Char.ToUpper(output[0])}{output.Substring(1)}";

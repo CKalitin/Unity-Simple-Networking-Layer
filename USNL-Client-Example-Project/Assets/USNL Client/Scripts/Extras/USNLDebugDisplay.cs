@@ -15,7 +15,6 @@ namespace USNL.Package {
         [SerializeField] private GameObject isServerActive;
         [SerializeField] private GameObject isMigratingHost;
         [SerializeField] private GameObject isBecomingHost;
-        [SerializeField] private GameObject inLobby;
 
         [Header("Network Info")]
         [SerializeField] private TextMeshProUGUI totalBytesSent;
@@ -57,7 +56,6 @@ namespace USNL.Package {
                 isServerActive.SetActive(ClientManager.instance.ServerData.IsServerActive);
                 isMigratingHost.SetActive(ClientManager.instance.IsMigratingHost);
                 isBecomingHost.SetActive(ClientManager.instance.IsBecomingHost);
-                inLobby.SetActive(ClientManager.instance.InLobby);
                 #endregion
 
                 #region Network Info
@@ -83,6 +81,8 @@ namespace USNL.Package {
                 wanClientId.text = ClientManager.instance.WanClientId.ToString();
                 lanClientId.text = ClientManager.instance.LanClientId.ToString();
                 #endregion
+
+                // Read text from json file ???? what
             }
         }
 
@@ -104,14 +104,10 @@ namespace USNL.Package {
 
         public void ConnectButton() {
             try {
-                ClientManager.instance.ConnectToServerLobby(int.Parse(ip.text), Int32.Parse(port.text));
+                ClientManager.instance.ConnectToServer(int.Parse(ip.text), Int32.Parse(port.text));
             } catch (Exception _ex) {
                 Debug.LogError($"Could not connect to server via Debug Menu, likely improper port.\n{_ex}");
             }
-        }
-
-        public void FullyConnectButton() {
-            ClientManager.instance.FullyConnectToServer();
         }
 
         public void DisconnectButton() {
