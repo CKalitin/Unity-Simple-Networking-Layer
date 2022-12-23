@@ -13,6 +13,8 @@ namespace USNL {
 
         [Header("Editor Config")]
         [SerializeField] private USNL.Package.ServerConfig serverConfig;
+        [Tooltip("These files are normally used when client self-hosts a server.")]
+        [SerializeField] private bool useServerConfigAndDataFilesInEditor;
 
         [Header("Server Config")]
         [Tooltip("In seconds.")]
@@ -82,64 +84,6 @@ namespace USNL {
 
         #endregion
 
-        #region Packet Handling
-
-        private void OnWelcomeReceivedPacket(object _packetObject) {
-            USNL.Package.WelcomeReceivedPacket _wr = (USNL.Package.WelcomeReceivedPacket)_packetObject;
-
-            USNL.Package.Client client = GetClientFromClientId(_wr.FromClient);
-            Debug.Log(client == null);
-            Debug.Log(client.Tcp == null);
-            Debug.Log(client.Tcp.socket == null);
-            Debug.Log(client.Tcp.socket.Client == null);
-            Debug.Log(client.Tcp.socket.Client.RemoteEndPoint == null);
-
-            Debug.Log($"{client.Tcp.socket.Client.RemoteEndPoint} connected successfully and is now waiting lobby client {USNL.Package.Server.WaitingLobbyClients.Count}.");
-            Debug.Log(USNL.Package.Server.WaitingLobbyClients.Capacity);
-
-            if (_wr.FromClient != _wr.LobbyClientIdCheck) {
-                Debug.Log($"ID: ({_wr.FromClient}) has assumed the wrong lobby client ID ({_wr.LobbyClientIdCheck}).");
-            }
-        }
-
-        private void OnConnectPacket(object _packetObject) {
-            USNL.Package.ConnectPacket _cp = (USNL.Package.ConnectPacket)_packetObject;
-
-            int _clientId = -1;
-            for (int i = 0; i < USNL.Package.Server.Clients.Count; i++) {
-                if (!USNL.Package.Server.Clients[i].IsConnected) {
-                    break;
-                }
-            }
-
-            if (_clientId == -1) {
-                Debug.Log($"Cannot connect Waiting Lobby Client {_cp.FromClient}. Server is full.");
-                return;
-            }
-
-            USNL.Package.Server.Clients[_clientId] = USNL.Package.Server.WaitingLobbyClients[_cp.FromClient];
-            USNL.Package.Server.WaitingLobbyClients.RemoveAt(_cp.FromClient);
-
-            USNL.Package.PacketSend.ConnectReceived(_cp.FromClient + 1000000, _clientId, serverConfig.WelcomeMessage);
-        }
-
-        private void OnConnectionConfirmedPacket(object _packetObject) {
-            USNL.Package.ConnectionConfirmedPacket _crp = (USNL.Package.ConnectionConfirmedPacket)_packetObject;
-
-            Debug.Log($"{USNL.Package.Server.Clients[_crp.FromClient].Tcp.socket.Client.RemoteEndPoint} connected successfully and is now Client {_crp.FromClient}.");
-            if (_crp.FromClient != _crp.ClientIdCheck) {
-                Debug.Log($"ID: ({_crp.FromClient}) has assumed the wrong client ID ({_crp.ClientIdCheck}).");
-            }
-
-            USNL.CallbackEvents.CallOnClientConnectedCallbacks(_crp.FromClient);
-        }
-        
-        public void ClientDisconnected(int _clientId) {
-            USNL.CallbackEvents.CallOnClientDisconnectedCallbacks(_clientId);
-        }
-
-        #endregion
-
         #region Server Manager
 
         public void StartServer() {
@@ -150,9 +94,10 @@ namespace USNL {
             
             USNL.Package.Server.ServerData.IsServerActive = true;
 
-            WriteServerDataFile();
-
-            ReadServerConfigFile();
+            if (useServerConfigAndDataFilesInEditor && Application.isEditor) {
+                WriteServerDataFile();
+                ReadServerConfigFile();
+            }
 
             USNL.Package.Server.Start(serverConfig.MaxClients, serverConfig.ServerPort);
 
@@ -169,11 +114,81 @@ namespace USNL {
 
             USNL.Package.Server.ServerData.IsServerActive = false;
 
-            USNL.Package.Server.ServerData.IsServerActive = false;
-            WriteServerDataFile();
+            if (useServerConfigAndDataFilesInEditor && Application.isEditor)
+                WriteServerDataFile();
             
             StartCoroutine(USNL.Package.Server.ShutdownServer());
         }
+
+        #endregion
+
+        #region Packet Handling
+
+        private void OnWelcomeReceivedPacket(object _packetObject) {
+            USNL.Package.WelcomeReceivedPacket _wr = (USNL.Package.WelcomeReceivedPacket)_packetObject;
+
+            Debug.Log($"1 {Package.Server.WaitingLobbyClients[0].Udp.endPoint != null}");
+            
+            USNL.Package.Client client = GetClientFromClientId(_wr.FromClient);
+            
+            Debug.Log($"{client.Tcp.socket.Client.RemoteEndPoint} connected successfully and is now Waiting Lobby Client {_wr.FromClient - 1000000}.");
+
+            if (_wr.FromClient != _wr.LobbyClientIdCheck) {
+                Debug.Log($"ID: ({_wr.FromClient}) has assumed the wrong lobby client ID ({_wr.LobbyClientIdCheck}).");
+            }
+
+            Debug.Log($"2 {client.Udp.endPoint != null}");
+            
+            client = GetClientFromClientId(_wr.FromClient);
+
+            Debug.Log($"3 {client.Udp.endPoint != null}");
+        }
+
+        private void OnConnectPacket(object _packetObject) {
+            USNL.Package.ConnectPacket _cp = (USNL.Package.ConnectPacket)_packetObject;
+
+            Debug.Log($"4 {USNL.Package.Server.WaitingLobbyClients[_cp.FromClient - 1000000].Udp.endPoint != null}");
+
+            int _clientId = -1;
+            for (int i = 0; i < USNL.Package.Server.Clients.Count; i++) {
+                if (!USNL.Package.Server.Clients[i].IsConnected) {
+                    _clientId = i;
+                    break;
+                }
+            }
+
+            if (_clientId == -1) {
+                Debug.Log($"Cannot connect Waiting Lobby Client {_cp.FromClient - 1000000}. Server is full.");
+                return;
+            }
+
+            USNL.Package.Server.Clients[_clientId] = USNL.Package.Server.WaitingLobbyClients[_cp.FromClient - 1000000];
+            USNL.Package.Server.Clients[_clientId].ClientId = _clientId;
+            RemoveWaitingLobbyClient(_cp.FromClient - 1000000);
+
+            USNL.Package.PacketSend.ConnectReceived(_clientId, _clientId, serverConfig.WelcomeMessage);
+
+            Debug.Log($"5 {USNL.Package.Server.WaitingLobbyClients[_cp.FromClient - 1000000].Udp.endPoint != null}");
+        }
+
+        private void OnConnectionConfirmedPacket(object _packetObject) {
+            USNL.Package.ConnectionConfirmedPacket _crp = (USNL.Package.ConnectionConfirmedPacket)_packetObject;
+            
+            Debug.Log($"{USNL.Package.Server.Clients[_crp.FromClient].Tcp.socket.Client.RemoteEndPoint} connected successfully and is now Client {_crp.FromClient}.");
+            if (_crp.FromClient != _crp.ClientIdCheck) {
+                Debug.Log($"ID: ({_crp.FromClient}) has assumed the wrong client ID ({_crp.ClientIdCheck}).");
+            }
+
+            USNL.CallbackEvents.CallOnClientConnectedCallbacks(_crp.FromClient);
+        }
+
+        public void ClientDisconnected(int _clientId) {
+            USNL.CallbackEvents.CallOnClientDisconnectedCallbacks(_clientId);
+        }
+
+        #endregion
+
+        #region Helper Functions
 
         private void CheckClientsTimedout() {
             for (int i = 0; i < USNL.Package.Server.Clients.Count; i++) {
@@ -183,14 +198,35 @@ namespace USNL {
                 Debug.Log($"Client {i} has timed out.");
                 USNL.Package.Server.Clients[i].Disconnect();
             }
+
+            for (int i = 0; i < USNL.Package.Server.WaitingLobbyClients.Count; i++) {
+                if (!USNL.Package.Server.WaitingLobbyClients[i].IsConnected) continue;
+                if (-USNL.Package.Server.WaitingLobbyClients[i].Tcp.LastPacketTime.Subtract(DateTime.Now).TotalSeconds < timeoutTime) continue;
+
+                Debug.Log($"Waiting Lobby Client {i} has timed out.");
+                USNL.Package.Server.WaitingLobbyClients[i].Disconnect();
+            }
         }
 
         private void CheckWaitingLobbyClientsConnected() {
-
+            int clientsRemoved = 0;
             for (int i = 0; i < USNL.Package.Server.WaitingLobbyClients.Count; i++) {
                 if (USNL.Package.Server.WaitingLobbyClients[i].IsConnected) continue;
+                if (-USNL.Package.Server.WaitingLobbyClients[i].Tcp.LastPacketTime.Subtract(DateTime.Now).TotalSeconds < 2f) continue;
 
-                USNL.Package.Server.WaitingLobbyClients.RemoveAt(i);
+                RemoveWaitingLobbyClient(i - clientsRemoved);
+                clientsRemoved++;
+
+                Debug.Log($"Removed waiting lobby client of Id {i}.");
+            }
+        }
+
+        private void RemoveWaitingLobbyClient(int _index) {
+            USNL.Package.Server.WaitingLobbyClients.RemoveAt(_index);
+
+            // Decrement waiting lobby clients with IDs greater than this one
+            for (int j = _index; j < USNL.Package.Server.WaitingLobbyClients.Count; j++) {
+                USNL.Package.Server.WaitingLobbyClients[j].ClientId--;
             }
         }
 
@@ -204,7 +240,7 @@ namespace USNL {
             for (int i = 0; i < USNL.Package.Server.WaitingLobbyClients.Count; i++) {
                 if (!USNL.Package.Server.WaitingLobbyClients[i].IsConnected) continue;
 
-                USNL.Package.PacketSend.ServerInfo(USNL.Package.Server.WaitingLobbyClients[i].ClientId + 1000000, ServerConfig.ServerName, USNL.ServerManager.GetConnectedClientsIds(), ServerConfig.MaxClients, USNL.ServerManager.GetNumberOfConnectedClients() > ServerConfig.MaxClients);
+                USNL.Package.PacketSend.ServerInfo(USNL.Package.Server.WaitingLobbyClients[i].ClientId, ServerConfig.ServerName, USNL.ServerManager.GetConnectedClientsIds(), ServerConfig.MaxClients, USNL.ServerManager.GetNumberOfConnectedClients() > ServerConfig.MaxClients);
             }
         }
 
@@ -217,7 +253,7 @@ namespace USNL {
 
         #endregion
 
-        #region Helper Functions
+        #region Public Functions
 
         public static int GetNumberOfConnectedClients() {
             int result = 0;

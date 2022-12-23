@@ -297,7 +297,6 @@ namespace USNL {
 
             Debug.Log($"Connection message from Server: {_cr.ConnectMessage}, Client Id: {_cr.ClientId}");
             USNL.Package.Client.instance.ClientId = _cr.ClientId;
-
             timeOfConnection = DateTime.Now;
             
             inLobby = false;

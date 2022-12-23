@@ -4713,6 +4713,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7110925763707054694, guid: 07a14c5067869a4429dcb3a1e0dde3ff, type: 3}
+      propertyPath: serverConfig.maxClients
+      value: 42
+      objectReference: {fileID: 0}
+    - target: {fileID: 7110925763707054694, guid: 07a14c5067869a4429dcb3a1e0dde3ff, type: 3}
+      propertyPath: serverConfig.serverName
+      value: ServerTest
+      objectReference: {fileID: 0}
+    - target: {fileID: 7110925763707054694, guid: 07a14c5067869a4429dcb3a1e0dde3ff, type: 3}
+      propertyPath: serverConfig.serverPort
+      value: 26950
+      objectReference: {fileID: 0}
+    - target: {fileID: 7110925763707054694, guid: 07a14c5067869a4429dcb3a1e0dde3ff, type: 3}
+      propertyPath: serverConfig.welcomeMessage
+      value: Welcome Message
+      objectReference: {fileID: 0}
     - target: {fileID: 7110925763707054699, guid: 07a14c5067869a4429dcb3a1e0dde3ff, type: 3}
       propertyPath: m_Name
       value: USNL Management

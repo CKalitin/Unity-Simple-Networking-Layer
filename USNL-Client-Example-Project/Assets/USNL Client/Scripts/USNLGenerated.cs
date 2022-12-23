@@ -633,7 +633,6 @@ namespace USNL.Package {
                 _packet.Write(_keycodesUp);
 
                 if (!USNL.ClientManager.instance.InLobby) {
-                    Debug.Log("Here");
                     SendTCPData(_packet);
                 }
             }

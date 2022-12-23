@@ -206,6 +206,7 @@ namespace USNL.Package {
                 socket.BeginReceive(ReceiveCallback, null);
 
                 using (Packet _packet = new Packet()) {
+                    _packet.Write(instance.clientId);
                     SendData(_packet);
                 }
             }

@@ -77,7 +77,7 @@ namespace USNL.Package {
         }
 
         private static void InitializeServerData() {
-            for (int i = 0; i <= MaxClients; i++) {
+            for (int i = 0; i < MaxClients; i++) {
                 Clients.Add(new Client(i));
             }
         }
@@ -116,7 +116,7 @@ namespace USNL.Package {
                 if (Clients[i].IsConnected) USNL.Package.PacketSend.DisconnectClient(i, _disconnectMessage);
             }
             for (int i = 0; i < WaitingLobbyClients.Count; i++) {
-                if (WaitingLobbyClients[i].IsConnected) USNL.Package.PacketSend.DisconnectClient(i + 1000000, _disconnectMessage);
+                if (WaitingLobbyClients[i].IsConnected) USNL.Package.PacketSend.DisconnectClient(WaitingLobbyClients[i].ClientId, _disconnectMessage);
             }
         }
 
@@ -129,11 +129,8 @@ namespace USNL.Package {
             tcpListener.BeginAcceptTcpClient(new AsyncCallback(TCPConnectCallback), null);
             Debug.Log($"Incoming connection from {_client.Client.RemoteEndPoint}...");
 
-            WaitingLobbyClients.Add(new Client(WaitingLobbyClients.Count));
+            WaitingLobbyClients.Add(new Client(WaitingLobbyClients.Count + 1000000));
             WaitingLobbyClients[WaitingLobbyClients.Count - 1].Tcp.Connect(_client);
-            Debug.Log("ttest: " + WaitingLobbyClients[WaitingLobbyClients.Count - 1].Tcp.socket.Client.RemoteEndPoint == null + "more text");
-            Client client = WaitingLobbyClients[WaitingLobbyClients.Count - 1];
-            Debug.Log("ttest: " + client.Tcp.socket.Client.RemoteEndPoint == null);
         }
         
         private static void UDPReceiveCallback(IAsyncResult _result) {
@@ -149,13 +146,17 @@ namespace USNL.Package {
                 using (Packet _packet = new Packet(_data)) {
                     int _clientId = _packet.ReadInt();
 
-                    if (Clients[_clientId].Udp.endPoint == null) {
-                        Clients[_clientId].Udp.Connect(_clientEndPoint);
+                    Debug.Log($"ClientId: {_clientId}");
+
+                    Client clientInLobby = ServerManager.GetClientFromClientId(_clientId + 1000000);
+                    if (clientInLobby != null && clientInLobby.Udp.endPoint == null) {
+                        clientInLobby.Udp.Connect(_clientEndPoint);
                         return;
                     }
-
-                    if (Clients[_clientId].Udp.endPoint.ToString() == _clientEndPoint.ToString()) {
-                        Clients[_clientId].Udp.HandleData(_packet);
+                    
+                    Client client = ServerManager.GetClientFromClientId(_clientId);
+                    if (client.Udp.endPoint.ToString() == _clientEndPoint.ToString()) {
+                        client.Udp.HandleData(_packet);
                     }
                 }
             } catch (Exception _ex) {
@@ -165,9 +166,8 @@ namespace USNL.Package {
 
         public static void SendUDPData(IPEndPoint _clientEndPoint, Packet _packet) {
             try {
-                if (_clientEndPoint != null) {
+                if (_clientEndPoint != null)
                     udpListener.BeginSend(_packet.ToArray(), _packet.Length(), _clientEndPoint, null, null);
-                }
             } catch (Exception _ex) {
                 Debug.Log($"Error sending data tp {_clientEndPoint} via UDP {_ex}");
             }

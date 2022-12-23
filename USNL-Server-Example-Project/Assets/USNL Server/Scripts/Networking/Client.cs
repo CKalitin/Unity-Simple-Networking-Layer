@@ -21,8 +21,8 @@ namespace USNL.Package {
 
         public Client(int _clientID) {
             clientId = _clientID;
-            tcp = new TCP(clientId, this);
-            udp = new UDP(clientId);
+            tcp = new TCP(this);
+            udp = new UDP(this);
         }
 
         #endregion
@@ -31,8 +31,7 @@ namespace USNL.Package {
 
         public class TCP {
             public TcpClient socket;
-
-            private readonly int clientId;
+            
             private NetworkStream stream;
             private Packet receivedData;
             private byte[] receiveBuffer;
@@ -43,12 +42,16 @@ namespace USNL.Package {
 
             public DateTime LastPacketTime { get => lastPacketTime; set => lastPacketTime = value; }
 
-            public TCP(int _id, Client _client) {
-                clientId = _id;
+            public TCP(Client _client) {
                 client = _client;
+                lastPacketTime = DateTime.Now;
             }
 
             public void Connect(TcpClient _socket) {
+                Debug.Log($"id tcp: {client.ClientId}");
+                Debug.Log($"Must be true: {client.tcp.socket == null}");
+                Debug.Log($"C1 {client.udp.endPoint != null}");
+
                 socket = _socket;
                 socket.ReceiveBufferSize = USNL.Package.Server.DataBufferSize;
                 socket.SendBufferSize = USNL.Package.Server.DataBufferSize;
@@ -62,11 +65,13 @@ namespace USNL.Package {
 
                 lastPacketTime = DateTime.Now;
 
-                USNL.Package.PacketSend.Welcome(clientId + 1000000, clientId + 1000000, USNL.ServerManager.instance.ServerConfig.WelcomeMessage);
+                USNL.Package.PacketSend.Welcome(client.clientId, client.clientId, USNL.ServerManager.instance.ServerConfig.WelcomeMessage);
 
-                USNL.Package.PacketSend.ServerInfo(clientId + 1000000, USNL.ServerManager.instance.ServerConfig.ServerName, USNL.ServerManager.GetConnectedClientsIds(), USNL.ServerManager.instance.ServerConfig.MaxClients, USNL.ServerManager.GetNumberOfConnectedClients() > USNL.ServerManager.instance.ServerConfig.MaxClients);
+                USNL.Package.PacketSend.ServerInfo(client.clientId, USNL.ServerManager.instance.ServerConfig.ServerName, USNL.ServerManager.GetConnectedClientsIds(), USNL.ServerManager.instance.ServerConfig.MaxClients, USNL.ServerManager.GetNumberOfConnectedClients() > USNL.ServerManager.instance.ServerConfig.MaxClients);
 
                 client.isConnected = true;
+                
+                Debug.Log($"C2 {client.udp.endPoint != null}");
             }
 
             public void SendData(Packet _packet) {
@@ -75,7 +80,7 @@ namespace USNL.Package {
                         stream.BeginWrite(_packet.ToArray(), 0, _packet.Length(), null, null);
                     }
                 } catch (Exception _ex) {
-                    Debug.Log($"Error sending data to client {clientId} via TCP: {_ex}");
+                    Debug.Log($"Error sending data to client {client.clientId} via TCP: {_ex}");
                 }
             }
 
@@ -83,7 +88,8 @@ namespace USNL.Package {
                 try {
                     int _byteLength = stream.EndRead(_result);
                     if (_byteLength <= 0) {
-                        Server.Clients[clientId].Disconnect();
+                        if (client.clientId > 1000000) Server.WaitingLobbyClients[client.clientId - 1000000].Disconnect();
+                        else Server.Clients[client.clientId].Disconnect();
                         return;
                     }
 
@@ -94,7 +100,8 @@ namespace USNL.Package {
                     stream.BeginRead(receiveBuffer, 0, USNL.Package.Server.DataBufferSize, ReceiveCallback, null);
                 } catch (Exception _ex) {
                     Debug.Log($"Error recieving TCP data: {_ex}");
-                    Server.Clients[clientId].Disconnect();
+                        if (client.clientId > 1000000) Server.WaitingLobbyClients[client.clientId - 1000000].Disconnect();
+                        else Server.Clients[client.clientId].Disconnect();
                 }
             }
 
@@ -118,7 +125,7 @@ namespace USNL.Package {
                             lastPacketTime = DateTime.Now;
 
                             _packet.PacketId = _packet.ReadInt();
-                            _packet.FromClient = clientId;
+                            _packet.FromClient = client.clientId;
                             USNL.Package.PacketHandlers.packetHandlers[_packet.PacketId](_packet);
                             NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length() + 4); // +4 for packet length
                         }
@@ -151,19 +158,24 @@ namespace USNL.Package {
 
         public class UDP {
             public IPEndPoint endPoint;
+            public string test = "Unchanged";
 
-            private int clientId;
+            Client client;
 
-            public UDP(int _id) {
-                clientId = _id;
+            public UDP(Client _client) {
+                client = _client;
             }
 
             public void Connect(IPEndPoint _endPoint) {
                 endPoint = _endPoint;
+                test = "Changed";
+                Debug.Log("UDP Connected");
+                Debug.Log($"Must be false: {client.tcp.socket == null}");
             }
 
             public void SendData(Packet _packet) {
                 Server.SendUDPData(endPoint, _packet);
+                //Debug.Log(endPoint != null); TODO DELETE
             }
 
             public void HandleData(Packet _packetData) {
@@ -174,7 +186,7 @@ namespace USNL.Package {
                 ThreadManager.ExecuteOnPacketHandleThread(() => {
                     using (Packet _packet = new Packet(_packetBytes)) {
                         _packet.PacketId = _packet.ReadInt();
-                        _packet.FromClient = clientId;
+                        _packet.FromClient = client.clientId;
                         USNL.Package.PacketHandlers.packetHandlers[_packet.PacketId](_packet);
                         NetworkDebugInfo.instance.PacketReceived(_packet.PacketId, _packet.Length() + 4); // +4 for packet length
                     }
@@ -182,6 +194,7 @@ namespace USNL.Package {
             }
 
             public void Disconnect() {
+                Debug.Log("UDP disconnected");
                 endPoint = null;
             }
         }
