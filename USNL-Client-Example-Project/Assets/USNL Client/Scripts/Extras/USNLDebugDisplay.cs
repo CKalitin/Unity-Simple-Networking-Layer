@@ -83,8 +83,6 @@ namespace USNL.Package {
                 wanClientId.text = ClientManager.instance.WanClientId.ToString();
                 lanClientId.text = ClientManager.instance.LanClientId.ToString();
                 #endregion
-
-                // Read text from json file ???? what
             }
         }
 

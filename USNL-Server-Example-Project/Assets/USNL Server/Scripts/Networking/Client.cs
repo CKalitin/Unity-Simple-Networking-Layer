@@ -48,10 +48,6 @@ namespace USNL.Package {
             }
 
             public void Connect(TcpClient _socket) {
-                Debug.Log($"id tcp: {client.ClientId}");
-                Debug.Log($"Must be true: {client.tcp.socket == null}");
-                Debug.Log($"C1 {client.udp.endPoint != null}");
-
                 socket = _socket;
                 socket.ReceiveBufferSize = USNL.Package.Server.DataBufferSize;
                 socket.SendBufferSize = USNL.Package.Server.DataBufferSize;
@@ -70,8 +66,6 @@ namespace USNL.Package {
                 USNL.Package.PacketSend.ServerInfo(client.clientId, USNL.ServerManager.instance.ServerConfig.ServerName, USNL.ServerManager.GetConnectedClientsIds(), USNL.ServerManager.instance.ServerConfig.MaxClients, USNL.ServerManager.GetNumberOfConnectedClients() > USNL.ServerManager.instance.ServerConfig.MaxClients);
 
                 client.isConnected = true;
-                
-                Debug.Log($"C2 {client.udp.endPoint != null}");
             }
 
             public void SendData(Packet _packet) {
@@ -87,9 +81,13 @@ namespace USNL.Package {
             private void ReceiveCallback(IAsyncResult _result) {
                 try {
                     int _byteLength = stream.EndRead(_result);
+                    
                     if (_byteLength <= 0) {
-                        if (client.clientId > 1000000) Server.WaitingLobbyClients[client.clientId - 1000000].Disconnect();
-                        else Server.Clients[client.clientId].Disconnect();
+                        if (client.clientId > 1000000) {
+                            if (Server.WaitingLobbyClients.Contains(client)) Server.WaitingLobbyClients[client.clientId - 1000000].Disconnect();
+                        } else {
+                            if (Server.Clients.Contains(client)) Server.Clients[client.clientId].Disconnect();
+                        }
                         return;
                     }
 
@@ -100,8 +98,8 @@ namespace USNL.Package {
                     stream.BeginRead(receiveBuffer, 0, USNL.Package.Server.DataBufferSize, ReceiveCallback, null);
                 } catch (Exception _ex) {
                     Debug.Log($"Error recieving TCP data: {_ex}");
-                        if (client.clientId > 1000000) Server.WaitingLobbyClients[client.clientId - 1000000].Disconnect();
-                        else Server.Clients[client.clientId].Disconnect();
+                    if (client.clientId > 1000000) Server.WaitingLobbyClients[client.clientId - 1000000].Disconnect();
+                    else Server.Clients[client.clientId].Disconnect();
                 }
             }
 
@@ -158,8 +156,7 @@ namespace USNL.Package {
 
         public class UDP {
             public IPEndPoint endPoint;
-            public string test = "Unchanged";
-
+            
             Client client;
 
             public UDP(Client _client) {
@@ -168,14 +165,10 @@ namespace USNL.Package {
 
             public void Connect(IPEndPoint _endPoint) {
                 endPoint = _endPoint;
-                test = "Changed";
-                Debug.Log("UDP Connected");
-                Debug.Log($"Must be false: {client.tcp.socket == null}");
             }
 
             public void SendData(Packet _packet) {
                 Server.SendUDPData(endPoint, _packet);
-                //Debug.Log(endPoint != null); TODO DELETE
             }
 
             public void HandleData(Packet _packetData) {
@@ -194,7 +187,6 @@ namespace USNL.Package {
             }
 
             public void Disconnect() {
-                Debug.Log("UDP disconnected");
                 endPoint = null;
             }
         }
@@ -204,16 +196,24 @@ namespace USNL.Package {
         #region Functions
 
         public void Disconnect() {
-            Debug.Log($"{tcp.socket.Client.RemoteEndPoint} has disconnected.");
+            tcp.Disconnect();
+            udp.Disconnect();
 
             isConnected = false;
 
-            ThreadManager.ExecuteOnMainThread(() => {
-                ServerManager.instance.ClientDisconnected(clientId);
-            });
+            if (USNL.Package.Server.Clients.Contains(this)) {
+                Debug.Log("Not in server waiting lobby");
 
-            tcp.Disconnect();
-            udp.Disconnect();
+                ThreadManager.ExecuteOnMainThread(() => {
+                    ServerManager.instance.ClientDisconnected(clientId);
+                });
+
+                Debug.Log($"{tcp.socket.Client.RemoteEndPoint} has disconnected.");
+
+                USNL.Package.Server.Clients[clientId] = new Client(clientId);
+            } else {
+                Debug.Log($"{tcp.socket.Client.RemoteEndPoint} has disconnected from Waiting Lobby.");
+            }
         }
 
         #endregion

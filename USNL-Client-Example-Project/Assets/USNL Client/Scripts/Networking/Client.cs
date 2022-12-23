@@ -307,6 +307,10 @@ namespace USNL.Package {
                 tcp.Reset();
                 udp.Reset();
 
+                clientId = 0;
+
+                USNL.ClientManager.instance.InLobby = false;
+
                 USNL.Package.ThreadManager.StopPacketHandleThread();
                 
                 USNL.CallbackEvents.CallOnDisconnectedCallbacks(0);

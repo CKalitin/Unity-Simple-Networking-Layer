@@ -126,8 +126,6 @@ namespace USNL {
 
         private void OnWelcomeReceivedPacket(object _packetObject) {
             USNL.Package.WelcomeReceivedPacket _wr = (USNL.Package.WelcomeReceivedPacket)_packetObject;
-
-            Debug.Log($"1 {Package.Server.WaitingLobbyClients[0].Udp.endPoint != null}");
             
             USNL.Package.Client client = GetClientFromClientId(_wr.FromClient);
             
@@ -136,19 +134,11 @@ namespace USNL {
             if (_wr.FromClient != _wr.LobbyClientIdCheck) {
                 Debug.Log($"ID: ({_wr.FromClient}) has assumed the wrong lobby client ID ({_wr.LobbyClientIdCheck}).");
             }
-
-            Debug.Log($"2 {client.Udp.endPoint != null}");
-            
-            client = GetClientFromClientId(_wr.FromClient);
-
-            Debug.Log($"3 {client.Udp.endPoint != null}");
         }
 
         private void OnConnectPacket(object _packetObject) {
             USNL.Package.ConnectPacket _cp = (USNL.Package.ConnectPacket)_packetObject;
-
-            Debug.Log($"4 {USNL.Package.Server.WaitingLobbyClients[_cp.FromClient - 1000000].Udp.endPoint != null}");
-
+            
             int _clientId = -1;
             for (int i = 0; i < USNL.Package.Server.Clients.Count; i++) {
                 if (!USNL.Package.Server.Clients[i].IsConnected) {
@@ -167,14 +157,12 @@ namespace USNL {
             RemoveWaitingLobbyClient(_cp.FromClient - 1000000);
 
             USNL.Package.PacketSend.ConnectReceived(_clientId, _clientId, serverConfig.WelcomeMessage);
-
-            Debug.Log($"5 {USNL.Package.Server.WaitingLobbyClients[_cp.FromClient - 1000000].Udp.endPoint != null}");
         }
 
         private void OnConnectionConfirmedPacket(object _packetObject) {
             USNL.Package.ConnectionConfirmedPacket _crp = (USNL.Package.ConnectionConfirmedPacket)_packetObject;
             
-            Debug.Log($"{USNL.Package.Server.Clients[_crp.FromClient].Tcp.socket.Client.RemoteEndPoint} connected successfully and is now Client {_crp.FromClient}.");
+            Debug.Log($"{USNL.Package.Server.Clients[_crp.FromClient].Tcp.socket.Client.RemoteEndPoint} is now Client {_crp.FromClient}.");
             if (_crp.FromClient != _crp.ClientIdCheck) {
                 Debug.Log($"ID: ({_crp.FromClient}) has assumed the wrong client ID ({_crp.ClientIdCheck}).");
             }
@@ -216,8 +204,6 @@ namespace USNL {
 
                 RemoveWaitingLobbyClient(i - clientsRemoved);
                 clientsRemoved++;
-
-                Debug.Log($"Removed waiting lobby client of Id {i}.");
             }
         }
 
@@ -288,9 +274,17 @@ namespace USNL {
             if (File.Exists(GetApplicationPath() + "ServerQuit")) {
                 Debug.Log("Server Quit commanded from host client, shutting down server.");
                 File.Delete(GetApplicationPath() + "ServerQuit");
-                StopServer();
-                Application.Quit();
             }
+        }
+
+        private IEnumerator QuitServer() {
+            StopServer();
+
+            yield return new WaitForSeconds(1.5f);
+
+            StopAllCoroutines();
+
+            Application.Quit();
         }
 
         public void WriteServerDataFile() {

@@ -142,22 +142,21 @@ namespace USNL.Package {
                 if (_data.Length < 4) {
                     return;
                 }
-
+                Debug.Log("1");
                 using (Packet _packet = new Packet(_data)) {
                     int _clientId = _packet.ReadInt();
-
-                    Debug.Log($"ClientId: {_clientId}");
-
+                    Debug.Log("2");
                     Client clientInLobby = ServerManager.GetClientFromClientId(_clientId + 1000000);
                     if (clientInLobby != null && clientInLobby.Udp.endPoint == null) {
                         clientInLobby.Udp.Connect(_clientEndPoint);
                         return;
                     }
-                    
+                    Debug.Log("3");
                     Client client = ServerManager.GetClientFromClientId(_clientId);
                     if (client.Udp.endPoint.ToString() == _clientEndPoint.ToString()) {
                         client.Udp.HandleData(_packet);
                     }
+                    Debug.Log("4");
                 }
             } catch (Exception _ex) {
                 Debug.Log($"Error receoving UDP data: {_ex}");

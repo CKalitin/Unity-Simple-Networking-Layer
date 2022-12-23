@@ -75,7 +75,7 @@ namespace USNL {
         
         public bool IsConnected { get => USNL.Package.Client.instance.IsConnected; }
         public bool IsAttempingConnection { get => isAttempingConnection; }
-        public bool InLobby { get => inLobby; set => inLobby = value; }
+        public bool InLobby { get => inLobby && USNL.Package.Client.instance.IsConnected; set => inLobby = value; }
         public bool IsHost { get => USNL.Package.Client.instance.IsHost; }
         public bool IsMigratingHost { get => isMigratingHost; }
         public bool IsBecomingHost { get => isBecomingHost; }

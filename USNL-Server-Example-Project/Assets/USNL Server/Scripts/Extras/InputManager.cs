@@ -160,13 +160,14 @@ namespace USNL {
         }
 
         private void OnClientInputPacket(object _packetObject) {
-            USNL.Package.ClientInputPacket asdf = (USNL.Package.ClientInputPacket)_packetObject;
-            receivedClientInputPackets.Add((USNL.Package.ClientInputPacket)_packetObject);
+            USNL.Package.ClientInputPacket _cip = (USNL.Package.ClientInputPacket)_packetObject;
+            Debug.Log($"OnConnected {_cip.FromClient}");
+            receivedClientInputPackets.Add(_cip);
         }
 
         private void OnClientDisconnected(object _clientIdObject) {
             int _clientId = (int)_clientIdObject;
-
+            Debug.Log($"OnDisconnected: {_clientId}");
             clientInputs[_clientId].KeycodesDown.Clear();
             clientInputs[_clientId].KeycodesUp.Clear();
             clientInputs[_clientId].KeycodesPressed.Clear();
