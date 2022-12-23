@@ -25,10 +25,6 @@ namespace USNL.Package {
         "OnClientDisconnected"
     };
 
-        // For editor script:
-        public bool[] ClientPacketFoldouts;
-        public bool[] ServerPacketFoldouts;
-
         public ClientPacketConfig[] ClientPackets { get => clientPackets; set => clientPackets = value; }
         public ServerPacketConfig[] ServerPackets { get => serverPackets; set => serverPackets = value; }
 
@@ -56,15 +52,10 @@ namespace USNL.Package {
             new PacketVariable[] { new PacketVariable("Send Ping Back", PacketVarType.Bool) },
             ServerPacketType.SendToClient,
             Protocol.TCP),
-        new ServerPacketConfig(
-            "DisconnectClient",
-            new PacketVariable[] { new PacketVariable("Disconnect Message", PacketVarType.String) },
-            ServerPacketType.SendToClient,
-            Protocol.TCP),
         #region Synced Objects
         new ServerPacketConfig(
             "SyncedObjectInstantiate",
-            new PacketVariable[] { new PacketVariable("Synced Object Tag", PacketVarType.String), new PacketVariable("Synced Object UUID", PacketVarType.Int), new PacketVariable("Position", PacketVarType.Vector3), new PacketVariable("Rotation", PacketVarType.Quaternion), new PacketVariable("Scale", PacketVarType.Vector3) },
+            new PacketVariable[] {new PacketVariable("Synced Object Prefeb Id", PacketVarType.Int), new PacketVariable("Synced Object UUID", PacketVarType.Int), new PacketVariable("Position", PacketVarType.Vector3), new PacketVariable("Rotation", PacketVarType.Quaternion), new PacketVariable("Scale", PacketVarType.Vector3) },
             ServerPacketType.SendToClient,
             Protocol.TCP),
         new ServerPacketConfig(
@@ -313,8 +304,6 @@ namespace USNL.Package {
         #region Generation
 
         public void GenerateScript() {
-            if (!CheckUserPacketsValid()) return;
-
             string scriptText = "";
 
             #region Using Statements
@@ -514,6 +503,7 @@ namespace USNL.Package {
                     string varType = packetTypes[cpcs[i].PacketVariables[x].VariableType]; // Variable type string
                     psts += $"\n        private {varType} {varName};";
                 }
+
 
                 // Constructor:
                 psts += "\n";

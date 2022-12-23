@@ -20,8 +20,6 @@ namespace USNL.Package {
         float labelFieldWidth;
         float labelHeight;
 
-        float elementVisibleButtonWidth;
-
         float packetElementHeight;
         float packetElementNameWidth;
         float clientPacketElementProtocolWidth;
@@ -43,28 +41,26 @@ namespace USNL.Package {
         int[] targetClientVariblesLengths;
         int[] targetServerVariblesLengths;
 
+        bool[] clientPacketFoldouts;
+        bool[] serverPacketFoldouts;
+
         private void OnEnable() {
             scriptGenerator = (ScriptGenerator)target;
 
             targetClientPacketsListSize = scriptGenerator.ClientPackets.Length;
             targetServerPacketsListSize = scriptGenerator.ServerPackets.Length;
 
+            clientPacketFoldouts = new bool[targetClientPacketsListSize];
+            for (int i = 0; i < clientPacketFoldouts.Length; i++) clientPacketFoldouts[i] = true;
+
+            serverPacketFoldouts = new bool[targetServerPacketsListSize];
+            for (int i = 0; i < serverPacketFoldouts.Length; i++) serverPacketFoldouts[i] = true;
+
             targetClientVariblesLengths = new int[scriptGenerator.ClientPackets.Length];
             targetServerVariblesLengths = new int[scriptGenerator.ServerPackets.Length];
-
             for (int i = 0; i < scriptGenerator.ClientPackets.Length; i++) targetClientVariblesLengths[i] = scriptGenerator.ClientPackets[i].PacketVariables.Length;
             for (int i = 0; i < scriptGenerator.ServerPackets.Length; i++) targetServerVariblesLengths[i] = scriptGenerator.ServerPackets[i].PacketVariables.Length;
 
-            if (scriptGenerator.ClientPacketFoldouts == null || scriptGenerator.ClientPacketFoldouts.Length <= 0) {
-                bool[] newCPF = new bool[targetClientPacketsListSize];
-                for (int i = 0; i < scriptGenerator.ClientPacketFoldouts.Length; i++) newCPF[i] = scriptGenerator.ClientPacketFoldouts[i];
-                scriptGenerator.ClientPacketFoldouts = newCPF;
-            }
-            if (scriptGenerator.ServerPacketFoldouts == null || scriptGenerator.ServerPacketFoldouts.Length <= 0) {
-                bool[] newSPF = new bool[targetServerPacketsListSize];
-                for (int i = 0; i < scriptGenerator.ServerPacketFoldouts.Length; i++) newSPF[i] = scriptGenerator.ServerPacketFoldouts[i];
-                scriptGenerator.ServerPacketFoldouts = newSPF;
-            }
         }
 
         public override void OnInspectorGUI() {
@@ -76,19 +72,18 @@ namespace USNL.Package {
             labelStyle = new GUIStyle(GUI.skin.label) { fontSize = 14, fontStyle = FontStyle.Bold };
             labelWidth = Screen.width * 0.6f;
             labelFieldWidth = Screen.width * 0.3f;
-            labelHeight = 20;
+            labelHeight = Screen.height * 0.02f;
 
-            packetElementHeight = 17f;
-            elementVisibleButtonWidth = 17f;
+            packetElementHeight = 19;
             packetElementNameWidth = Screen.width * 0.3f;
-            clientPacketElementProtocolWidth = Screen.width * 0.315f - 20f;
-            serverPacketElementSendTypeWidth = Screen.width * 0.1575f - 10f;
-            serverPacketElementProtocolWidth = Screen.width * 0.1575f - 10f;
-            packetElementVarTextWidth = Screen.width * 0.22f;
+            clientPacketElementProtocolWidth = Screen.width * 0.325f;
+            serverPacketElementSendTypeWidth = Screen.width * 0.1625f;
+            serverPacketElementProtocolWidth = Screen.width * 0.1625f;
+            packetElementVarTextWidth = Screen.width * 0.21f;
             packetElementVarLengthWidth = Screen.width * 0.05f;
 
             variableLabelStyle = new GUIStyle(GUI.skin.label) { fontSize = 13, fontStyle = FontStyle.Normal };
-            variableElementHeight = 17;
+            variableElementHeight = 19;
             variableNameWidth = Screen.width * 0.45f;
             variableTypeWidth = Screen.width * 0.45f;
 
@@ -145,7 +140,7 @@ namespace USNL.Package {
                 // Repopulate the new array with the old array's contents
                 for (int i = 0; i < Mathf.Clamp(scriptGenerator.ClientPackets.Length, 0, packets.Length); i++) {
                     packets[i] = scriptGenerator.ClientPackets[i];
-                    foldouts[i] = scriptGenerator.ClientPacketFoldouts[i];
+                    foldouts[i] = clientPacketFoldouts[i];
                 }
 
                 // Remaining Client Packets
@@ -155,7 +150,7 @@ namespace USNL.Package {
                     foldouts[i] = true;
                 }
                 scriptGenerator.ClientPackets = packets;
-                scriptGenerator.ClientPacketFoldouts = foldouts;
+                clientPacketFoldouts = foldouts;
 
                 int[] newTargetClientVariblesLengths = new int[targetClientPacketsListSize];
                 for (int i = 0; i < targetClientVariblesLengths.Length && i < newTargetClientVariblesLengths.Length; i++) {
@@ -171,15 +166,18 @@ namespace USNL.Package {
             }
         }
 
+        // Display a single element of the list of costs in a horizontal line
         private void DisplayClientPacketElement(int _index) {
+            //clientPacketFoldouts[_index] = EditorGUI.BeginFoldoutHeaderGroup(new Rect(100, 100, 200, 100), clientPacketFoldouts[_index], scriptGenerator.ClientPackets[_index].PacketName);
+
             // Begin horizontal line of elements
             EditorGUILayout.BeginHorizontal();
 
             try {
-                scriptGenerator.ClientPacketFoldouts[_index] = EditorGUILayout.Toggle(scriptGenerator.ClientPacketFoldouts[_index], GUILayout.Width(elementVisibleButtonWidth), GUILayout.Height(packetElementHeight));
+                //EditorGUILayout.LabelField(_index.ToString(), GUILayout.Width(aeLabelWidth), GUILayout.Height(aeHeight));
                 scriptGenerator.ClientPackets[_index].PacketName = EditorGUILayout.TextField(scriptGenerator.ClientPackets[_index].PacketName, GUILayout.Width(packetElementNameWidth), GUILayout.Height(packetElementHeight));
                 scriptGenerator.ClientPackets[_index].Protocol = (ScriptGenerator.Protocol)EditorGUILayout.EnumPopup(scriptGenerator.ClientPackets[_index].Protocol, GUILayout.Width(clientPacketElementProtocolWidth), GUILayout.Height(packetElementHeight));
-                EditorGUILayout.LabelField("Num. Variables ", GUILayout.Width(packetElementVarTextWidth), GUILayout.Height(packetElementHeight));
+                EditorGUILayout.LabelField("Num. Variables: ", GUILayout.Width(packetElementVarTextWidth), GUILayout.Height(packetElementHeight));
                 GUI.SetNextControlName("ClientPacketVariablesLengthField"); // This line means GetNameOfFocusedControl() returns "ArrayLengthField" when this box is selected
                 targetClientVariblesLengths[_index] = EditorGUILayout.IntField(targetClientVariblesLengths[_index], GUILayout.Width(packetElementVarLengthWidth), GUILayout.Height(packetElementHeight));
             } catch {
@@ -189,8 +187,11 @@ namespace USNL.Package {
             // End horizontal line of elements
             EditorGUILayout.EndHorizontal();
 
-            if (scriptGenerator.ClientPacketFoldouts[_index])
-                for (int i = 0; i < scriptGenerator.ClientPackets[_index].PacketVariables.Length; i++) { DisplayClientPacketVariableElement(_index, i); }
+            for (int i = 0; i < scriptGenerator.ClientPackets[_index].PacketVariables.Length; i++) {
+                DisplayClientPacketVariableElement(_index, i);
+            }
+
+            //EditorGUI.EndFoldoutHeaderGroup();
 
             // if targetListSize field is not selected, or is enter is pressed
             if (GUI.GetNameOfFocusedControl() != "ClientPacketVariablesLengthField" || (Event.current.isKey && Event.current.keyCode == KeyCode.Return)) {
@@ -255,7 +256,7 @@ namespace USNL.Package {
                 // Repopulate the new array with the old array's contents
                 for (int i = 0; i < Mathf.Clamp(scriptGenerator.ServerPackets.Length, 0, packets.Length); i++) {
                     packets[i] = scriptGenerator.ServerPackets[i];
-                    foldouts[i] = scriptGenerator.ServerPacketFoldouts[i];
+                    foldouts[i] = serverPacketFoldouts[i];
                 }
 
                 // Remaining Server Packets
@@ -265,7 +266,7 @@ namespace USNL.Package {
                     foldouts[i] = true;
                 }
                 scriptGenerator.ServerPackets = packets;
-                scriptGenerator.ServerPacketFoldouts = foldouts;
+                serverPacketFoldouts = foldouts;
 
                 int[] newTargetServerVariblesLengths = new int[targetServerPacketsListSize];
                 for (int i = 0; i < targetServerVariblesLengths.Length && i < newTargetServerVariblesLengths.Length; i++) {
@@ -281,6 +282,7 @@ namespace USNL.Package {
             }
         }
 
+        // Display a single element of the list of costs in a horizontal line
         private void DisplayServerPacketElement(int _index) {
             //ServerPacketFoldouts[_index] = EditorGUI.BeginFoldoutHeaderGroup(new Rect(100, 100, 200, 100), ServerPacketFoldouts[_index], scriptGenerator.ServerPackets[_index].PacketName);
 
@@ -288,11 +290,12 @@ namespace USNL.Package {
             EditorGUILayout.BeginHorizontal();
 
             try {
-                scriptGenerator.ServerPacketFoldouts[_index] = EditorGUILayout.Toggle(scriptGenerator.ServerPacketFoldouts[_index], GUILayout.Width(elementVisibleButtonWidth), GUILayout.Height(packetElementHeight));
+
+                //EditorGUILayout.LabelField(_index.ToString(), GUILayout.Width(aeLabelWidth), GUILayout.Height(aeHeight));
                 scriptGenerator.ServerPackets[_index].PacketName = EditorGUILayout.TextField(scriptGenerator.ServerPackets[_index].PacketName, GUILayout.Width(packetElementNameWidth), GUILayout.Height(packetElementHeight));
                 scriptGenerator.ServerPackets[_index].SendType = (ScriptGenerator.ServerPacketType)EditorGUILayout.EnumPopup(scriptGenerator.ServerPackets[_index].SendType, GUILayout.Width(serverPacketElementSendTypeWidth), GUILayout.Height(packetElementHeight));
                 scriptGenerator.ServerPackets[_index].Protocol = (ScriptGenerator.Protocol)EditorGUILayout.EnumPopup(scriptGenerator.ServerPackets[_index].Protocol, GUILayout.Width(serverPacketElementProtocolWidth), GUILayout.Height(packetElementHeight));
-                EditorGUILayout.LabelField("Num. Variables ", GUILayout.Width(packetElementVarTextWidth), GUILayout.Height(packetElementHeight));
+                EditorGUILayout.LabelField("Num. Variables: ", GUILayout.Width(packetElementVarTextWidth), GUILayout.Height(packetElementHeight));
                 GUI.SetNextControlName("ServerPacketVariablesLengthField"); // This line means GetNameOfFocusedControl() returns "ArrayLengthField" when this box is selected
                 targetServerVariblesLengths[_index] = EditorGUILayout.IntField(targetServerVariblesLengths[_index], GUILayout.Width(packetElementVarLengthWidth), GUILayout.Height(packetElementHeight));
             } catch {
@@ -302,8 +305,9 @@ namespace USNL.Package {
             // End horizontal line of elements
             EditorGUILayout.EndHorizontal();
 
-            if (scriptGenerator.ServerPacketFoldouts[_index])
-                for (int i = 0; i < scriptGenerator.ServerPackets[_index].PacketVariables.Length; i++) { DisplayServerPacketVariableElement(_index, i); }
+            for (int i = 0; i < scriptGenerator.ServerPackets[_index].PacketVariables.Length; i++) {
+                DisplayServerPacketVariableElement(_index, i);
+            }
 
             //EditorGUI.EndFoldoutHeaderGroup();
 
@@ -361,7 +365,7 @@ namespace USNL.Package {
                 "\n" +
                 "\nType variable names should be in C# format: exampleVariable." +
                 "\n" +
-                "\nThis is just a ScriptableObject so the data can be lost if something happens to the package. Eg. an update. Good idea to back it up.";
+                "\nMaybe it's a good idea to back this up? Who knows... Just a suggestion.";
 
             GUILayout.TextArea(helpMessage, helpBoxStyle);
         }

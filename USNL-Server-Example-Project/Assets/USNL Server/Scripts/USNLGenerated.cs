@@ -11,6 +11,7 @@ namespace USNL {
         ConnectionConfirmed,
         Ping,
         ClientInput,
+        Test,
     }
 
     public enum ServerPackets {
@@ -18,7 +19,6 @@ namespace USNL {
         ConnectReceived,
         ServerInfo,
         Ping,
-        DisconnectClient,
         SyncedObjectInstantiate,
         SyncedObjectDestroy,
         SyncedObjectInterpolationMode,
@@ -34,11 +34,26 @@ namespace USNL {
         SyncedObjectRotInterpolation,
         SyncedObjectVec2ScaleInterpolation,
         SyncedObjectVec3ScaleInterpolation,
+        Testtwo,
     }
 
     #endregion
 
     #region Packet Structs
+
+    public struct TestPacket {
+        private int fromClient;
+
+        private long a;
+
+        public TestPacket(int _fromClient, long _a) {
+            fromClient = _fromClient;
+            a = _a;
+        }
+
+        public int FromClient { get => fromClient; set => fromClient = value; }
+        public long A { get => a; set => a = value; }
+    }
 
 
     #endregion
@@ -46,7 +61,65 @@ namespace USNL {
     #region Packet Send
 
     public static class PacketSend {
+        #region TCP & UDP Send Functions
+    
+        private static void SendTCPData(int _toClient, USNL.Package.Packet _packet) {
+            _packet.WriteLength();
+            USNL.Package.Server.Clients[_toClient].Tcp.SendData(_packet);
+            if (USNL.Package.Server.Clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+        }
+    
+        private static void SendTCPDataToAll(USNL.Package.Packet _packet) {
+            _packet.WriteLength();
+            for (int i = 0; i < USNL.Package.Server.MaxClients; i++) {
+                USNL.Package.Server.Clients[i].Tcp.SendData(_packet);
+                if (USNL.Package.Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+            }
+        }
+    
+        private static void SendTCPDataToAll(int _excpetClient, USNL.Package.Packet _packet) {
+            _packet.WriteLength();
+            for (int i = 0; i < USNL.Package.Server.MaxClients; i++) {
+                if (i != _excpetClient) {
+                    USNL.Package.Server.Clients[i].Tcp.SendData(_packet);
+                    if (USNL.Package.Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+                }
+            }
+        }
+    
+        private static void SendUDPData(int _toClient, USNL.Package.Packet _packet) {
+            _packet.WriteLength();
+            USNL.Package.Server.Clients[_toClient].Udp.SendData(_packet);
+            if (USNL.Package.Server.Clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+        }
+    
+        private static void SendUDPDataToAll(USNL.Package.Packet _packet) {
+            _packet.WriteLength();
+            for (int i = 0; i < USNL.Package.Server.MaxClients; i++) {
+                USNL.Package.Server.Clients[i].Udp.SendData(_packet);
+                if (USNL.Package.Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+            }
+        }
+    
+        private static void SendUDPDataToAll(int _excpetClient, USNL.Package.Packet _packet) {
+            _packet.WriteLength();
+            for (int i = 0; i < USNL.Package.Server.MaxClients; i++) {
+                if (i != _excpetClient) {
+                    USNL.Package.Server.Clients[i].Udp.SendData(_packet);
+                    if (USNL.Package.Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+                }
+            }
+        }
+    
+        #endregion
+    
+        public static void Testtwo(int _exceptClient, int _b) {
+            using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)ServerPackets.Testtwo)) {
+                _packet.Write(_b);
 
+                SendUDPDataToAll(_exceptClient, _packet);
+            }
+        }
         }
 
     #endregion
@@ -60,6 +133,7 @@ namespace USNL.Package {
         ConnectionConfirmed,
         Ping,
         ClientInput,
+        Test,
     }
 
     public enum ServerPackets {
@@ -67,7 +141,6 @@ namespace USNL.Package {
         ConnectReceived,
         ServerInfo,
         Ping,
-        DisconnectClient,
         SyncedObjectInstantiate,
         SyncedObjectDestroy,
         SyncedObjectInterpolationMode,
@@ -83,6 +156,7 @@ namespace USNL.Package {
         SyncedObjectRotInterpolation,
         SyncedObjectVec2ScaleInterpolation,
         SyncedObjectVec3ScaleInterpolation,
+        Testtwo,
     }
     #endregion
 
@@ -174,6 +248,7 @@ namespace USNL.Package {
             { ConnectionConfirmed },
             { Ping },
             { ClientInput },
+            { Test },
         };
 
         public static void WelcomeReceived(Packet _packet) {
@@ -210,6 +285,13 @@ namespace USNL.Package {
 
             ClientInputPacket clientInputPacket = new ClientInputPacket(_packet.FromClient, keycodesDown, keycodesUp);
             PacketManager.instance.PacketReceived(_packet, clientInputPacket);
+        }
+
+        public static void Test(Packet _packet) {
+            long a = _packet.ReadLong();
+
+            TestPacket testPacket = new TestPacket(_packet.FromClient, a);
+            PacketManager.instance.PacketReceived(_packet, testPacket);
         }
     }
 
@@ -317,17 +399,9 @@ namespace USNL.Package {
             }
         }
 
-        public static void DisconnectClient(int _toClient, string _disconnectMessage) {
-            using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)ServerPackets.DisconnectClient)) {
-                _packet.Write(_disconnectMessage);
-
-                SendTCPData(_toClient, _packet);
-            }
-        }
-
-        public static void SyncedObjectInstantiate(int _toClient, string _syncedObjectTag, int _syncedObjectUUID, Vector3 _position, Quaternion _rotation, Vector3 _scale) {
+        public static void SyncedObjectInstantiate(int _toClient, int _syncedObjectPrefebId, int _syncedObjectUUID, Vector3 _position, Quaternion _rotation, Vector3 _scale) {
             using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)ServerPackets.SyncedObjectInstantiate)) {
-                _packet.Write(_syncedObjectTag);
+                _packet.Write(_syncedObjectPrefebId);
                 _packet.Write(_syncedObjectUUID);
                 _packet.Write(_position);
                 _packet.Write(_rotation);
@@ -479,6 +553,7 @@ namespace USNL {
             CallOnConnectionConfirmedPacketCallbacks,
             CallOnPingPacketCallbacks,
             CallOnClientInputPacketCallbacks,
+            CallOnTestPacketCallbacks,
         };
 
         public static event CallbackEvent OnServerStarted;
@@ -491,6 +566,7 @@ namespace USNL {
         public static event CallbackEvent OnConnectionConfirmedPacket;
         public static event CallbackEvent OnPingPacket;
         public static event CallbackEvent OnClientInputPacket;
+        public static event CallbackEvent OnTestPacket;
 
         public static void CallOnServerStartedCallbacks(object _param) { if (OnServerStarted != null) { OnServerStarted(_param); } }
         public static void CallOnServerStoppedCallbacks(object _param) { if (OnServerStopped != null) { OnServerStopped(_param); } }
@@ -502,6 +578,7 @@ namespace USNL {
         public static void CallOnConnectionConfirmedPacketCallbacks(object _param) { if (OnConnectionConfirmedPacket != null) { OnConnectionConfirmedPacket(_param); } }
         public static void CallOnPingPacketCallbacks(object _param) { if (OnPingPacket != null) { OnPingPacket(_param); } }
         public static void CallOnClientInputPacketCallbacks(object _param) { if (OnClientInputPacket != null) { OnClientInputPacket(_param); } }
+        public static void CallOnTestPacketCallbacks(object _param) { if (OnTestPacket != null) { OnTestPacket(_param); } }
     }
 }
 

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Linq;
 using UnityEngine;
 
 namespace USNL.Package {
@@ -69,7 +70,7 @@ namespace USNL.Package {
 
             InputManager.instance.Initialize();
 
-            ServerData.IsServerActive = true;
+            ServerActive = true;
 
             USNL.CallbackEvents.CallOnServerStartedCallbacks(0);
 
@@ -81,39 +82,23 @@ namespace USNL.Package {
                 Clients.Add(new Client(i));
             }
         }
-        
-        public static IEnumerator ShutdownServer() {
-            float time = 0f;
-            while (true) {
-                if (USNL.ServerManager.GetNumberOfConnectedClients() <= 0 || time > 1f) {
-                    for (int i = 0; i < Clients.Count; i++) {
-                        if (Clients[i].IsConnected) Clients[i].Disconnect();
-                    }
-                    for (int i = 0; i < WaitingLobbyClients.Count; i++) {
-                        if (WaitingLobbyClients[i].IsConnected) WaitingLobbyClients[i].Disconnect();
-                    }
 
-                    tcpListener.Stop();
-                    udpListener.Close();
+        public static void Stop() {
+            tcpListener.Stop();
+            udpListener.Close();
 
-                    ThreadManager.StopPacketHandleThread();
+            ThreadManager.StopPacketHandleThread();
 
-                    ServerData.IsServerActive = false;
+            ServerActive = false;
 
-                    USNL.CallbackEvents.CallOnServerStoppedCallbacks(0);
+            USNL.CallbackEvents.CallOnServerStoppedCallbacks(0);
 
-                    Debug.Log("Server stopped.");
-                    
-                    break;
-                }
-                yield return new WaitForEndOfFrame();
-                time += Time.deltaTime;
-            }
+            Debug.Log("Server stopped.");
         }
 
-        public static void DisconnectAllClients(string _disconnectMessage) {
+        public static void DisconnectAllClients() {
             for (int i = 0; i < Clients.Count; i++) {
-                if (Clients[i].IsConnected) USNL.Package.PacketSend.DisconnectClient(i, _disconnectMessage);
+                if (Clients[i].IsConnected) Clients[i].Disconnect();
             }
             for (int i = 0; i < WaitingLobbyClients.Count; i++) {
                 if (WaitingLobbyClients[i].IsConnected) USNL.Package.PacketSend.DisconnectClient(WaitingLobbyClients[i].ClientId, _disconnectMessage);

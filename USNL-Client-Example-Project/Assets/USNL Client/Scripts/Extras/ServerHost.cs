@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using Newtonsoft.Json;
 using UnityEngine;
 
 namespace USNL.Package {
@@ -16,11 +15,13 @@ namespace USNL.Package {
 
     [Serializable]
     public struct ServerConfig {
+        [Header("Server")]
         [SerializeField] private string serverName;
         [SerializeField] private int serverPort;
         [SerializeField] private int maxPlayers;
         [SerializeField] private string welcomeMessage;
-        [Space]
+
+        [Header("Hosting")]
         [SerializeField] private bool showGUI;
 
         public string ServerName { get => serverName; set => serverName = value; }
@@ -29,6 +30,7 @@ namespace USNL.Package {
         public string WelcomeMessage { get => welcomeMessage; set => welcomeMessage = value; }
         public bool ShowGUI { get => showGUI; set => showGUI = value; }
     }
+
 
     public class ServerHost {
         private static Process serverProcess;
@@ -58,7 +60,7 @@ namespace USNL.Package {
             UnityEngine.Debug.Log("Launching Server...");
             launchingServer = true;
 
-            ClearServerDataFile();
+            DeleteServerDataFile();
             WriteServerConfigFile();
 
             ProcessStartInfo startInfo = new ProcessStartInfo();
@@ -109,26 +111,40 @@ namespace USNL.Package {
             if (!File.Exists($"{GetServerPath()}serverData.json")) {
                 return;
             }
-            string jsonText = File.ReadAllText($"{GetServerPath()}serverData.json");
+            string[] text = File.ReadAllLines($"{GetServerPath()}serverData.json");
 
-            serverData = JsonConvert.DeserializeObject<ServerData>(jsonText);
+            ServerData newServerData = new ServerData();
+            bool isServerActive = false;
+
+            for (int i = 0; i < text.Length; i++) {
+                if (text[i].Contains("serverActive")) {
+                    string[] split = text[i].Split(':');
+                    string value = split[1].Replace(",", "").Replace(" ", "");
+                    isServerActive = bool.Parse(value);
+                }
+            }
+
+            newServerData.IsServerActive = isServerActive;
+            serverData = newServerData;
         }
 
         private static void WriteServerConfigFile() {
-            string jsonText = JsonConvert.SerializeObject(ClientManager.instance.ServerConfig, Formatting.Indented);
-            
+            string text = "{" +
+                $"\n    \"serverPort\":{ClientManager.instance.ServerConfig.ServerPort}" +
+                $"\n    \"maxPlayers\":{ClientManager.instance.ServerConfig.MaxPlayers}" +
+                $"\n    \"serverName\":{ClientManager.instance.ServerConfig.ServerName}" +
+                $"\n    \"welcomeMessage\":{ClientManager.instance.ServerConfig.WelcomeMessage}" +
+                "\n}";
+
             StreamWriter sw = new StreamWriter($"{GetServerPath()}ServerConfig.json");
-            sw.Write(jsonText);
+            sw.Write(text);
             sw.Flush();
             sw.Close();
         }
 
-        private static void ClearServerDataFile() {
-            serverData = new ServerData();
-            string jsonText = JsonConvert.SerializeObject(ClientManager.instance.ServerData, Formatting.Indented);
-
+        private static void DeleteServerDataFile() {
             StreamWriter sw = new StreamWriter($"{GetServerPath()}ServerData.json");
-            sw.Write(jsonText);
+            sw.Write("");
             sw.Flush();
             sw.Close();
             //File.Delete($"{GetServerPath()}ServerData.json");

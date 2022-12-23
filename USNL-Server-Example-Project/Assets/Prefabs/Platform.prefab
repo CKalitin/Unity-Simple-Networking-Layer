@@ -124,11 +124,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 349a82be78bd7c74e9104b90ff1641c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  syncedObjectTag: Platform
-  useLocalChangeValues: 0
-  minPosChange: 0.001
-  minRotChange: 0.001
-  minScaleChange: 0.001
-  interpolatePosition: 1
-  interpolateRotation: 0
-  interpolateScale: 1
+  prefabId: 1

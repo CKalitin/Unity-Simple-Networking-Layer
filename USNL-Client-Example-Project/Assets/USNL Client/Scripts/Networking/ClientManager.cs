@@ -53,7 +53,7 @@ namespace USNL {
 
         private DateTime timeOfConnection;
 
-        private string serverName;
+        [SerializeField] private string serverName;
 
         [Header("Server Host")]
         [SerializeField] private string serverExeName = "USNL-Server-Example-Project.exe";
@@ -73,7 +73,7 @@ namespace USNL {
         public string WanClientIp { get => wanClientIp; set => wanClientIp = value; }
         public string LanClientIP { get => lanClientIp; set => lanClientIp = value; }
         
-        public bool IsConnected { get => USNL.Package.Client.instance.IsConnected; }
+        public bool IsConnected { get => Package.Client.instance.IsConnected; }
         public bool IsAttempingConnection { get => isAttempingConnection; }
         public bool InLobby { get => inLobby && USNL.Package.Client.instance.IsConnected; set => inLobby = value; }
         public bool IsHost { get => USNL.Package.Client.instance.IsHost; }
@@ -126,19 +126,8 @@ namespace USNL {
             }
         }
 
-        private void OnEnable() {
-            USNL.CallbackEvents.OnWelcomePacket += OnWelcomePacket;
-            USNL.CallbackEvents.OnConnectReceivedPacket += OnConnectReceivedPacket;
-            USNL.CallbackEvents.OnDisconnectClientPacket += OnDisconnectClientPacket;
-            USNL.CallbackEvents.OnServerInfoPacket += OnServerInfoPacket;
-        }
-
-        private void OnDisable() {
-            USNL.CallbackEvents.OnWelcomePacket -= OnWelcomePacket;
-            USNL.CallbackEvents.OnConnectReceivedPacket -= OnConnectReceivedPacket;
-            USNL.CallbackEvents.OnDisconnectClientPacket -= OnDisconnectClientPacket;
-            USNL.CallbackEvents.OnServerInfoPacket -= OnServerInfoPacket;
-        }
+        private void OnEnable() { USNL.CallbackEvents.OnWelcomePacket += OnWelcomePacket; }
+        private void OnDisable() { USNL.CallbackEvents.OnWelcomePacket -= OnWelcomePacket; }
 
         private void OnApplicationQuit() {
             CloseServer();
@@ -277,23 +266,10 @@ namespace USNL {
 
         private void OnWelcomePacket(object _packetObject) {
             USNL.Package.WelcomePacket _wp = (USNL.Package.WelcomePacket)_packetObject;
-            
-            Debug.Log($"Connected to server lobby.\nWelcome Message: {_wp.WelcomeMessage}");
 
-            USNL.Package.Client.instance.ClientId = _wp.LobbyClientId;
-
-            InLobby = true;
-
-            USNL.Package.PacketSend.WelcomeReceived(_wp.LobbyClientId);
-        }
-
-        private void OnConnectReceivedPacket(object _packetObject) {
-            USNL.Package.ConnectReceivedPacket _cr = (USNL.Package.ConnectReceivedPacket)_packetObject;
-
-            if (_cr.ClientId < 0) {
-                Debug.Log("Could not connect to server. Server full.");
-                return;
-            }
+            Debug.Log($"Welcome message from Server: {_wp.WelcomeMessage}, Client Id: {_wp.ClientId}");
+            Package.Client.instance.ClientId = _wp.ClientId;
+            serverName = _wp.ServerName;
 
             Debug.Log($"Connection message from Server: {_cr.ConnectMessage}, Client Id: {_cr.ClientId}");
             USNL.Package.Client.instance.ClientId = _cr.ClientId;
@@ -306,12 +282,8 @@ namespace USNL {
             USNL.CallbackEvents.CallOnConnectedCallbacks(0);
         }
 
-        private void OnDisconnectClientPacket(object _packetObject) {
-            USNL.Package.DisconnectClientPacket _dcp = (USNL.Package.DisconnectClientPacket)_packetObject;
-
-            Debug.Log($"Disconnection commanded from server.\nMessage: {_dcp.DisconnectMessage}");
-
-            USNL.Package.Client.instance.Disconnect();
+        public void SetDisconnectedFromServer() {
+            USNL.CallbackEvents.CallOnDisconnectedCallbacks(0);
         }
 
         private void OnServerInfoPacket(object _packetObject) {

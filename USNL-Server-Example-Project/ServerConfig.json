@@ -1,7 +1,6 @@
 {
-  "ServerName": "GoodCode",
-  "ServerPort": 26950,
-  "MaxPlayers": 69,
-  "WelcomeMessage": "Tovarishch",
-  "ShowGUI": false
+    "serverPort":26950
+    "maxPlayers":20
+    "serverName":Server
+    "welcomeMessage":Holy fuck my code worked! :O :)
 }

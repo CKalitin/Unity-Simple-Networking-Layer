@@ -39,7 +39,7 @@ namespace USNL.Package {
             // If Debug Menu visible, update values
             if (debugMenuParent.activeSelf) {
                 #region Client Mangaer Bool Values
-                isRunning.SetActive(Server.ServerData.IsServerActive);
+                isRunning.SetActive(Server.ServerActive);
                 isMigratingHost.SetActive(ServerManager.instance.IsMigratingHost);
                 #endregion
 
@@ -55,10 +55,8 @@ namespace USNL.Package {
                 totalPacketsSentPerSecond.text = String.Format("{0:n0}", NetworkDebugInfo.instance.TotalPacketsSentPerSecond);
                 totalPacketsReceivedPerSecond.text = String.Format("{0:n0}", NetworkDebugInfo.instance.TotalPacketsReceivedPerSecond);
 
-                if (ServerManager.instance.ServerActive) uptime.text = NetworkDebugInfo.instance.Uptime.ToString(@"hh\:mm\:ss");
-                else uptime.text = "00:00:00";
-                clientsConnected.text = $"{USNL.ServerManager.GetNumberOfConnectedClients()}/{ServerManager.instance.ServerConfig.MaxClients}";
-                clientsInWaitingLobby.text = $"{USNL.ServerManager.instance.ClientsInWaitingLobby }";
+                uptime.text = NetworkDebugInfo.instance.Uptime.ToString(@"hh\:mm\:ss");
+                clientsConnected.text = $"{Server.GetConnectedClients()}/{ServerManager.instance.MaxPlayers}";
                 #endregion
 
                 // Read text from json file

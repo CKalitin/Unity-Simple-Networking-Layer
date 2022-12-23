@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
 using UnityEngine;
 
 namespace USNL {
@@ -272,7 +271,7 @@ namespace USNL {
 
         private void LookForServerQuitFile() {
             if (File.Exists(GetApplicationPath() + "ServerQuit")) {
-                Debug.Log("Server Quit commanded from host client, shutting down server.");
+                Debug.Log("ServerQuit commanded from host client, shutting down server.");
                 File.Delete(GetApplicationPath() + "ServerQuit");
             }
         }
@@ -291,10 +290,10 @@ namespace USNL {
             string jsonText = JsonConvert.SerializeObject(USNL.Package.Server.ServerData, Formatting.Indented);
 
             StreamWriter sw = new StreamWriter($"{GetApplicationPath()}ServerData.json");
-            sw.Write(jsonText);
+            sw.Write(text);
             sw.Flush();
             sw.Close();
-            
+
             Debug.Log("Wrote Server Data file at: " + GetApplicationPath() + "ServerData.json");
         }
 
@@ -302,10 +301,15 @@ namespace USNL {
             string path = GetApplicationPath() + "/ServerConfig.json";
 
             if (!File.Exists(path)) {
-                string jsonText = JsonConvert.SerializeObject(serverConfig, Formatting.Indented);
+                string serverConfigFileText = "{" +
+                $"\n    \"serverPort\":{port}" +
+                $"\n    \"maxPlayers\":{maxPlayers}" +
+                $"\n    \"serverName\":{ServerName}" +
+                $"\n    \"welcomeMessage\":{welcomeMessage}" +
+                "\n}";
 
                 StreamWriter sw = new StreamWriter($"{path}");
-                sw.Write(jsonText);
+                sw.Write(serverConfigFileText);
                 sw.Flush();
                 sw.Close();
 

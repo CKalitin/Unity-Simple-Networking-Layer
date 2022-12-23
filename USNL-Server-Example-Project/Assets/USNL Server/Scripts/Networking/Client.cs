@@ -63,7 +63,7 @@ namespace USNL.Package {
 
                 USNL.Package.PacketSend.Welcome(client.clientId, client.clientId, USNL.ServerManager.instance.ServerConfig.WelcomeMessage);
 
-                USNL.Package.PacketSend.ServerInfo(client.clientId, USNL.ServerManager.instance.ServerConfig.ServerName, USNL.ServerManager.GetConnectedClientsIds(), USNL.ServerManager.instance.ServerConfig.MaxClients, USNL.ServerManager.GetNumberOfConnectedClients() > USNL.ServerManager.instance.ServerConfig.MaxClients);
+                USNL.Package.PacketSend.Welcome(clientId, ServerManager.instance.WelcomeMessage, ServerManager.instance.ServerName, clientId);
 
                 client.isConnected = true;
             }

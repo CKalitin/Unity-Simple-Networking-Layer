@@ -188,6 +188,7 @@ namespace USNL {
 
         private void SendAllSyncedObjectsToClient(int _toClient) {
             USNL.Package.PacketSend.SyncedObjectInterpolationMode(_toClient, serverSideInterpolation);
+            USNL.Package.PacketSend.SyncedObjectInterpolationMode(_toClient, serverSideInterpolation);
             for (int i = 0; i < syncedObjects.Count; i++) {
                 USNL.Package.PacketSend.SyncedObjectInstantiate(_toClient, syncedObjects[i].SyncedObjectTag, syncedObjects[i].SyncedObjectUUID, syncedObjects[i].transform.position, syncedObjects[i].transform.rotation, syncedObjects[i].transform.lossyScale);
             }
