@@ -29,7 +29,10 @@ namespace USNL.Package {
         [SerializeField] private TextMeshProUGUI serverName;
         [SerializeField] private TextMeshProUGUI uptime;
         [SerializeField] private TextMeshProUGUI clientsConnected;
-
+        [Space]
+        [SerializeField] private TextMeshProUGUI wanServerID;
+        [SerializeField] private TextMeshProUGUI lanServerID;
+        
         private void Update() {
             // Toggle debug menu visible
             if (Input.GetKey(KeyCode.LeftControl) & Input.GetKeyDown(KeyCode.BackQuote)) {
@@ -58,6 +61,9 @@ namespace USNL.Package {
                 serverName.text = USNL.ServerManager.instance.ServerConfig.ServerName;
                 uptime.text = USNL.NetworkDebugInfo.instance.Uptime.ToString(@"hh\:mm\:ss");
                 clientsConnected.text = $"{USNL.ServerManager.GetNumberOfConnectedClients()}/{USNL.ServerManager.instance.ServerConfig.MaxClients}";
+
+                wanServerID.text = USNL.ServerManager.instance.WanServerId.ToString();
+                lanServerID.text = USNL.ServerManager.instance.LanServerId.ToString();
                 #endregion
 
                 // Read text from json file

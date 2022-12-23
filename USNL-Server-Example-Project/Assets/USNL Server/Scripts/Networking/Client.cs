@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
@@ -14,10 +16,16 @@ namespace USNL.Package {
 
         private bool isConnected = false;
 
+        private List<int> packetRTTs = new List<int>();
+        private int packetRTT;
+        private int smoothPacketRTT;
+
         public TCP Tcp { get => tcp; set => tcp = value; }
         public UDP Udp { get => udp; set => udp = value; }
         public int ClientId { get => clientId; set => clientId = value; }
         public bool IsConnected { get => isConnected; set => isConnected = value; }
+        public int PacketRTT { get => packetRTT; set => packetRTT = value; }
+        public int SmoothPacketRTT { get => smoothPacketRTT; set => smoothPacketRTT = value; }
 
         public Client(int _clientID) {
             clientId = _clientID;
@@ -199,6 +207,14 @@ namespace USNL.Package {
 
             tcp.Disconnect();
             udp.Disconnect();
+        }
+
+        public void NewPing(int _rtt) {
+            packetRTT = _rtt;
+            
+            if (packetRTTs.Count > 5) { packetRTTs.RemoveAt(0); }
+            packetRTTs.Add(packetRTT);
+            smoothPacketRTT = packetRTTs.Sum() / packetRTTs.Count;
         }
 
         #endregion

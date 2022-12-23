@@ -578,9 +578,10 @@ namespace USNL.Package {
             }
         }
 
-        public static void Ping(bool _sendPingBack) {
+        public static void Ping(bool _sendPingBack, int _previousPingValue) {
             using (Package.Packet _packet = new Package.Packet((int)USNL.Package.ClientPackets.Ping)) {
                 _packet.Write(_sendPingBack);
+                _packet.Write(_previousPingValue);
 
                 SendTCPData(_packet);
             }

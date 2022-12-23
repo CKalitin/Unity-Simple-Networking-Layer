@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -24,6 +26,11 @@ namespace USNL {
         private DateTime timeOfStartup;
 
         private float lastServerInfoPacketSentTime;
+        
+        private int wanServerId;
+        private int lanServerId;
+        private string wanServerIp;
+        private string lanServerIp;
 
         public Package.ServerConfig ServerConfig { get => serverConfig; set => serverConfig = value; }
         
@@ -31,6 +38,11 @@ namespace USNL {
         public DateTime TimeOfStartup { get => timeOfStartup; set => timeOfStartup = value; }
         public bool ServerActive { get => USNL.Package.Server.ServerData.IsServerActive; }
 
+        public int WanServerId { get => wanServerId; }
+        public int LanServerId { get => lanServerId; }
+        public string WanServerIp { get => wanServerIp; }
+        public string LanServerIP { get => lanServerIp; }
+        
         #endregion
 
         #region Core
@@ -46,6 +58,8 @@ namespace USNL {
             if (Application.isEditor) {
                 Application.runInBackground = true;
             }
+
+            SetServerId();
 
             Debug.LogError("Opened Console.");
         }
@@ -75,7 +89,7 @@ namespace USNL {
         public void StartServer() {
             Package.Server.ServerData.IsServerActive = true;
 
-            if (useServerConfigAndDataFilesInEditor && Application.isEditor) {
+            if ((useServerConfigAndDataFilesInEditor & Application.isEditor) | !Application.isEditor) {
                 WriteServerDataFile();
                 ReadServerConfigFile();
             }
@@ -89,7 +103,7 @@ namespace USNL {
             Package.Server.CommandDisconnectAllClients("Server is shutting down.");
 
             Package.Server.ServerData.IsServerActive = false;
-            if (useServerConfigAndDataFilesInEditor && Application.isEditor)
+            if ((useServerConfigAndDataFilesInEditor & Application.isEditor) | !Application.isEditor)
                 WriteServerDataFile();
             
             StartCoroutine(Package.Server.ShutdownServer());
@@ -217,6 +231,80 @@ namespace USNL {
             }
 
             return path;
+        }
+
+        #endregion
+
+        #region IP and ID Functions
+
+        private void SetServerId() {
+            wanServerIp = GetWanIP();
+            lanServerIp = GetLanIP();
+            
+            wanServerId = IPToID(wanServerIp);
+            lanServerId = IPToID(lanServerIp);
+        }
+
+        private string GetWanIP() {
+            int attempts = 0;
+            try {
+                string url = "http://checkip.dyndns.org";
+                System.Net.WebRequest req = System.Net.WebRequest.Create(url);
+                System.Net.WebResponse resp = req.GetResponse();
+                System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
+                string response = sr.ReadToEnd().Trim();
+                string[] a = response.Split(':');
+                string a2 = a[1].Substring(1);
+                string[] a3 = a2.Split('<');
+                string a4 = a3[0];
+                return a4;
+            } catch {
+                attempts++;
+                if (attempts < 5) return GetWanIP();
+                else return "";
+                // Kinda jank but it should work
+            }
+        }
+
+        // https://stackoverflow.com/questions/6803073/get-local-ip-address
+        private string GetLanIP() {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList) {
+                if (ip.AddressFamily == AddressFamily.InterNetwork) {
+                    return ip.ToString();
+                }
+            }
+            Debug.LogWarning("Failed to Get LAN IP. No network adapters with an IPv4 address in the system.");
+            return "";
+        }
+        public int IPToID(string _ip) {
+            int[] ipOctets = new int[4];
+            string[] ipOctetsString = _ip.Split('.');
+            for (int i = 0; i < ipOctets.Length; i++) {
+                ipOctets[i] = int.Parse(ipOctetsString[i]);
+            }
+
+            return ipOctets[0] * 16777216 + ipOctets[1] * 65536 + ipOctets[2] * 256 + ipOctets[3];
+        }
+
+        public string IDtoIP(int _id) {
+            return new IPAddress(IPAddress.HostToNetworkOrder(_id)).ToString();
+        }
+
+        #endregion
+
+        #region Client Functions
+
+        public bool GetClientConnected(int _clientId) {
+            return USNL.Package.Server.Clients[_clientId].IsConnected;
+        }
+
+        public int GetClientPacketRTT(int _clientId) {
+            return USNL.Package.Server.Clients[_clientId].PacketRTT;
+        }
+
+        public int GetClientSmoothPacketRTT(int _clientId) {
+            return USNL.Package.Server.Clients[_clientId].SmoothPacketRTT;
         }
 
         #endregion

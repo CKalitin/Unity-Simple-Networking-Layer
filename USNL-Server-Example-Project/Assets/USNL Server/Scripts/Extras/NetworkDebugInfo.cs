@@ -166,10 +166,11 @@ namespace USNL {
             USNL.Package.PingPacket _pingPacket = (USNL.Package.PingPacket)_packetObject;
 
             // If this is to determine Client -> Server ping time, send packet back
-            if (_pingPacket.SendPingBack) {
+            if (_pingPacket.SendPingBack)
                 USNL.Package.PacketSend.Ping(_pingPacket.FromClient, false);
-                return;
-            }
+
+            if (_pingPacket.PreviousPingValue > 0)
+                Package.Server.Clients[_pingPacket.FromClient].NewPing(_pingPacket.PreviousPingValue);
         }
 
         #endregion

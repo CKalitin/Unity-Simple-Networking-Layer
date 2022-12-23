@@ -192,7 +192,8 @@ namespace USNL {
             // If packet has been received packetPingSentTime will be -1
             if (packetPingSentTime < 0) {
                 packetPingSentTime = Time.realtimeSinceStartup;
-                USNL.Package.PacketSend.Ping(true);
+                if (packetRTT > 0) USNL.Package.PacketSend.Ping(true, packetRTT);
+                else USNL.Package.PacketSend.Ping(true, -1);
             } else {
                 // Set smoothPacketRTT
                 if (packetRTTs.Count > 5) { packetRTTs.RemoveAt(0); }
@@ -205,13 +206,7 @@ namespace USNL {
 
         private void OnPingPacketReceived(object _packetObject) {
             USNL.Package.PingPacket pingPacket = (USNL.Package.PingPacket)_packetObject;
-
-            // If this is to determine Server -> Client ping time, send packet back, don't get total ping time on Client
-            if (pingPacket.SendPingBack) {
-                USNL.Package.PacketSend.Ping(false);
-                return;
-            }
-
+            
             packetRTT = Mathf.RoundToInt((Time.realtimeSinceStartup - packetPingSentTime) * 1000); // Round to ms (*1000), instead of seconds
 
             // Set smoothPacketRTT

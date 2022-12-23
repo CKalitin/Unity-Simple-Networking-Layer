@@ -100,14 +100,17 @@ namespace USNL.Package {
         private int fromClient;
 
         private bool sendPingBack;
+        private int previousPingValue;
 
-        public PingPacket(int _fromClient, bool _sendPingBack) {
+        public PingPacket(int _fromClient, bool _sendPingBack, int _previousPingValue) {
             fromClient = _fromClient;
             sendPingBack = _sendPingBack;
+            previousPingValue = _previousPingValue;
         }
 
         public int FromClient { get => fromClient; set => fromClient = value; }
         public bool SendPingBack { get => sendPingBack; set => sendPingBack = value; }
+        public int PreviousPingValue { get => previousPingValue; set => previousPingValue = value; }
     }
 
     public struct ClientInputPacket {
@@ -149,8 +152,9 @@ namespace USNL.Package {
 
         public static void Ping(Packet _packet) {
             bool sendPingBack = _packet.ReadBool();
+            int previousPingValue = _packet.ReadInt();
 
-            PingPacket pingPacket = new PingPacket(_packet.FromClient, sendPingBack);
+            PingPacket pingPacket = new PingPacket(_packet.FromClient, sendPingBack, previousPingValue);
             PacketManager.instance.PacketReceived(_packet, pingPacket);
         }
 

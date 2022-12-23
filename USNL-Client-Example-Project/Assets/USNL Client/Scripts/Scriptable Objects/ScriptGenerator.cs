@@ -19,9 +19,9 @@ namespace USNL.Package {
 
         // Custom Callbacks for library functions
         private string[] libCallbacks = {
-        "OnConnected",
-        "OnDisconnected"
-    };
+            "OnConnected",
+            "OnDisconnected"
+        };
 
         // For editor script:
         public bool[] ClientPacketFoldouts;
@@ -42,7 +42,7 @@ namespace USNL.Package {
             Protocol.TCP),
         new ServerPacketConfig(
             "Ping",
-            new PacketVariable[] { new PacketVariable("Send Ping Back", PacketVarType.Bool) },
+            new PacketVariable[] { new PacketVariable("Placeholder", PacketVarType.Bool) },
             ServerPacketType.SendToClient,
             Protocol.TCP),
         new ServerPacketConfig(
@@ -145,7 +145,7 @@ namespace USNL.Package {
             Protocol.TCP),
         new ClientPacketConfig(
             "Ping",
-            new PacketVariable[] { new PacketVariable("Send Ping Back", PacketVarType.Bool) },
+            new PacketVariable[] { new PacketVariable("Send Ping Back", PacketVarType.Bool), new PacketVariable("PreviousPingValue", PacketVarType.Int) },
             Protocol.TCP),
         new ClientPacketConfig(
             "ClientInput",

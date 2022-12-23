@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
@@ -161,6 +162,7 @@ namespace USNL {
 
         public void DisconnectFromServer() {
             Package.Client.instance.Disconnect();
+            attemptConnection = false;
         }
 
         public void StopAttemptingConnection() {
@@ -168,6 +170,8 @@ namespace USNL {
         }
 
         private IEnumerator AttemptingConnection() {
+            if (isAttempingConnection == true) yield break;
+            
             isAttempingConnection = true;
             attemptConnection = true;
 
@@ -204,6 +208,7 @@ namespace USNL {
         }
 
         private string GetWanIP() {
+            int attempts = 0;
             try {
                 string url = "http://checkip.dyndns.org";
                 System.Net.WebRequest req = System.Net.WebRequest.Create(url);
@@ -216,7 +221,9 @@ namespace USNL {
                 string a4 = a3[0];
                 return a4;
             } catch {
-                return GetWanIP();
+                attempts++;
+                if (attempts < 5) return GetWanIP();
+                else return "";
                 // Kinda jank but it should work
             }
         }
@@ -237,7 +244,16 @@ namespace USNL {
             //if (_ip == wanClientIp) return IPType.WAN; TODO - If server can be pinged, it is valid
             if (_ip.Substring(0, 5) == lanClientIp.Substring(0, 5)) return IPType.LAN;
             else if (_ip == lanClientIp) return IPType.Localhost;
+            else if (CheckIPOctets(_ip)) return IPType.WAN;
             else return IPType.Unknown;
+        }
+
+        private bool CheckIPOctets(string _ip) {
+            char dot = '.';
+            int count = _ip.Count(s => s == dot);
+            
+            if (count == 3) return true;
+            return false;
         }
 
         #endregion
