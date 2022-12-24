@@ -67,7 +67,7 @@ namespace USNL.Package {
             EditorUtility.SetDirty(target);
         }
         
-        #region Packets
+        #region Synced Objects
         
         private void SyncedObjectsField() {
             EditorGUILayout.BeginHorizontal();

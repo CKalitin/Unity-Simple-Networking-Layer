@@ -17,8 +17,6 @@ namespace USNL.Package {
         }
 
         public void PacketReceived(Packet _packet, object _packetStruct) {
-            //Debug.Log($"Packet Received: {Enum.GetName(typeof(ServerPackets), _packet.PacketId)}");
-
             // Break out of Packet Handle Thread
             USNL.Package.ThreadManager.ExecuteOnMainThread(() => {
                 // Call callback events

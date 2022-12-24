@@ -32,6 +32,8 @@ namespace USNL {
         private string wanServerIp;
         private string lanServerIp;
 
+        private bool quittingApplication = false;
+
         public Package.ServerConfig ServerConfig { get => serverConfig; set => serverConfig = value; }
         
         public bool IsMigratingHost { get => isMigratingHost; set => isMigratingHost = value; }
@@ -87,16 +89,19 @@ namespace USNL {
         #region Server Manager
 
         public void StartServer() {
-            Package.Server.ServerData.IsServerActive = true;
+            LookForServerQuitFile(); // If quit is commanded before unity loading screen is complete, this is necessary
+            if (!quittingApplication) {
+                Package.Server.ServerData.IsServerActive = true;
 
-            if ((useServerConfigAndDataFilesInEditor & Application.isEditor) | !Application.isEditor) {
-                WriteServerDataFile();
-                ReadServerConfigFile();
+                if ((useServerConfigAndDataFilesInEditor & Application.isEditor) | !Application.isEditor) {
+                    WriteServerDataFile();
+                    ReadServerConfigFile();
+                }
+
+                Package.Server.Start(serverConfig.MaxClients, serverConfig.ServerPort);
+
+                TimeOfStartup = DateTime.Now;
             }
-            
-            Package.Server.Start(serverConfig.MaxClients, serverConfig.ServerPort);
-
-            TimeOfStartup = DateTime.Now;
         }
 
         public void StopServer() {
@@ -183,11 +188,17 @@ namespace USNL {
 
         private void LookForServerQuitFile() {
             if (File.Exists(GetApplicationPath() + "ServerQuit")) {
+                quittingApplication = true;
                 Debug.Log("Server Quit commanded from host client, shutting down server.");
                 File.Delete(GetApplicationPath() + "ServerQuit");
                 StopServer();
-                Application.Quit();
+                StartCoroutine(QuitAfterDelay());
             }
+        }
+
+        private IEnumerator QuitAfterDelay() {
+            yield return new WaitForSeconds(2f);
+            Application.Quit();
         }
 
         public void WriteServerDataFile() {

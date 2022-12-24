@@ -234,9 +234,9 @@ namespace USNL.Package {
             }
         }
 
-        public static void Ping(int _toClient, bool _sendPingBack) {
+        public static void Ping(int _toClient, bool _placeholder) {
             using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)ServerPackets.Ping)) {
-                _packet.Write(_sendPingBack);
+                _packet.Write(_placeholder);
 
                 SendTCPData(_toClient, _packet);
             }

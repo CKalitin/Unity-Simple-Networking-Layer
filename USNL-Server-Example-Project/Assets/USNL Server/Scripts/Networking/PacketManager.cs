@@ -17,8 +17,6 @@ namespace USNL.Package {
         }
 
         public void PacketReceived(Packet _packet, object _packetStruct) {
-            //Debug.Log($"Packet Received: {Enum.GetName(typeof(ClientPackets), _packet.PacketId)}"); TODO DELETE
-
             // Break out of Packet Handle Thread
             ThreadManager.ExecuteOnMainThread(() => {
                 // Call callback events

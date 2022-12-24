@@ -129,13 +129,13 @@ namespace USNL.Package {
     }
 
     public struct PingPacket {
-        private bool sendPingBack;
+        private bool placeholder;
 
-        public PingPacket(bool _sendPingBack) {
-            sendPingBack = _sendPingBack;
+        public PingPacket(bool _placeholder) {
+            placeholder = _placeholder;
         }
 
-        public bool SendPingBack { get => sendPingBack; set => sendPingBack = value; }
+        public bool Placeholder { get => placeholder; set => placeholder = value; }
     }
 
     public struct ServerInfoPacket {
@@ -404,9 +404,9 @@ namespace USNL.Package {
         }
 
         public static void Ping(Package.Packet _packet) {
-            bool sendPingBack = _packet.ReadBool();
+            bool placeholder = _packet.ReadBool();
 
-            Package.PingPacket pingPacket = new Package.PingPacket(sendPingBack);
+            Package.PingPacket pingPacket = new Package.PingPacket(placeholder);
             Package.PacketManager.instance.PacketReceived(_packet, pingPacket);
         }
 

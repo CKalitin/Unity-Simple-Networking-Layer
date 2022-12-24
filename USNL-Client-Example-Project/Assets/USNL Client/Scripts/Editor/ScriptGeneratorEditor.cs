@@ -43,6 +43,12 @@ namespace USNL.Package {
         int[] targetClientVariblesLengths;
         int[] targetServerVariblesLengths;
 
+        int previousTargetClientPacketsListSize;
+        int previousTargetServerPacketsListSize;
+
+        int[] previousTargetClientVariblesLengths;
+        int[] previousTargetServerVariblesLengths;
+
         private void OnEnable() {
             scriptGenerator = (ScriptGenerator)target;
 
@@ -130,14 +136,16 @@ namespace USNL.Package {
             targetClientPacketsListSize = EditorGUILayout.IntField(targetClientPacketsListSize, GUILayout.Width(labelFieldWidth), GUILayout.Height(labelHeight));
 
             EditorGUILayout.EndHorizontal();
-
+            
             for (int i = 0; i < scriptGenerator.ClientPackets.Length; i++) {
                 VerticalBreak(variableElementVerticalBreakSize);
                 DisplayClientPacketElement(i);
             }
-
+            
             // if targetListSize field is not selected, or is enter is pressed
             if (GUI.GetNameOfFocusedControl() != "ClientPacketsLengthField" || (Event.current.isKey && Event.current.keyCode == KeyCode.Return)) {
+                if (previousTargetClientPacketsListSize == targetClientPacketsListSize) return;
+
                 // Create new array of targetListSize, copy old array contents into new array, replace old array with new array
                 ScriptGenerator.ClientPacketConfig[] packets = new ScriptGenerator.ClientPacketConfig[targetClientPacketsListSize];
                 bool[] foldouts = new bool[targetClientPacketsListSize];
@@ -158,16 +166,26 @@ namespace USNL.Package {
                 scriptGenerator.ClientPacketFoldouts = foldouts;
 
                 int[] newTargetClientVariblesLengths = new int[targetClientPacketsListSize];
+                int[] newPreviousTargetClientVariablesLength = new int[targetClientPacketsListSize];
                 for (int i = 0; i < targetClientVariblesLengths.Length && i < newTargetClientVariblesLengths.Length; i++) {
                     newTargetClientVariblesLengths[i] = targetClientVariblesLengths[i];
+                    newPreviousTargetClientVariablesLength[i] = previousTargetClientVariblesLengths[i];
                 }
 
                 for (int i = targetClientVariblesLengths.Length; i < newTargetClientVariblesLengths.Length; i++) {
-                    if (targetClientVariblesLengths.Length > 0) newTargetClientVariblesLengths[i] = targetClientVariblesLengths[targetClientVariblesLengths.Length - 1];
-                    else newTargetClientVariblesLengths[i] = 0;
+                    if (targetClientVariblesLengths.Length > 0) {
+                        newTargetClientVariblesLengths[i] = targetClientVariblesLengths[targetClientVariblesLengths.Length - 1];
+                        newPreviousTargetClientVariablesLength[i] = previousTargetClientVariblesLengths[previousTargetClientVariblesLengths.Length - 1];
+                    } else {
+                        newTargetClientVariblesLengths[i] = 0;
+                        newPreviousTargetClientVariablesLength[i] = 0;
+                    }
                 }
 
                 targetClientVariblesLengths = newTargetClientVariblesLengths;
+                previousTargetClientVariblesLengths = newPreviousTargetClientVariablesLength;
+                
+                previousTargetClientPacketsListSize = targetClientPacketsListSize;
             }
         }
         
@@ -191,9 +209,11 @@ namespace USNL.Package {
             
             if (scriptGenerator.ClientPacketFoldouts[_index])
                 for (int i = 0; i < scriptGenerator.ClientPackets[_index].PacketVariables.Length; i++) { DisplayClientPacketVariableElement(_index, i); }
-            
+
             // if targetListSize field is not selected, or is enter is pressed
             if (GUI.GetNameOfFocusedControl() != "ClientPacketVariablesLengthField" || (Event.current.isKey && Event.current.keyCode == KeyCode.Return)) {
+                if (previousTargetClientVariblesLengths[_index] == targetClientVariblesLengths[_index]) return;
+
                 // Create new array of targetListSize, copy old array contents into new array, replace old array with new array
                 ScriptGenerator.PacketVariable[] packetVariables = new ScriptGenerator.PacketVariable[targetClientVariblesLengths[_index]];
 
@@ -209,6 +229,8 @@ namespace USNL.Package {
                 }
 
                 scriptGenerator.ClientPackets[_index].PacketVariables = packetVariables;
+                
+                previousTargetClientVariblesLengths[_index] = targetClientVariblesLengths[_index];
             }
         }
 
@@ -240,7 +262,7 @@ namespace USNL.Package {
             }
 
             EditorGUILayout.EndHorizontal();
-
+            
             for (int i = 0; i < scriptGenerator.ServerPackets.Length; i++) {
                 VerticalBreak(variableElementVerticalBreakSize);
                 DisplayServerPacketElement(i);
@@ -248,6 +270,8 @@ namespace USNL.Package {
 
             // if targetListSize field is not selected, or is enter is pressed
             if (GUI.GetNameOfFocusedControl() != "ServerPacketsLengthField" || (Event.current.isKey && Event.current.keyCode == KeyCode.Return)) {
+                if (previousTargetServerPacketsListSize == targetServerPacketsListSize) return;
+                
                 // Create new array of targetListSize, copy old array contents into new array, replace old array with new array
                 ScriptGenerator.ServerPacketConfig[] packets = new ScriptGenerator.ServerPacketConfig[targetServerPacketsListSize];
                 bool[] foldouts = new bool[targetServerPacketsListSize];
@@ -268,22 +292,30 @@ namespace USNL.Package {
                 scriptGenerator.ServerPacketFoldouts = foldouts;
 
                 int[] newTargetServerVariblesLengths = new int[targetServerPacketsListSize];
+                int[] newPreviousTargetServerVariablesLength = new int[targetServerPacketsListSize];
                 for (int i = 0; i < targetServerVariblesLengths.Length && i < newTargetServerVariblesLengths.Length; i++) {
                     newTargetServerVariblesLengths[i] = targetServerVariblesLengths[i];
+                    newPreviousTargetServerVariablesLength[i] = previousTargetServerVariblesLengths[i];
                 }
 
                 for (int i = targetServerVariblesLengths.Length; i < newTargetServerVariblesLengths.Length; i++) {
-                    if (targetServerVariblesLengths.Length > 0) newTargetServerVariblesLengths[i] = targetServerVariblesLengths[targetServerVariblesLengths.Length - 1];
-                    else newTargetServerVariblesLengths[i] = 0;
+                    if (targetServerVariblesLengths.Length > 0) {
+                        newTargetServerVariblesLengths[i] = targetServerVariblesLengths[targetServerVariblesLengths.Length - 1];
+                        newPreviousTargetServerVariablesLength[i] = previousTargetServerVariblesLengths[previousTargetServerVariblesLengths.Length - 1];
+                    } else {
+                        newTargetServerVariblesLengths[i] = 0;
+                        newPreviousTargetServerVariablesLength[i] = 0;
+                    }
                 }
 
                 targetServerVariblesLengths = newTargetServerVariblesLengths;
+                previousTargetServerVariblesLengths = newPreviousTargetServerVariablesLength;
+
+                previousTargetServerPacketsListSize = targetServerPacketsListSize;
             }
         }
         
         private void DisplayServerPacketElement(int _index) {
-            //ServerPacketFoldouts[_index] = EditorGUI.BeginFoldoutHeaderGroup(new Rect(100, 100, 200, 100), ServerPacketFoldouts[_index], scriptGenerator.ServerPackets[_index].PacketName);
-
             // Begin horizontal line of elements
             EditorGUILayout.BeginHorizontal();
 
@@ -305,10 +337,10 @@ namespace USNL.Package {
             if (scriptGenerator.ServerPacketFoldouts[_index])
                 for (int i = 0; i < scriptGenerator.ServerPackets[_index].PacketVariables.Length; i++) { DisplayServerPacketVariableElement(_index, i); }
 
-            //EditorGUI.EndFoldoutHeaderGroup();
-
             // if targetListSize field is not selected, or is enter is pressed
             if (GUI.GetNameOfFocusedControl() != "ServerPacketVariablesLengthField" || (Event.current.isKey && Event.current.keyCode == KeyCode.Return)) {
+                if (previousTargetServerVariblesLengths[_index] == targetServerVariblesLengths[_index]) return;
+                
                 // Create new array of targetListSize, copy old array contents into new array, replace old array with new array
                 ScriptGenerator.PacketVariable[] packetVariables = new ScriptGenerator.PacketVariable[targetServerVariblesLengths[_index]];
 
@@ -324,6 +356,8 @@ namespace USNL.Package {
                 }
 
                 scriptGenerator.ServerPackets[_index].PacketVariables = packetVariables;
+                
+                previousTargetServerVariblesLengths[_index] = targetServerVariblesLengths[_index];
             }
         }
 

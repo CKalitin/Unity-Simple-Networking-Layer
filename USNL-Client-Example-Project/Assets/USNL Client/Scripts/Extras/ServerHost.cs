@@ -31,6 +31,8 @@ namespace USNL.Package {
     }
 
     public class ServerHost {
+        #region Variables
+
         private static Process serverProcess;
 
         private static ServerData serverData;
@@ -38,6 +40,10 @@ namespace USNL.Package {
 
         public static ServerData GetServerData() { ReadServerDataFile(); return serverData; }
         public static bool LaunchingServer { get => launchingServer; set => launchingServer = value; }
+
+        #endregion
+
+        #region Server Hosting
 
         public static bool IsServerRunning() {
             if (serverProcess == null) return false;
@@ -75,7 +81,8 @@ namespace USNL.Package {
                 UnityEngine.Debug.LogWarning("Cannot close server, server not running.");
                 return;
             }
-
+            
+            //serverProcess.CloseMainWindow();
             WriteServerQuitFile();
             serverProcess = null;
 
@@ -98,6 +105,10 @@ namespace USNL.Package {
             UnityEngine.Debug.Log("Killed Server. (This is not recommend, leads to buggy behaviour on clients)");
         }
 
+        #endregion
+
+        #region Server Files
+
         private static void WriteServerQuitFile() {
             StreamWriter sw = new StreamWriter($"{GetServerPath()}ServerQuit");
             sw.Write("");
@@ -109,9 +120,14 @@ namespace USNL.Package {
             if (!File.Exists($"{GetServerPath()}serverData.json")) {
                 return;
             }
-            string jsonText = File.ReadAllText($"{GetServerPath()}serverData.json");
 
-            serverData = JsonConvert.DeserializeObject<ServerData>(jsonText);
+            try {
+                string jsonText = File.ReadAllText($"{GetServerPath()}serverData.json");
+
+                serverData = JsonConvert.DeserializeObject<ServerData>(jsonText);
+            } catch {
+                // Janky way to "fix" an error but it works
+            }
         }
 
         private static void WriteServerConfigFile() {
@@ -126,13 +142,16 @@ namespace USNL.Package {
         private static void ClearServerDataFile() {
             serverData = new ServerData();
             string jsonText = JsonConvert.SerializeObject(ClientManager.instance.ServerData, Formatting.Indented);
-
+            
             StreamWriter sw = new StreamWriter($"{GetServerPath()}ServerData.json");
             sw.Write(jsonText);
             sw.Flush();
             sw.Close();
-            //File.Delete($"{GetServerPath()}ServerData.json");
         }
+
+        #endregion
+
+        #region Helper Functions
 
         private static string GetServerPath() {
             if (Application.isEditor)
@@ -152,5 +171,7 @@ namespace USNL.Package {
 
             return path;
         }
+
+        #endregion
     }
 }
