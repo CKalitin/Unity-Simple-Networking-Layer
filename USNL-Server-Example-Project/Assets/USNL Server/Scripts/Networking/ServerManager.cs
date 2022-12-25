@@ -15,11 +15,11 @@ namespace USNL {
 
         [Header("Editor Config")]
         [SerializeField] private Package.ServerConfig serverConfig;
-        [SerializeField] private bool useServerConfigAndDataFilesInEditor;
+        [SerializeField] private bool useServerFilesInEditor;
 
         [Header("Server Config")]
         [Tooltip("In seconds.")]
-        [SerializeField] private float timeoutTime = 6f;
+        [SerializeField] private float timeoutTime = 11f;
         [SerializeField] private float serverInfoPacketSendInterval = 1f;
 
         private bool isMigratingHost = false;
@@ -93,7 +93,7 @@ namespace USNL {
             if (!quittingApplication) {
                 Package.Server.ServerData.IsServerActive = true;
 
-                if ((useServerConfigAndDataFilesInEditor & Application.isEditor) | !Application.isEditor) {
+                if ((useServerFilesInEditor & Application.isEditor) | !Application.isEditor) {
                     WriteServerDataFile();
                     ReadServerConfigFile();
                 }
@@ -108,7 +108,7 @@ namespace USNL {
             Package.Server.CommandDisconnectAllClients("Server is shutting down.");
 
             Package.Server.ServerData.IsServerActive = false;
-            if ((useServerConfigAndDataFilesInEditor & Application.isEditor) | !Application.isEditor)
+            if ((useServerFilesInEditor & Application.isEditor) | !Application.isEditor)
                 WriteServerDataFile();
             
             StartCoroutine(Package.Server.ShutdownServer());
@@ -122,7 +122,7 @@ namespace USNL {
                 Debug.Log($"ID: ({_wrp.FromClient}) has assumed the wrong client ID ({_wrp.ClientIdCheck}).");
             }
 
-            USNL.Package.PacketSend.ServerInfo(_wrp.FromClient, serverConfig.ServerName, GetConnectedClientsIds(), serverConfig.MaxClients, GetNumberOfConnectedClients() >= serverConfig.MaxClients);
+            USNL.Package.PacketSend.ServerInfo(_wrp.FromClient, serverConfig.ServerName, GetConnectedClientIds(), serverConfig.MaxClients, GetNumberOfConnectedClients() >= serverConfig.MaxClients);
 
             USNL.CallbackEvents.CallOnClientConnectedCallbacks(_wrp.FromClient);
         }
@@ -145,7 +145,7 @@ namespace USNL {
             for (int i = 0; i < USNL.Package.Server.Clients.Count; i++) {
                 if (!USNL.Package.Server.Clients[i].IsConnected) continue;
 
-                USNL.Package.PacketSend.ServerInfo(USNL.Package.Server.Clients[i].ClientId, serverConfig.ServerName, GetConnectedClientsIds(), serverConfig.MaxClients, GetNumberOfConnectedClients() >= serverConfig.MaxClients);
+                USNL.Package.PacketSend.ServerInfo(USNL.Package.Server.Clients[i].ClientId, serverConfig.ServerName, GetConnectedClientIds(), serverConfig.MaxClients, GetNumberOfConnectedClients() >= serverConfig.MaxClients);
             }
         }
 
@@ -169,7 +169,7 @@ namespace USNL {
             return result;
         }
 
-        public static int[] GetConnectedClientsIds() {
+        public static int[] GetConnectedClientIds() {
             List<int> result = new List<int>();
             for (int i = 0; i < USNL.Package.Server.Clients.Count; i++) {
                 if (USNL.Package.Server.Clients[i].IsConnected)
@@ -252,8 +252,8 @@ namespace USNL {
             wanServerIp = GetWanIP();
             lanServerIp = GetLanIP();
             
-            wanServerId = IPToID(wanServerIp);
-            lanServerId = IPToID(lanServerIp);
+            wanServerId = IpToId(wanServerIp);
+            lanServerId = IpToId(lanServerIp);
         }
 
         private string GetWanIP() {
@@ -288,7 +288,8 @@ namespace USNL {
             Debug.LogWarning("Failed to Get LAN IP. No network adapters with an IPv4 address in the system.");
             return "";
         }
-        public int IPToID(string _ip) {
+        
+        public int IpToId(string _ip) {
             int[] ipOctets = new int[4];
             string[] ipOctetsString = _ip.Split('.');
             for (int i = 0; i < ipOctets.Length; i++) {
@@ -298,7 +299,7 @@ namespace USNL {
             return ipOctets[0] * 16777216 + ipOctets[1] * 65536 + ipOctets[2] * 256 + ipOctets[3];
         }
 
-        public string IDtoIP(int _id) {
+        public string IdToIp(int _id) {
             return new IPAddress(IPAddress.HostToNetworkOrder(_id)).ToString();
         }
 

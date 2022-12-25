@@ -2,7 +2,6 @@
 This covers the USNL namespace. It contains all the functions needed for a user to use the package.
 If you're changing the package itself, see Docs-Package.md.
 
-## Use Guides
 See the example projects to see this in action. Many of your questions can be answered by examining it.
 
 USNL contains 2 namespaces. USNL and USNL.Package.
@@ -224,3 +223,82 @@ SetKeyDown(KeyCode keycode)
 SetKeyUp(KeyCode keycode)
 SetMouseButtonDown(string buttonName)
 SetMouseButtonUp(strubg buttonName)
+
+## Client Manager
+### Inspector Variables
+int serverID: Id the Client will connect to. This is overridden in one of the ConnectToServer functions.
+int port: Port the Client will connect to. This is overridden in one of the ConnectToServer functions.
+
+float attemptConnectionTime: How long the Client will attempt to connect to the Server.
+float timeoutTime: How much time without packets received until the client is timedout from the Server.
+ServerInfo serverInfo: Information about the Server the Client is connected to. (ServerName, ConnectedClientIds, MaxClients, ServerFull)
+
+string serverExeName: Name of the Server exe file when it is built.
+string serverPath: Path to the Server from the built Client project.
+string editorServerPath: Global path to the Server when in Editor.
+bool useApplicationPath: If true, it will add the path to the application to the begining of serverPath.
+Package.ServerConfig serverConfig: Variables Associated with how the server will be run when the Client hosts it.
+
+### Public Variables
+int WanClientId: Other Clients use this to connect if they are no on the same network.
+int LanClientId: Other Clients use this to connect if they are on the same network
+string WanClientIp: Public IP
+string LanClientIp: Local network IP
+
+bool IsConnected.
+bool IsAttemptingConnection.
+bool IsHost.
+
+DateTime TimeOfConnection: When the Client connected to the server.
+
+Package.ServerConfig ServerConfig: Returns serverConfig.
+
+bool IsServerRunning: If self-hosted Server is running.
+
+string ServrName: Name of the server the Client is connected to.
+ServerInfo ServerInfo: Returns serverInfo.
+
+### User Functions
+bool IsServerActive(): Returns true is self-hosted Server is active.
+
+void ConnectToServer(): Connects to Server with ID and Port specified in ClientManager.
+void ConnectToServer(int _id, int _port): Connects to Server with parameters.
+void DisconnectFromServer(): Disconnects from Server.
+void StopAttemptingConnection(): Stops attempting to connect to Server.
+
+int IpToId(string _ip): Converts a string ip to an int id
+string IdTpId(int _id): Converts an int id to a string ip
+
+void LaunchServer(): Launches self-hosted Server on the Client's Computer
+void CloseServer(): Closes self-hosted Server on the Client's Computer
+
+## Server Manager
+### Inspector Variables
+ServerConfig serverConfig: USNL.Package.ServerConfig struct (serverName, Port, etc.)
+bool useServerFilesInEditor: If ServerConfig should be saved and read when running game in editor. As opposed to using the values in serverConfig.
+
+float timeoutTime: Seconds passed until a client is timed out. Should be slightly higher than timeoutTime on Client.
+bool serverInfoPacketSendInterval: How often the Server Info Packet is sent with information about max players, etc.
+
+### Public Variables
+ServerConfig ServerConfig: USNL.Package.ServerConfig struct (serverName, Port, etc.)
+DateTime TimeOfStartup: When ServerStart() was called
+bool ServerActive: If server has successfully been started
+
+int WanServerId: Clients use this to connect if they are not on the same network
+int LanServerId: Clients use this to connect if they are on the same network
+string WanServerIp: Public IP
+string LanServerIp: Local network IP
+
+### User Functions
+void StartServer(): Starts Server.
+void StopServer(): Stops Server.
+static int GetNumberOfConnectedClients(): Returns number of connected Clients.
+static int[] GetConnectedClientsIds(): Returns array of connected Client Ids.
+
+int IpToId(string _ip): Converts a string ip to an int id
+string IdTpId(int _id): Converts an int id to a string ip
+
+bool GetClientConnected(int _clientId): Returns true if Client of id is connected.
+int GetClientPacketRTT(int _clientId): Returns the specified Client's Packet RTT (Ping).
+int GetClientSmoothPacketRTT(int _clientId): Returns the specified Client's Smoothed Packet RTT (Ping)(Average of last 5 RTTs).

@@ -29,13 +29,13 @@ namespace USNL {
         public static ClientManager instance;
 
         [Header("Connection Info")]
-        [SerializeField] private int serverID;
+        [SerializeField] private int serverId;
         [SerializeField] private int port = 26950;
         [Space]
         [Tooltip("If connection is not established after x seconds, stop attemping connection.")]
-        [SerializeField] private float connectionTimeout = 10f;
+        [SerializeField] private float attemptConnectionTime = 10f;
         [Tooltip("If this is too low the server will see 2 attempted connections and the client will not received UDP data, who knows why.")]
-        [SerializeField] private float timeBetweenConnectionAttempts = 3f;
+        private float timeBetweenConnectionAttempts = 3f;
         [Space]
         [Tooltip("In seconds.")]
         [SerializeField] private float timeoutTime = 5f;
@@ -88,6 +88,7 @@ namespace USNL {
         public Package.ServerData ServerData { get => Package.ServerHost.GetServerData(); }
 
         public bool IsServerRunning { get => Package.ServerHost.IsServerRunning(); }
+        
         public string ServerName { get => serverName; set => serverName = value; }
         public ServerInfo ServerInfo { get => serverInfo; set => serverInfo = value; }
 
@@ -145,7 +146,7 @@ namespace USNL {
         #region Connection Functions
 
         public void ConnectToServer() {
-            Package.Client.instance.SetIP(serverID, port);
+            Package.Client.instance.SetIP(serverId, port);
             StartCoroutine(AttemptingConnection());
         }
 
@@ -153,10 +154,10 @@ namespace USNL {
         /// <param name="_id">IP Address</param>
         /// <param name="_port">Port</param>
         public void ConnectToServer(int _id, int _port) {
-            serverID = _id;
+            serverId = _id;
             port = _port;
 
-            Package.Client.instance.SetIP(serverID, port);
+            Package.Client.instance.SetIP(serverId, port);
             StartCoroutine(AttemptingConnection());
         }
 
@@ -178,7 +179,7 @@ namespace USNL {
             int connectionsAttempted = 0;
 
             float timer = 0.00001f;
-            while (timer < connectionTimeout && attemptConnection) {
+            while (timer < attemptConnectionTime && attemptConnection) {
                 yield return new WaitForEndOfFrame();
 
                 if (Package.Client.instance.IsConnected)
