@@ -13,6 +13,13 @@ MonoBehaviour:
   m_Name: ScriptGenerator
   m_EditorClassIdentifier: 
   clientPackets: []
-  serverPackets: []
+  serverPackets:
+  - packetName: 
+    packetVariables:
+    - variableName: 
+      variableType: 0
+    sendType: 1
+    protocol: 0
+    notes: 
   ClientPacketFoldouts: 
-  ServerPacketFoldouts: 
+  ServerPacketFoldouts: 01

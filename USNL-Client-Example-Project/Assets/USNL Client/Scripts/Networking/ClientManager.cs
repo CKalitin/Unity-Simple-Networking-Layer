@@ -59,7 +59,7 @@ namespace USNL {
 
         [Header("Server Host")]
         [SerializeField] private string serverExeName = "USNL-Server-Example-Project.exe";
-        [Tooltip("Be sure to add '/' at the end")]
+        [Tooltip("This is a local path inside the Unity folder of the exported game. Be sure to add '/' at the end")]
         [SerializeField] private string serverPath = "Server";
         [Tooltip("Be sure to add '/' at the end.\nThis is not affected by useApplicationDataPath.")]
         [SerializeField] private string editorServerPath = "Server";
@@ -73,7 +73,7 @@ namespace USNL {
         public string LanClientIP { get => lanClientIp; set => lanClientIp = value; }
         
         public bool IsConnected { get => Package.Client.instance.IsConnected; }
-        public bool IsAttempingConnection { get => isAttempingConnection; }
+        public bool IsAttemptingConnection { get => isAttempingConnection; }
         public bool IsHost { get => Package.Client.instance.IsHost; }
         public bool IsMigratingHost { get => isMigratingHost; }
         public bool IsBecomingHost { get => isBecomingHost; }
@@ -256,6 +256,14 @@ namespace USNL {
             return false;
         }
 
+        public int IPToID(string _ip) {
+            return USNL.Package.Client.instance.IPToID(_ip);
+        }
+
+        public string IDtoIP(int _id) {
+            return USNL.Package.Client.instance.IDtoIP(_id);
+        }
+
         #endregion
 
         #region Server Host Functions
@@ -277,7 +285,7 @@ namespace USNL {
 
         #endregion
 
-        #region Management Functions
+        #region Callbacks
 
         private void OnWelcomePacket(object _packetObject) {
             USNL.Package.WelcomePacket _wp = (USNL.Package.WelcomePacket)_packetObject;

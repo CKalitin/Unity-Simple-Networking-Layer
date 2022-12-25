@@ -7,7 +7,7 @@ namespace USNL {
     public class SyncedObject : MonoBehaviour {
         [SerializeField] private bool interpolate = true;
 
-        public int SyncedObjectUuid;
+        private int syncedObjectUuid;
 
         private Vector3 previousUpdatedPosition = new Vector3(-999999, -999999, -999999);
         private Vector3 positionRateOfChange = Vector3.zero; // Per Second
@@ -18,6 +18,8 @@ namespace USNL {
         private Vector3 previousUpdatedScale = new Vector3(-999999, -999999, -999999);
         private Vector3 scaleRateOfChange = Vector3.zero; // Per Second
         private float scaleUpdateReceivedTime = 0;
+
+        public int SyncedObjectUuid { get => syncedObjectUuid; set => syncedObjectUuid = value; }
 
         private void Update() {
             if (interpolate) {
@@ -30,7 +32,7 @@ namespace USNL {
         #region Local Interpolation
 
         public void PositionUpdate(Vector3 _updatedPosition) {
-            if (SyncedObjectManager.instance.LocalInterpolation) {
+            if (SyncedObjectManager.instance.ClientSideInterpolation) {
                 if (previousUpdatedPosition != new Vector3(-999999, -999999, -999999)) {
                     float timeBetweenUpdates = Time.realtimeSinceStartup - positionUpdateReceivedTime;
 
@@ -53,7 +55,7 @@ namespace USNL {
         }
 
         public void ScaleUpdate(Vector3 _updateScale) {
-            if (SyncedObjectManager.instance.LocalInterpolation) {
+            if (SyncedObjectManager.instance.ClientSideInterpolation) {
                 if (previousUpdatedScale != new Vector3(-999999, -999999, -999999)) {
                     float timeBetweenUpdates = Time.realtimeSinceStartup - scaleUpdateReceivedTime;
 
@@ -74,19 +76,19 @@ namespace USNL {
         #region Server Interpolation
 
         public void PositionInterpolationUpdate(Vector3 _interpolatePosition) {
-            if (!SyncedObjectManager.instance.LocalInterpolation) {
+            if (!SyncedObjectManager.instance.ClientSideInterpolation) {
                 positionRateOfChange = _interpolatePosition;
             }
         }
 
         public void RotationInterpolationUpdate(Vector3 _interpolateRotation) {
-            if (!SyncedObjectManager.instance.LocalInterpolation) {
+            if (!SyncedObjectManager.instance.ClientSideInterpolation) {
                 rotationRateOfChange = _interpolateRotation;
             }
         }
 
         public void ScaleInterpolationUpdate(Vector3 _interpolateScale) {
-            if (!SyncedObjectManager.instance.LocalInterpolation) {
+            if (!SyncedObjectManager.instance.ClientSideInterpolation) {
                 scaleRateOfChange = _interpolateScale;
             }
         }

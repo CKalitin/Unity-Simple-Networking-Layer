@@ -12,9 +12,9 @@ namespace USNL {
 
         private Dictionary<int, Transform> syncedObjects = new Dictionary<int, Transform>();
 
-        private bool localInterpolation = false;
+        [SerializeField] private bool clientSideInterpolation = false;
 
-        public bool LocalInterpolation { get => localInterpolation; set => localInterpolation = value; }
+        public bool ClientSideInterpolation { get => clientSideInterpolation; set => clientSideInterpolation = value; }
 
         private void Awake() {
             if (instance == null) {
@@ -79,7 +79,7 @@ namespace USNL {
 
         private void OnSyncedObjectInterpolationModePacket(object _packetObject) {
             USNL.Package.SyncedObjectInterpolationModePacket packet = (USNL.Package.SyncedObjectInterpolationModePacket)_packetObject;
-            localInterpolation = !packet.ServerInterpolation;
+            clientSideInterpolation = !packet.ServerInterpolation;
         }
 
         private void OnSyncedObjectInstantiatePacket(object _packetObject) {

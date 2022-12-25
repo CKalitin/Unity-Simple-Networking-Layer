@@ -51,7 +51,7 @@ namespace USNL.Package {
             if (debugMenuParent.activeSelf) {
                 #region Client Mangaer Bool Values
                 isConnected.SetActive(ClientManager.instance.IsConnected);
-                isAttempingConnection.SetActive(ClientManager.instance.IsAttempingConnection);
+                isAttempingConnection.SetActive(ClientManager.instance.IsAttemptingConnection);
                 isHost.SetActive(ClientManager.instance.IsHost);
                 isServerActive.SetActive(ClientManager.instance.ServerData.IsServerActive);
                 isMigratingHost.SetActive(ClientManager.instance.IsMigratingHost);

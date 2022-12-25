@@ -79,8 +79,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8115309673269438038}
-  - component: {fileID: 5312388765440194745}
   - component: {fileID: 5325183203695712137}
+  - component: {fileID: 5312388765440194745}
   - component: {fileID: 7365712499779709808}
   - component: {fileID: 3769673835941896189}
   m_Layer: 0
@@ -106,19 +106,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5312388765440194745
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8115309673269438032}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f035ae982f6ca14fa273ba8f96da7fd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  syncedObjectsPrefabs: {fileID: 11400000, guid: 774f73ecb3be6a8498ac0afcc29108ef, type: 2}
 --- !u!114 &5325183203695712137
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -135,7 +122,12 @@ MonoBehaviour:
   port: 26950
   connectionTimeout: 10
   timeBetweenConnectionAttempts: 3
-  serverName: 
+  timeoutTime: 5
+  serverInfo:
+    ServerName: 
+    ConnectedClientIds: 
+    MaxClients: 0
+    ServerFull: 0
   serverExeName: USNL-Server-Example-Project.exe
   serverPath: Server\
   editorServerPath: G:\_Dev\Unity Projects\Unity-Simple-Networking-Layer\USNL-Server-Example-Project\Build\
@@ -146,6 +138,20 @@ MonoBehaviour:
     maxPlayers: 69
     welcomeMessage: Tovarishch
     showGUI: 0
+--- !u!114 &5312388765440194745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8115309673269438032}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f035ae982f6ca14fa273ba8f96da7fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncedObjectsPrefabs: {fileID: 11400000, guid: 774f73ecb3be6a8498ac0afcc29108ef, type: 2}
+  clientSideInterpolation: 0
 --- !u!114 &7365712499779709808
 MonoBehaviour:
   m_ObjectHideFlags: 0

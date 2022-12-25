@@ -116,7 +116,7 @@ namespace USNL {
 
         private void OnWelcomeReceivedPacket(object _packetObject) {
             USNL.Package.WelcomeReceivedPacket _wrp = (USNL.Package.WelcomeReceivedPacket)_packetObject;
-
+            
             Debug.Log($"{Package.Server.Clients[_wrp.FromClient].Tcp.socket.Client.RemoteEndPoint} connected successfully and is now Player {_wrp.FromClient}.");
             if (_wrp.FromClient != _wrp.ClientIdCheck) {
                 Debug.Log($"ID: ({_wrp.FromClient}) has assumed the wrong client ID ({_wrp.ClientIdCheck}).");
