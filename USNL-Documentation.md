@@ -11,6 +11,11 @@ The USNL.Package namespace contains all the scripts that make the package work. 
 ## Installation
 USNL uses a Server Client model so two Unity projects are required. Import the USNL-Server unity package on the Server and the USNL-Client unity package on the Client.
 
+## Setup
+Put the USNL Management prefab in the Client scene and the Server scene.
+Configure Server Config on the Server Manager script.
+Create a script that calls USNL.ServerManager.instance.StartServer();
+
 ## Prefabs
 USNL Management
 It must be placed in the game scene and always be active. It does not have a DontDestroyOnLoad(), add your own.

@@ -24,6 +24,7 @@ namespace USNL.Package {
         private UDP udp;
         private bool isConnected = false;
         private bool isHost = false;
+        private bool serverInfoReceived = false; // This is used to check if the server is full or not
 
         public int ServerMaxPlayers { get => serverMaxPlayers; set => serverMaxPlayers = value; }
         public int ClientId { get => clientId; set => clientId = value; }
@@ -31,6 +32,7 @@ namespace USNL.Package {
         public TCP Tcp { get => tcp; set => tcp = value; }
         public bool IsConnected { get => isConnected; set => isConnected = value; }
         public bool IsHost { get => isHost; set => isHost = value; }
+        public bool ServerInfoReceived { get => serverInfoReceived; set => serverInfoReceived = value; }
 
         #endregion
 
@@ -90,8 +92,6 @@ namespace USNL.Package {
 
                 stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
 
-                instance.udp.Connect(((IPEndPoint)instance.tcp.socket.Client.LocalEndPoint).Port);
-                
                 lastPacketTime = DateTime.Now;
 
                 instance.isConnected = true;
@@ -264,7 +264,6 @@ namespace USNL.Package {
             }
 
             public void Reset() {
-
                 endPoint = null;
                 socket = null;
             }
@@ -299,13 +298,12 @@ namespace USNL.Package {
                 isConnected = false;
 
                 tcp.socket.Close();
-
-                if (udp.socket != null) {
-                    udp.socket.Close();
-                }
+                if (udp.socket != null) udp.socket.Close();
 
                 tcp.Reset();
                 udp.Reset();
+
+                serverInfoReceived = false;
 
                 USNL.Package.ThreadManager.StopPacketHandleThread();
 
@@ -323,12 +321,19 @@ namespace USNL.Package {
             for (int i = 0; i < ipOctets.Length; i++) {
                 ipOctets[i] = int.Parse(ipOctetsString[i]);
             }
-
+            
             return ipOctets[0] * 16777216 + ipOctets[1] * 65536 + ipOctets[2] * 256 + ipOctets[3];
         }
 
         public string IDtoIP(int _id) {
-            return new IPAddress(IPAddress.HostToNetworkOrder(_id)).ToString();
+            // https://support.sumologic.com/hc/en-us/community/posts/5076590459927-convert-decimal-value-to-IP-address
+            int[] ipOctets = new int[4];
+            ipOctets[0] = (int)((_id/16777216) % 256);
+            ipOctets[1] = (int)((_id / 65536) % 256);
+            ipOctets[2] = (int)((_id / 256) % 256);
+            ipOctets[3] = (int)((_id / 1) % 256);
+
+            return ipOctets[0] + "." + ipOctets[1] + "." + ipOctets[2] + "." + ipOctets[3];
         }
 
         #endregion

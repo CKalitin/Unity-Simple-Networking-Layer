@@ -72,11 +72,11 @@ namespace USNL {
             prevSOUpdatePos = transform.position;
             prevSOUpdateRot = transform.eulerAngles;
             prevSOUpdateScale = transform.lossyScale;
+
+            SyncedObjectManager.instance.InstantiateSyncedObject(this);
         }
 
         private void Start() {
-            SyncedObjectManager.instance.InstantiateSyncedObject(this);
-
             if (!useLocalChangeValues) {
                 minPosChange = SyncedObjectManager.instance.MinPosChange;
                 minRotChange = SyncedObjectManager.instance.MinRotChange;
@@ -121,13 +121,13 @@ namespace USNL {
 
         private void SetInterpolationValues() {
             if (prevPositionsDiffs.Count > 0) {
-                if (interpolatePosition & SyncedObjectManager.instance.InterpolatePosition) positionInterpolation = GetMedian(prevPositionsDiffs);
+                if (interpolatePosition & SyncedObjectManager.instance.InterpolatePosition & !positionStable) positionInterpolation = GetMedian(prevPositionsDiffs);
                 else positionInterpolation = Vector3.zero;
 
-                if (interpolateRotation & SyncedObjectManager.instance.InterpolateRotation) rotationInterpolation = GetMedian(prevRotationsDiffs);
+                if (interpolateRotation & SyncedObjectManager.instance.InterpolateRotation & !rotationStable) rotationInterpolation = GetMedian(prevRotationsDiffs);
                 else rotationInterpolation = Vector3.zero;
 
-                if (interpolateScale & SyncedObjectManager.instance.InterpolateScale) scaleInterpolation = GetMedian(prevScalesDiffs);
+                if (interpolateScale & SyncedObjectManager.instance.InterpolateScale & !scaleStable) scaleInterpolation = GetMedian(prevScalesDiffs);
                 else scaleInterpolation = Vector3.zero;
             } else {
                 positionInterpolation = Vector3.zero;

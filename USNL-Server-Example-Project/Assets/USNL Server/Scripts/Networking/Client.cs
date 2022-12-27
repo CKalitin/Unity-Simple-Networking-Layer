@@ -197,7 +197,7 @@ namespace USNL.Package {
         #region Functions
 
         public void Disconnect() {
-            Debug.Log($"{tcp.socket.Client.RemoteEndPoint} has disconnected.");
+            Debug.Log($"Client {clientId} ({tcp.socket.Client.RemoteEndPoint}) has disconnected.");
 
             isConnected = false;
 

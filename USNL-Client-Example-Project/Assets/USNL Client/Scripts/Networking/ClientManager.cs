@@ -72,7 +72,7 @@ namespace USNL {
         public string WanClientIp { get => wanClientIp; set => wanClientIp = value; }
         public string LanClientIP { get => lanClientIp; set => lanClientIp = value; }
         
-        public bool IsConnected { get => Package.Client.instance.IsConnected; }
+        public bool IsConnected { get => Package.Client.instance.IsConnected && USNL.Package.Client.instance.ServerInfoReceived; }
         public bool IsAttemptingConnection { get => isAttempingConnection; }
         public bool IsHost { get => Package.Client.instance.IsHost; }
         public bool IsMigratingHost { get => isMigratingHost; }
@@ -93,6 +93,7 @@ namespace USNL {
         public ServerInfo ServerInfo { get => serverInfo; set => serverInfo = value; }
 
         public bool IsServerActive() { Package.ServerHost.ReadServerDataFile(); return Package.ServerHost.GetServerData().IsServerActive; }
+        public int ClientId { get => USNL.Package.Client.instance.ClientId; }
 
         #endregion
 
@@ -291,11 +292,13 @@ namespace USNL {
         private void OnWelcomePacket(object _packetObject) {
             USNL.Package.WelcomePacket _wp = (USNL.Package.WelcomePacket)_packetObject;
 
-            Debug.Log($"Welcome message from Server {_wp.ServerName}: {_wp.WelcomeMessage}, Client Id: {_wp.ClientId}");
+            Debug.Log($"Welcome message from Server ({_wp.ServerName}): {_wp.WelcomeMessage}, Client Id: {_wp.ClientId}");
             Package.Client.instance.ClientId = _wp.ClientId;
             serverName = _wp.ServerName;
 
             timeOfConnection = DateTime.Now;
+
+            USNL.Package.Client.instance.Udp.Connect(((IPEndPoint)USNL.Package.Client.instance.Tcp.socket.Client.LocalEndPoint).Port);
 
             USNL.Package.PacketSend.WelcomeReceived(_wp.ClientId);
 
@@ -316,6 +319,15 @@ namespace USNL {
             serverInfo.ConnectedClientIds = _si.ConnectedClientsIds;
             serverInfo.MaxClients = _si.MaxClients;
             serverInfo.ServerFull = _si.ServerFull;
+
+            if (!USNL.Package.Client.instance.ServerInfoReceived) {
+                USNL.Package.Client.instance.ServerInfoReceived = true;
+
+                if (_si.ConnectedClientsIds.Length > _si.MaxClients) {
+                    Debug.Log($"{_si.ConnectedClientsIds.Length} {_si.MaxClients}");
+                    DisconnectFromServer();
+                }
+            }
         }
 
         #endregion

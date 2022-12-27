@@ -61,7 +61,7 @@ namespace USNL.Package {
                 serverName.text = USNL.ServerManager.instance.ServerConfig.ServerName;
                 uptime.text = USNL.NetworkDebugInfo.instance.Uptime.ToString(@"hh\:mm\:ss");
                 clientsConnected.text = $"{USNL.ServerManager.GetNumberOfConnectedClients()}/{USNL.ServerManager.instance.ServerConfig.MaxClients}";
-
+                
                 wanServerID.text = USNL.ServerManager.instance.WanServerId.ToString();
                 lanServerID.text = USNL.ServerManager.instance.LanServerId.ToString();
                 #endregion

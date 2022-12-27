@@ -75,6 +75,18 @@ namespace USNL {
 
         #endregion
 
+        #region Public Functions
+
+        public SyncedObject GetSyncedObject(int _syncedObjectUUID) {
+            if (syncedObjects.ContainsKey(_syncedObjectUUID)) {
+                return syncedObjects[_syncedObjectUUID].GetComponent<SyncedObject>();
+            } else {
+                return null;
+            }
+        }
+
+        #endregion
+
         #region Synced Object Management
 
         private void OnSyncedObjectInterpolationModePacket(object _packetObject) {
@@ -85,6 +97,8 @@ namespace USNL {
         private void OnSyncedObjectInstantiatePacket(object _packetObject) {
             USNL.Package.SyncedObjectInstantiatePacket _packet = (USNL.Package.SyncedObjectInstantiatePacket)_packetObject;
 
+            if (syncedObjects.ContainsKey(_packet.SyncedObjectUUID)) return;
+            
             GameObject newSyncedObject = Instantiate(syncedObjectsPrefabs.SyncedObjects[_packet.SyncedObjectTag], _packet.Position, _packet.Rotation);
             newSyncedObject.transform.localScale = _packet.Scale;
 

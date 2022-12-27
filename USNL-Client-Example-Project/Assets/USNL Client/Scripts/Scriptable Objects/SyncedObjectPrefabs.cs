@@ -22,7 +22,8 @@ namespace USNL.Package {
         public void GenerateSyncedObjectsDict() {
             syncedObjects.Clear();
             foreach (SyncedObjectStruct syncedObject in syncedObjectStructs) {
-                syncedObjects.Add(syncedObject.tag, syncedObject.prefab);
+                if (syncedObject.tag != null && syncedObject.prefab != null)
+                    syncedObjects.Add(syncedObject.tag, syncedObject.prefab);
             }
         }
     }

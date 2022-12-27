@@ -21,7 +21,7 @@ namespace USNL.Package {
         float labelHeight;
 
         float elementVisibleButtonWidth;
-        
+
         float packetElementHeight;
         float packetElementNameWidth;
         float clientPacketElementProtocolWidth;
@@ -57,9 +57,15 @@ namespace USNL.Package {
 
             targetClientVariblesLengths = new int[scriptGenerator.ClientPackets.Length];
             targetServerVariblesLengths = new int[scriptGenerator.ServerPackets.Length];
-            
+
             for (int i = 0; i < scriptGenerator.ClientPackets.Length; i++) targetClientVariblesLengths[i] = scriptGenerator.ClientPackets[i].PacketVariables.Length;
             for (int i = 0; i < scriptGenerator.ServerPackets.Length; i++) targetServerVariblesLengths[i] = scriptGenerator.ServerPackets[i].PacketVariables.Length;
+
+            previousTargetClientVariblesLengths = new int[scriptGenerator.ClientPackets.Length];
+            previousTargetServerVariblesLengths = new int[scriptGenerator.ServerPackets.Length];
+
+            for (int i = 0; i < scriptGenerator.ClientPackets.Length; i++) previousTargetClientVariblesLengths[i] = scriptGenerator.ClientPackets[i].PacketVariables.Length;
+            for (int i = 0; i < scriptGenerator.ServerPackets.Length; i++) previousTargetServerVariblesLengths[i] = scriptGenerator.ServerPackets[i].PacketVariables.Length;
 
             if (scriptGenerator.ClientPacketFoldouts == null || scriptGenerator.ClientPacketFoldouts.Length <= 0) {
                 bool[] newCPF = new bool[targetClientPacketsListSize];
@@ -136,59 +142,60 @@ namespace USNL.Package {
             targetClientPacketsListSize = EditorGUILayout.IntField(targetClientPacketsListSize, GUILayout.Width(labelFieldWidth), GUILayout.Height(labelHeight));
 
             EditorGUILayout.EndHorizontal();
-            
+
+            // if targetListSize field is not selected, or is enter is pressed
+            if (GUI.GetNameOfFocusedControl() != "ClientPacketsLengthField" || (Event.current.isKey && Event.current.keyCode == KeyCode.Return)) {
+                if (previousTargetClientPacketsListSize != targetClientPacketsListSize) {
+
+                    // Create new array of targetListSize, copy old array contents into new array, replace old array with new array
+                    ScriptGenerator.ClientPacketConfig[] packets = new ScriptGenerator.ClientPacketConfig[targetClientPacketsListSize];
+                    bool[] foldouts = new bool[targetClientPacketsListSize];
+
+                    // Repopulate the new array with the old array's contents
+                    for (int i = 0; i < Mathf.Clamp(scriptGenerator.ClientPackets.Length, 0, packets.Length); i++) {
+                        packets[i] = scriptGenerator.ClientPackets[i];
+                        foldouts[i] = scriptGenerator.ClientPacketFoldouts[i];
+                    }
+
+                    // Remaining Client Packets
+                    for (int i = scriptGenerator.ClientPackets.Length; i < packets.Length; i++) {
+                        if (scriptGenerator.ClientPackets.Length > 0) packets[i] = scriptGenerator.ClientPackets[scriptGenerator.ClientPackets.Length - 1];
+                        else packets[i] = new ScriptGenerator.ClientPacketConfig("", new ScriptGenerator.PacketVariable[0], ScriptGenerator.Protocol.TCP);
+                        foldouts[i] = true;
+                    }
+                    scriptGenerator.ClientPackets = packets;
+                    scriptGenerator.ClientPacketFoldouts = foldouts;
+
+                    int[] newTargetClientVariblesLengths = new int[targetClientPacketsListSize];
+                    int[] newPreviousTargetClientVariablesLength = new int[targetClientPacketsListSize];
+                    for (int i = 0; i < targetClientVariblesLengths.Length && i < newTargetClientVariblesLengths.Length; i++) {
+                        newTargetClientVariblesLengths[i] = targetClientVariblesLengths[i];
+                        newPreviousTargetClientVariablesLength[i] = previousTargetClientVariblesLengths[i];
+                    }
+
+                    for (int i = targetClientVariblesLengths.Length; i < newTargetClientVariblesLengths.Length; i++) {
+                        if (targetClientVariblesLengths.Length > 0) {
+                            newTargetClientVariblesLengths[i] = targetClientVariblesLengths[targetClientVariblesLengths.Length - 1];
+                            newPreviousTargetClientVariablesLength[i] = previousTargetClientVariblesLengths[previousTargetClientVariblesLengths.Length - 1];
+                        } else {
+                            newTargetClientVariblesLengths[i] = 0;
+                            newPreviousTargetClientVariablesLength[i] = 0;
+                        }
+                    }
+
+                    targetClientVariblesLengths = newTargetClientVariblesLengths;
+                    previousTargetClientVariblesLengths = newPreviousTargetClientVariablesLength;
+
+                    previousTargetClientPacketsListSize = targetClientPacketsListSize;
+                }
+            }
+
             for (int i = 0; i < scriptGenerator.ClientPackets.Length; i++) {
                 VerticalBreak(variableElementVerticalBreakSize);
                 DisplayClientPacketElement(i);
             }
-            
-            // if targetListSize field is not selected, or is enter is pressed
-            if (GUI.GetNameOfFocusedControl() != "ClientPacketsLengthField" || (Event.current.isKey && Event.current.keyCode == KeyCode.Return)) {
-                if (previousTargetClientPacketsListSize == targetClientPacketsListSize) return;
-
-                // Create new array of targetListSize, copy old array contents into new array, replace old array with new array
-                ScriptGenerator.ClientPacketConfig[] packets = new ScriptGenerator.ClientPacketConfig[targetClientPacketsListSize];
-                bool[] foldouts = new bool[targetClientPacketsListSize];
-
-                // Repopulate the new array with the old array's contents
-                for (int i = 0; i < Mathf.Clamp(scriptGenerator.ClientPackets.Length, 0, packets.Length); i++) {
-                    packets[i] = scriptGenerator.ClientPackets[i];
-                    foldouts[i] = scriptGenerator.ClientPacketFoldouts[i];
-                }
-
-                // Remaining Client Packets
-                for (int i = scriptGenerator.ClientPackets.Length; i < packets.Length; i++) {
-                    if (scriptGenerator.ClientPackets.Length > 0) packets[i] = scriptGenerator.ClientPackets[scriptGenerator.ClientPackets.Length - 1];
-                    else packets[i] = new ScriptGenerator.ClientPacketConfig("", new ScriptGenerator.PacketVariable[0], ScriptGenerator.Protocol.TCP);
-                    foldouts[i] = true;
-                }
-                scriptGenerator.ClientPackets = packets;
-                scriptGenerator.ClientPacketFoldouts = foldouts;
-
-                int[] newTargetClientVariblesLengths = new int[targetClientPacketsListSize];
-                int[] newPreviousTargetClientVariablesLength = new int[targetClientPacketsListSize];
-                for (int i = 0; i < targetClientVariblesLengths.Length && i < newTargetClientVariblesLengths.Length; i++) {
-                    newTargetClientVariblesLengths[i] = targetClientVariblesLengths[i];
-                    newPreviousTargetClientVariablesLength[i] = previousTargetClientVariblesLengths[i];
-                }
-
-                for (int i = targetClientVariblesLengths.Length; i < newTargetClientVariblesLengths.Length; i++) {
-                    if (targetClientVariblesLengths.Length > 0) {
-                        newTargetClientVariblesLengths[i] = targetClientVariblesLengths[targetClientVariblesLengths.Length - 1];
-                        newPreviousTargetClientVariablesLength[i] = previousTargetClientVariblesLengths[previousTargetClientVariblesLengths.Length - 1];
-                    } else {
-                        newTargetClientVariblesLengths[i] = 0;
-                        newPreviousTargetClientVariablesLength[i] = 0;
-                    }
-                }
-
-                targetClientVariblesLengths = newTargetClientVariblesLengths;
-                previousTargetClientVariblesLengths = newPreviousTargetClientVariablesLength;
-                
-                previousTargetClientPacketsListSize = targetClientPacketsListSize;
-            }
         }
-        
+
         private void DisplayClientPacketElement(int _index) {
             // Begin horizontal line of elements
             EditorGUILayout.BeginHorizontal();
@@ -206,7 +213,7 @@ namespace USNL.Package {
 
             // End horizontal line of elements
             EditorGUILayout.EndHorizontal();
-            
+
             if (scriptGenerator.ClientPacketFoldouts[_index])
                 for (int i = 0; i < scriptGenerator.ClientPackets[_index].PacketVariables.Length; i++) { DisplayClientPacketVariableElement(_index, i); }
 
@@ -229,7 +236,7 @@ namespace USNL.Package {
                 }
 
                 scriptGenerator.ClientPackets[_index].PacketVariables = packetVariables;
-                
+
                 previousTargetClientVariblesLengths[_index] = targetClientVariblesLengths[_index];
             }
         }
@@ -262,59 +269,60 @@ namespace USNL.Package {
             }
 
             EditorGUILayout.EndHorizontal();
-            
+
+            // if targetListSize field is not selected, or is enter is pressed
+            if (GUI.GetNameOfFocusedControl() != "ServerPacketsLengthField" || (Event.current.isKey && Event.current.keyCode == KeyCode.Return)) {
+                if (previousTargetServerPacketsListSize != targetServerPacketsListSize) {
+
+                    // Create new array of targetListSize, copy old array contents into new array, replace old array with new array
+                    ScriptGenerator.ServerPacketConfig[] packets = new ScriptGenerator.ServerPacketConfig[targetServerPacketsListSize];
+                    bool[] foldouts = new bool[targetServerPacketsListSize];
+
+                    // Repopulate the new array with the old array's contents
+                    for (int i = 0; i < Mathf.Clamp(scriptGenerator.ServerPackets.Length, 0, packets.Length); i++) {
+                        packets[i] = scriptGenerator.ServerPackets[i];
+                        foldouts[i] = scriptGenerator.ServerPacketFoldouts[i];
+                    }
+
+                    // Remaining Server Packets
+                    for (int i = scriptGenerator.ServerPackets.Length; i < packets.Length; i++) {
+                        if (scriptGenerator.ServerPackets.Length > 0) packets[i] = scriptGenerator.ServerPackets[scriptGenerator.ServerPackets.Length - 1];
+                        else packets[i] = new ScriptGenerator.ServerPacketConfig("", new ScriptGenerator.PacketVariable[0], ScriptGenerator.ServerPacketType.SendToAllClients, ScriptGenerator.Protocol.TCP);
+                        foldouts[i] = true;
+                    }
+                    scriptGenerator.ServerPackets = packets;
+                    scriptGenerator.ServerPacketFoldouts = foldouts;
+
+                    int[] newTargetServerVariblesLengths = new int[targetServerPacketsListSize];
+                    int[] newPreviousTargetServerVariablesLength = new int[targetServerPacketsListSize];
+                    for (int i = 0; i < targetServerVariblesLengths.Length && i < newTargetServerVariblesLengths.Length; i++) {
+                        newTargetServerVariblesLengths[i] = targetServerVariblesLengths[i];
+                        newPreviousTargetServerVariablesLength[i] = previousTargetServerVariblesLengths[i];
+                    }
+
+                    for (int i = targetServerVariblesLengths.Length; i < newTargetServerVariblesLengths.Length; i++) {
+                        if (targetServerVariblesLengths.Length > 0) {
+                            newTargetServerVariblesLengths[i] = targetServerVariblesLengths[targetServerVariblesLengths.Length - 1];
+                            newPreviousTargetServerVariablesLength[i] = previousTargetServerVariblesLengths[previousTargetServerVariblesLengths.Length - 1];
+                        } else {
+                            newTargetServerVariblesLengths[i] = 0;
+                            newPreviousTargetServerVariablesLength[i] = 0;
+                        }
+                    }
+
+                    targetServerVariblesLengths = newTargetServerVariblesLengths;
+                    previousTargetServerVariblesLengths = newPreviousTargetServerVariablesLength;
+
+                    previousTargetServerPacketsListSize = targetServerPacketsListSize;
+                }
+            }
+
             for (int i = 0; i < scriptGenerator.ServerPackets.Length; i++) {
                 VerticalBreak(variableElementVerticalBreakSize);
                 DisplayServerPacketElement(i);
             }
-
-            // if targetListSize field is not selected, or is enter is pressed
-            if (GUI.GetNameOfFocusedControl() != "ServerPacketsLengthField" || (Event.current.isKey && Event.current.keyCode == KeyCode.Return)) {
-                if (previousTargetServerPacketsListSize == targetServerPacketsListSize) return;
-                
-                // Create new array of targetListSize, copy old array contents into new array, replace old array with new array
-                ScriptGenerator.ServerPacketConfig[] packets = new ScriptGenerator.ServerPacketConfig[targetServerPacketsListSize];
-                bool[] foldouts = new bool[targetServerPacketsListSize];
-
-                // Repopulate the new array with the old array's contents
-                for (int i = 0; i < Mathf.Clamp(scriptGenerator.ServerPackets.Length, 0, packets.Length); i++) {
-                    packets[i] = scriptGenerator.ServerPackets[i];
-                    foldouts[i] = scriptGenerator.ServerPacketFoldouts[i];
-                }
-
-                // Remaining Server Packets
-                for (int i = scriptGenerator.ServerPackets.Length; i < packets.Length; i++) {
-                    if (scriptGenerator.ServerPackets.Length > 0) packets[i] = scriptGenerator.ServerPackets[scriptGenerator.ServerPackets.Length - 1];
-                    else packets[i] = new ScriptGenerator.ServerPacketConfig("", new ScriptGenerator.PacketVariable[0], ScriptGenerator.ServerPacketType.SendToAllClients, ScriptGenerator.Protocol.TCP);
-                    foldouts[i] = true;
-                }
-                scriptGenerator.ServerPackets = packets;
-                scriptGenerator.ServerPacketFoldouts = foldouts;
-
-                int[] newTargetServerVariblesLengths = new int[targetServerPacketsListSize];
-                int[] newPreviousTargetServerVariablesLength = new int[targetServerPacketsListSize];
-                for (int i = 0; i < targetServerVariblesLengths.Length && i < newTargetServerVariblesLengths.Length; i++) {
-                    newTargetServerVariblesLengths[i] = targetServerVariblesLengths[i];
-                    newPreviousTargetServerVariablesLength[i] = previousTargetServerVariblesLengths[i];
-                }
-
-                for (int i = targetServerVariblesLengths.Length; i < newTargetServerVariblesLengths.Length; i++) {
-                    if (targetServerVariblesLengths.Length > 0) {
-                        newTargetServerVariblesLengths[i] = targetServerVariblesLengths[targetServerVariblesLengths.Length - 1];
-                        newPreviousTargetServerVariablesLength[i] = previousTargetServerVariblesLengths[previousTargetServerVariblesLengths.Length - 1];
-                    } else {
-                        newTargetServerVariblesLengths[i] = 0;
-                        newPreviousTargetServerVariablesLength[i] = 0;
-                    }
-                }
-
-                targetServerVariblesLengths = newTargetServerVariblesLengths;
-                previousTargetServerVariblesLengths = newPreviousTargetServerVariablesLength;
-
-                previousTargetServerPacketsListSize = targetServerPacketsListSize;
-            }
         }
-        
+
         private void DisplayServerPacketElement(int _index) {
             // Begin horizontal line of elements
             EditorGUILayout.BeginHorizontal();
@@ -340,7 +348,7 @@ namespace USNL.Package {
             // if targetListSize field is not selected, or is enter is pressed
             if (GUI.GetNameOfFocusedControl() != "ServerPacketVariablesLengthField" || (Event.current.isKey && Event.current.keyCode == KeyCode.Return)) {
                 if (previousTargetServerVariblesLengths[_index] == targetServerVariblesLengths[_index]) return;
-                
+
                 // Create new array of targetListSize, copy old array contents into new array, replace old array with new array
                 ScriptGenerator.PacketVariable[] packetVariables = new ScriptGenerator.PacketVariable[targetServerVariblesLengths[_index]];
 
@@ -356,7 +364,7 @@ namespace USNL.Package {
                 }
 
                 scriptGenerator.ServerPackets[_index].PacketVariables = packetVariables;
-                
+
                 previousTargetServerVariblesLengths[_index] = targetServerVariblesLengths[_index];
             }
         }

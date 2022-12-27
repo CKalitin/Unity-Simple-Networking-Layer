@@ -75,7 +75,7 @@ namespace USNL.Package {
         }
 
         private static void InitializeServerData() {
-            for (int i = 0; i <= MaxClients; i++) {
+            for (int i = 0; i < MaxClients; i++) {
                 Clients.Add(new Client(i));
             }
         }
@@ -87,9 +87,9 @@ namespace USNL.Package {
                     for (int i = 0; i < Clients.Count; i++) {
                         if (Clients[i].IsConnected) Clients[i].Disconnect();
                     }
-                    
-                    tcpListener.Stop();
-                    udpListener.Close();
+
+                    if (tcpListener != null) tcpListener.Stop();
+                    if (udpListener != null) udpListener.Close();
 
                     ThreadManager.StopPacketHandleThread();
 
@@ -117,17 +117,18 @@ namespace USNL.Package {
         #region TCP & UDP
 
         private static void TCPConnectCallback(IAsyncResult _result) {
+
             TcpClient _client = tcpListener.EndAcceptTcpClient(_result);
             tcpListener.BeginAcceptTcpClient(new AsyncCallback(TCPConnectCallback), null);
+
             Debug.Log($"Incoming connection from {_client.Client.RemoteEndPoint}...");
 
-            for (int i = 0; i <= MaxClients; i++) {
-                if (Clients[i].Tcp.socket == null) {
-                    Clients[i].Tcp.Connect(_client);
-                    return;
-                }
+            for (int i = 0; i < MaxClients; i++) {
+                if (Clients[i].Tcp.socket != null) continue;
+                Clients[i].Tcp.Connect(_client);
+                return;
             }
-
+            
             Debug.Log($"{_client.Client.RemoteEndPoint} failed to connect: Server full.");
         }
 

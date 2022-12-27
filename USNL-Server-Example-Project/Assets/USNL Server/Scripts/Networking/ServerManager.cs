@@ -62,8 +62,6 @@ namespace USNL {
             }
 
             SetServerId();
-
-            Debug.LogError("Opened Console.");
         }
 
         private void Start() {
@@ -117,9 +115,9 @@ namespace USNL {
         private void OnWelcomeReceivedPacket(object _packetObject) {
             USNL.Package.WelcomeReceivedPacket _wrp = (USNL.Package.WelcomeReceivedPacket)_packetObject;
             
-            Debug.Log($"{Package.Server.Clients[_wrp.FromClient].Tcp.socket.Client.RemoteEndPoint} connected successfully and is now Player {_wrp.FromClient}.");
+            Debug.Log($"{Package.Server.Clients[_wrp.FromClient].Tcp.socket.Client.RemoteEndPoint} connected successfully and is now Client {_wrp.FromClient}.");
             if (_wrp.FromClient != _wrp.ClientIdCheck) {
-                Debug.Log($"ID: ({_wrp.FromClient}) has assumed the wrong client ID ({_wrp.ClientIdCheck}).");
+                Debug.Log($"Client {_wrp.FromClient} has assumed the wrong client ID ({_wrp.ClientIdCheck}).");
             }
 
             USNL.Package.PacketSend.ServerInfo(_wrp.FromClient, serverConfig.ServerName, GetConnectedClientIds(), serverConfig.MaxClients, GetNumberOfConnectedClients() >= serverConfig.MaxClients);
@@ -300,7 +298,14 @@ namespace USNL {
         }
 
         public string IdToIp(int _id) {
-            return new IPAddress(IPAddress.HostToNetworkOrder(_id)).ToString();
+            // https://support.sumologic.com/hc/en-us/community/posts/5076590459927-convert-decimal-value-to-IP-address
+            int[] ipOctets = new int[4];
+            ipOctets[0] = (int)((_id / 16777216) % 256);
+            ipOctets[1] = (int)((_id / 65536) % 256);
+            ipOctets[2] = (int)((_id / 256) % 256);
+            ipOctets[3] = (int)((_id / 1) % 256);
+
+            return ipOctets[0] + "." + ipOctets[1] + "." + ipOctets[2] + "." + ipOctets[3];
         }
 
         #endregion
