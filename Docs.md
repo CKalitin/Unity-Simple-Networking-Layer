@@ -8,13 +8,10 @@ USNL contains 2 namespaces. USNL and USNL.Package.
 The USNL namespace contains all the scripts you use to make a multiplayer game.
 The USNL.Package namespace contains all the scripts that make the package work. You don't need to mess with these. 
 
+The Server Unity project must be built for external clients to connect.
+
 ## Installation
 USNL uses a Server Client model so two Unity projects are required. Import the USNL-Server unity package on the Server and the USNL-Client unity package on the Client.
-
-## Setup
-Put the USNL Management prefab in the Client scene and the Server scene.
-Configure Server Config on the Server Manager script.
-Create a script that calls USNL.ServerManager.instance.StartServer();
 
 ## Prefabs
 USNL Management
@@ -97,7 +94,7 @@ Code Example:
     private void OnPlayerInputPacket(object packetObject) {
         USNL.PlayerInputPacket playerInputPacket = (USNL.PlayerInputPacket)packetObject;
         // FromClient can only be used on the Server
-        Debug.Log("Client " + {playerInputPacket.FromClient} + " Input: " + new Vector2(playerInputPacket.XInput, playerInputPacket.YInput));
+        Debug.Log("Input Packet received from Client " + {playerInputPacket.FromClient});
     }
 
 ## Starting and Stopping the Server
@@ -193,6 +190,8 @@ Synced Object Prefabs: This is a reference to the Synced Object Prefabs Scriptab
 Local Interpolation: Interpolation can be done Server-side or Client-side. Local Interpolation makes it Client-side. Be sure to toggle it on the Server as well.
 
 ## Synced Object Interpolation
+Interpolation isn't great because UDP packets can be delayed. In this case the interpolation is correct and moves the object, but the delayed position update packet snaps the object back to its previous position. So, don't use interpolation.
+
 Interpolation can be done two ways. On the Server or on the Client.
 
 In Client mode it takes the median of the previous 5 Synced Object Updates and interpolates based on that.

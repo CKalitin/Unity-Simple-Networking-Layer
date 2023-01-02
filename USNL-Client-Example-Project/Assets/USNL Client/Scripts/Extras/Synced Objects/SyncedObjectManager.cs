@@ -91,7 +91,7 @@ namespace USNL {
 
         private void OnSyncedObjectInterpolationModePacket(object _packetObject) {
             USNL.Package.SyncedObjectInterpolationModePacket packet = (USNL.Package.SyncedObjectInterpolationModePacket)_packetObject;
-            clientSideInterpolation = !packet.ServerInterpolation;
+            //clientSideInterpolation = !packet.ServerInterpolation;
         }
 
         private void OnSyncedObjectInstantiatePacket(object _packetObject) {
@@ -99,14 +99,18 @@ namespace USNL {
 
             if (syncedObjects.ContainsKey(_packet.SyncedObjectUUID)) return;
             
-            GameObject newSyncedObject = Instantiate(syncedObjectsPrefabs.SyncedObjects[_packet.SyncedObjectTag], _packet.Position, _packet.Rotation);
-            newSyncedObject.transform.localScale = _packet.Scale;
+            try {
+                GameObject newSyncedObject = Instantiate(syncedObjectsPrefabs.SyncedObjects[_packet.SyncedObjectTag], _packet.Position, _packet.Rotation);
+                newSyncedObject.transform.localScale = _packet.Scale;
 
-            // If object does not have a Syncede Object Component
-            if (newSyncedObject.GetComponent<USNL.SyncedObject>() == null) { newSyncedObject.gameObject.AddComponent<USNL.SyncedObject>(); }
-            newSyncedObject.gameObject.GetComponent<USNL.SyncedObject>().SyncedObjectUuid = _packet.SyncedObjectUUID;
+                // If object does not have a Syncede Object Component
+                if (newSyncedObject.GetComponent<USNL.SyncedObject>() == null) { newSyncedObject.gameObject.AddComponent<USNL.SyncedObject>(); }
+                newSyncedObject.gameObject.GetComponent<USNL.SyncedObject>().SyncedObjectUuid = _packet.SyncedObjectUUID;
 
-            syncedObjects.Add(_packet.SyncedObjectUUID, newSyncedObject.transform);
+                syncedObjects.Add(_packet.SyncedObjectUUID, newSyncedObject.transform);
+            } catch {
+                Debug.Log("Synced Object Manager: Could not instantiate synced object with tag: " + _packet.SyncedObjectTag);
+            }
         }
 
         private void OnSyncedObjectDestroyPacket(object _packetObject) {

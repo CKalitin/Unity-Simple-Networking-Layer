@@ -42,10 +42,10 @@ namespace USNL {
         [Space]
         [SerializeField] private ServerInfo serverInfo;
 
-        private int wanClientId;
-        private int lanClientId;
-        private string wanClientIp;
-        private string lanClientIp;
+        private int wanClientId = 0;
+        private int lanClientId = 0;
+        private string wanClientIp = "";
+        private string lanClientIp = "";
 
         private bool attemptConnection = true;
 
@@ -110,10 +110,8 @@ namespace USNL {
             if (Application.isEditor) {
                 Application.runInBackground = true;
             }
-        }
-
-        private void Start() {
-            SetClientId();
+            
+            StartCoroutine(SetClientId());
         }
 
         private void Update() {
@@ -201,12 +199,18 @@ namespace USNL {
 
         #region IP and ID Functions
 
-        private void SetClientId() {
+        private IEnumerator SetClientId() {
             wanClientIp = GetWanIP();
             lanClientIp = GetLanIP();
+            while (true) {
+                if (wanClientIp != "" & lanClientIp != "") {
+                    wanClientId = IPToID(wanClientIp);
+                    lanClientId = IPToID(lanClientIp);
+                    yield break;
+                }
 
-            wanClientId = Package.Client.instance.IPToID(wanClientIp);
-            lanClientId = Package.Client.instance.IPToID(lanClientIp);
+                yield return new WaitForEndOfFrame();
+            }
         }
 
         private string GetWanIP() {

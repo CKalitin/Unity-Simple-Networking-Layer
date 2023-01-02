@@ -97,8 +97,7 @@ namespace USNL.Package {
 
                 // Remaining Client Packets
                 for (int i = sop.SyncedObjectStructs.Length; i < newSyncedObjectStructs.Length; i++) {
-                    if (sop.SyncedObjectStructs.Length > 0) newSyncedObjectStructs[i] = sop.SyncedObjectStructs[sop.SyncedObjectStructs.Length - 1];
-                    else newSyncedObjectStructs[i] = new SyncedObjectStruct();
+                    newSyncedObjectStructs[i] = new SyncedObjectStruct();
                 }
                 sop.SyncedObjectStructs = newSyncedObjectStructs;
             }
@@ -121,7 +120,11 @@ namespace USNL.Package {
             EditorGUILayout.EndHorizontal();
 
             if (GUI.GetNameOfFocusedControl() != "RegenerateDictionary" || (Event.current.isKey && Event.current.keyCode == KeyCode.Return)) {
-                sop.GenerateSyncedObjectsDict();
+                try {
+                    sop.GenerateSyncedObjectsDict();
+                } catch {
+                    Debug.LogError("Error in Synced Objects Prefab Scriptable Object. Likely a repeated tag.");
+                }
             }
         }
         

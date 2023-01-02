@@ -9,6 +9,7 @@ namespace USNL {
         WelcomeReceived,
         Ping,
         ClientInput,
+        RaycastFromCamera,
     }
 
     public enum ServerPackets {
@@ -31,11 +32,40 @@ namespace USNL {
         SyncedObjectRotInterpolation,
         SyncedObjectVec2ScaleInterpolation,
         SyncedObjectVec3ScaleInterpolation,
+        PlayerSpawned,
+        MatchUpdate,
+        Countdown,
     }
 
     #endregion
 
     #region Packet Structs
+
+    public struct RaycastFromCameraPacket {
+        private int fromClient;
+
+        private Vector3 cameraPosition;
+        private Quaternion cameraRotation;
+        private Vector2 resolution;
+        private float fieldOfView;
+        private Vector2 mousePosition;
+
+        public RaycastFromCameraPacket(int _fromClient, Vector3 _cameraPosition, Quaternion _cameraRotation, Vector2 _resolution, float _fieldOfView, Vector2 _mousePosition) {
+            fromClient = _fromClient;
+            cameraPosition = _cameraPosition;
+            cameraRotation = _cameraRotation;
+            resolution = _resolution;
+            fieldOfView = _fieldOfView;
+            mousePosition = _mousePosition;
+        }
+
+        public int FromClient { get => fromClient; set => fromClient = value; }
+        public Vector3 CameraPosition { get => cameraPosition; set => cameraPosition = value; }
+        public Quaternion CameraRotation { get => cameraRotation; set => cameraRotation = value; }
+        public Vector2 Resolution { get => resolution; set => resolution = value; }
+        public float FieldOfView { get => fieldOfView; set => fieldOfView = value; }
+        public Vector2 MousePosition { get => mousePosition; set => mousePosition = value; }
+    }
 
 
     #endregion
@@ -43,7 +73,84 @@ namespace USNL {
     #region Packet Send
 
     public static class PacketSend {
+        #region TCP & UDP Send Functions
+    
+        private static void SendTCPData(int _toClient, USNL.Package.Packet _packet) {
+            _packet.WriteLength();
+            USNL.Package.Server.Clients[_toClient].Tcp.SendData(_packet);
+            if (USNL.Package.Server.Clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+        }
+    
+        private static void SendTCPDataToAll(USNL.Package.Packet _packet) {
+            _packet.WriteLength();
+            for (int i = 0; i < USNL.Package.Server.MaxClients; i++) {
+                USNL.Package.Server.Clients[i].Tcp.SendData(_packet);
+                if (USNL.Package.Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+            }
+        }
+    
+        private static void SendTCPDataToAll(int _excpetClient, USNL.Package.Packet _packet) {
+            _packet.WriteLength();
+            for (int i = 0; i < USNL.Package.Server.MaxClients; i++) {
+                if (i != _excpetClient) {
+                    USNL.Package.Server.Clients[i].Tcp.SendData(_packet);
+                    if (USNL.Package.Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+                }
+            }
+        }
+    
+        private static void SendUDPData(int _toClient, USNL.Package.Packet _packet) {
+            _packet.WriteLength();
+            USNL.Package.Server.Clients[_toClient].Udp.SendData(_packet);
+            if (USNL.Package.Server.Clients[_toClient].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+        }
+    
+        private static void SendUDPDataToAll(USNL.Package.Packet _packet) {
+            _packet.WriteLength();
+            for (int i = 0; i < USNL.Package.Server.MaxClients; i++) {
+                USNL.Package.Server.Clients[i].Udp.SendData(_packet);
+                if (USNL.Package.Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+            }
+        }
+    
+        private static void SendUDPDataToAll(int _excpetClient, USNL.Package.Packet _packet) {
+            _packet.WriteLength();
+            for (int i = 0; i < USNL.Package.Server.MaxClients; i++) {
+                if (i != _excpetClient) {
+                    USNL.Package.Server.Clients[i].Udp.SendData(_packet);
+                    if (USNL.Package.Server.Clients[i].IsConnected) { NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length()); }
+                }
+            }
+        }
+    
+        #endregion
+    
+        public static void PlayerSpawned(int _toClient, int _matchState, int _playerSyncedObjectUUID) {
+            using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)ServerPackets.PlayerSpawned)) {
+                _packet.Write(_matchState);
+                _packet.Write(_playerSyncedObjectUUID);
 
+                SendTCPData(_toClient, _packet);
+            }
+        }
+
+        public static void MatchUpdate(int _matchState) {
+            using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)ServerPackets.MatchUpdate)) {
+                _packet.Write(_matchState);
+
+                SendTCPDataToAll(_packet);
+            }
+        }
+
+        public static void Countdown(int[] _startTime, float _duration, string _countdownTag) {
+            using (USNL.Package.Packet _packet = new USNL.Package.Packet((int)ServerPackets.Countdown)) {
+                _packet.Write(_startTime);
+                _packet.Write(_duration);
+                _packet.Write(_countdownTag);
+
+                SendTCPDataToAll(_packet);
+            }
+        }
         }
 
     #endregion
@@ -55,6 +162,7 @@ namespace USNL.Package {
         WelcomeReceived,
         Ping,
         ClientInput,
+        RaycastFromCamera,
     }
 
     public enum ServerPackets {
@@ -77,6 +185,9 @@ namespace USNL.Package {
         SyncedObjectRotInterpolation,
         SyncedObjectVec2ScaleInterpolation,
         SyncedObjectVec3ScaleInterpolation,
+        PlayerSpawned,
+        MatchUpdate,
+        Countdown,
     }
     #endregion
 
@@ -141,6 +252,7 @@ namespace USNL.Package {
             { WelcomeReceived },
             { Ping },
             { ClientInput },
+            { RaycastFromCamera },
         };
 
         public static void WelcomeReceived(Packet _packet) {
@@ -164,6 +276,17 @@ namespace USNL.Package {
 
             ClientInputPacket clientInputPacket = new ClientInputPacket(_packet.FromClient, keycodesDown, keycodesUp);
             PacketManager.instance.PacketReceived(_packet, clientInputPacket);
+        }
+
+        public static void RaycastFromCamera(Packet _packet) {
+            Vector3 cameraPosition = _packet.ReadVector3();
+            Quaternion cameraRotation = _packet.ReadQuaternion();
+            Vector2 resolution = _packet.ReadVector2();
+            float fieldOfView = _packet.ReadFloat();
+            Vector2 mousePosition = _packet.ReadVector2();
+
+            RaycastFromCameraPacket raycastFromCameraPacket = new RaycastFromCameraPacket(_packet.FromClient, cameraPosition, cameraRotation, resolution, fieldOfView, mousePosition);
+            PacketManager.instance.PacketReceived(_packet, raycastFromCameraPacket);
         }
     }
 
@@ -413,6 +536,7 @@ namespace USNL {
             CallOnWelcomeReceivedPacketCallbacks,
             CallOnPingPacketCallbacks,
             CallOnClientInputPacketCallbacks,
+            CallOnRaycastFromCameraPacketCallbacks,
         };
 
         public static event CallbackEvent OnServerStarted;
@@ -423,6 +547,7 @@ namespace USNL {
         public static event CallbackEvent OnWelcomeReceivedPacket;
         public static event CallbackEvent OnPingPacket;
         public static event CallbackEvent OnClientInputPacket;
+        public static event CallbackEvent OnRaycastFromCameraPacket;
 
         public static void CallOnServerStartedCallbacks(object _param) { if (OnServerStarted != null) { OnServerStarted(_param); } }
         public static void CallOnServerStoppedCallbacks(object _param) { if (OnServerStopped != null) { OnServerStopped(_param); } }
@@ -432,6 +557,7 @@ namespace USNL {
         public static void CallOnWelcomeReceivedPacketCallbacks(object _param) { if (OnWelcomeReceivedPacket != null) { OnWelcomeReceivedPacket(_param); } }
         public static void CallOnPingPacketCallbacks(object _param) { if (OnPingPacket != null) { OnPingPacket(_param); } }
         public static void CallOnClientInputPacketCallbacks(object _param) { if (OnClientInputPacket != null) { OnClientInputPacket(_param); } }
+        public static void CallOnRaycastFromCameraPacketCallbacks(object _param) { if (OnRaycastFromCameraPacket != null) { OnRaycastFromCameraPacket(_param); } }
     }
 }
 

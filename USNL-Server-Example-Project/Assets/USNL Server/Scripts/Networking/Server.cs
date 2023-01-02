@@ -36,6 +36,8 @@ namespace USNL.Package {
 
         public static int Port { get; private set; }
 
+        private static bool allowNewConnections = true;
+
         public static List<Client> Clients = new List<Client>();
 
         public static ServerData ServerData;
@@ -44,6 +46,8 @@ namespace USNL.Package {
 
         private static TcpListener tcpListener;
         private static UdpClient udpListener;
+        
+        public static bool AllowNewConnections { get => allowNewConnections; set => allowNewConnections = value; }
 
         #endregion
 
@@ -122,6 +126,11 @@ namespace USNL.Package {
             tcpListener.BeginAcceptTcpClient(new AsyncCallback(TCPConnectCallback), null);
 
             Debug.Log($"Incoming connection from {_client.Client.RemoteEndPoint}...");
+
+            if (!AllowNewConnections) {
+                Debug.Log($"{_client.Client.RemoteEndPoint} failed to connect: New connections not allowed.");
+                return;
+            }
 
             for (int i = 0; i < MaxClients; i++) {
                 if (Clients[i].Tcp.socket != null) continue;
