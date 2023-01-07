@@ -230,13 +230,13 @@ namespace USNL.Package {
 
                 for (int i = targetClientVariblesLengths[_index]; i < packetVariables.Length; i++) {
                     if (scriptGenerator.ClientPackets[_index].PacketVariables.Length > 0)
-                        packetVariables[i] = scriptGenerator.ClientPackets[_index].PacketVariables[scriptGenerator.ClientPackets[_index].PacketVariables.Length - 1];
+                        packetVariables[i] = new ScriptGenerator.PacketVariable(scriptGenerator.ClientPackets[_index].PacketVariables[scriptGenerator.ClientPackets[_index].PacketVariables.Length - 1].VariableName, scriptGenerator.ClientPackets[_index].PacketVariables[scriptGenerator.ClientPackets[_index].PacketVariables.Length - 1].VariableType);
                     else
                         packetVariables[i] = new ScriptGenerator.PacketVariable("", ScriptGenerator.PacketVarType.Byte);
                 }
 
                 scriptGenerator.ClientPackets[_index].PacketVariables = packetVariables;
-
+                
                 previousTargetClientVariblesLengths[_index] = targetClientVariblesLengths[_index];
             }
         }
@@ -358,7 +358,7 @@ namespace USNL.Package {
 
                 for (int i = targetServerVariblesLengths[_index]; i < packetVariables.Length; i++) {
                     if (scriptGenerator.ServerPackets[_index].PacketVariables.Length > 0)
-                        packetVariables[i] = scriptGenerator.ServerPackets[_index].PacketVariables[scriptGenerator.ServerPackets[_index].PacketVariables.Length - 1];
+                        packetVariables[i] = new ScriptGenerator.PacketVariable(scriptGenerator.ServerPackets[_index].PacketVariables[scriptGenerator.ServerPackets[_index].PacketVariables.Length - 1].VariableName, scriptGenerator.ServerPackets[_index].PacketVariables[scriptGenerator.ServerPackets[_index].PacketVariables.Length - 1].VariableType);
                     else
                         packetVariables[i] = new ScriptGenerator.PacketVariable("", ScriptGenerator.PacketVarType.Byte);
                 }

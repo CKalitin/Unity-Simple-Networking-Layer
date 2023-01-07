@@ -48,7 +48,7 @@ namespace USNL.Package {
             Protocol.TCP),
         new ServerPacketConfig(
             "ServerInfo",
-            new PacketVariable[] { new PacketVariable("Server Name", PacketVarType.String), new PacketVariable("connectedClientsIds", PacketVarType.IntArray), new PacketVariable("maxClients", PacketVarType.Int), new PacketVariable("serverFull", PacketVarType.Bool) },
+            new PacketVariable[] { new PacketVariable("Server Name", PacketVarType.String), new PacketVariable("connectedClientIds", PacketVarType.IntArray), new PacketVariable("maxClients", PacketVarType.Int), new PacketVariable("serverFull", PacketVarType.Bool) },
             ServerPacketType.SendToClient,
             Protocol.TCP),
         new ServerPacketConfig(

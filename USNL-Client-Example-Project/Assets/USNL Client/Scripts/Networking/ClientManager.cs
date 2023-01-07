@@ -320,15 +320,15 @@ namespace USNL {
         private void OnServerInfoPacket(object _packetObject) {
             USNL.Package.ServerInfoPacket _si = (USNL.Package.ServerInfoPacket)_packetObject;
             serverInfo.ServerName = _si.ServerName;
-            serverInfo.ConnectedClientIds = _si.ConnectedClientsIds;
+            serverInfo.ConnectedClientIds = _si.ConnectedClientIds;
             serverInfo.MaxClients = _si.MaxClients;
             serverInfo.ServerFull = _si.ServerFull;
 
             if (!USNL.Package.Client.instance.ServerInfoReceived) {
                 USNL.Package.Client.instance.ServerInfoReceived = true;
 
-                if (_si.ConnectedClientsIds.Length > _si.MaxClients) {
-                    Debug.Log($"{_si.ConnectedClientsIds.Length} {_si.MaxClients}");
+                if (_si.ConnectedClientIds.Length > _si.MaxClients) {
+                    Debug.Log($"{_si.ConnectedClientIds.Length} {_si.MaxClients}");
                     DisconnectFromServer();
                 }
             }
