@@ -84,30 +84,33 @@ namespace USNL.Package {
             }
         }
         
-        public static IEnumerator ShutdownServer() {
+        // Why did i think this was a good idea?
+        public static IEnumerator ShutdownServerCoroutine() {
             float time = 0f;
             while (true) {
                 if (USNL.ServerManager.GetNumberOfConnectedClients() <= 0 || time > 1f) {
-                    for (int i = 0; i < Clients.Count; i++) {
-                        if (Clients[i].IsConnected) Clients[i].Disconnect();
-                    }
-
-                    if (tcpListener != null) tcpListener.Stop();
-                    if (udpListener != null) udpListener.Close();
-
-                    ThreadManager.StopPacketHandleThread();
-
-                    ServerData.IsServerActive = false;
-
-                    USNL.CallbackEvents.CallOnServerStoppedCallbacks(0);
-
-                    Debug.Log("Server stopped.");
-                    
+                    ShutdownServer();
                     break;
                 }
                 yield return new WaitForEndOfFrame();
                 time += Time.deltaTime;
             }
+        }
+
+        public static void ShutdownServer() {
+            for (int i = 0; i < Clients.Count; i++)
+                if (Clients[i].IsConnected) Clients[i].Disconnect();
+
+            if (tcpListener != null) tcpListener.Stop();
+            if (udpListener != null) udpListener.Close();
+
+            ThreadManager.StopPacketHandleThread();
+
+            ServerData.IsServerActive = false;
+
+            USNL.CallbackEvents.CallOnServerStoppedCallbacks(0);
+
+            Debug.Log("Server stopped.");
         }
 
         public static void CommandDisconnectAllClients(string _disconnectMessage) {

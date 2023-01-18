@@ -53,6 +53,9 @@ namespace USNL {
         private bool isMigratingHost = false;
         private bool isBecomingHost = false;
 
+        private bool timedOut = false;
+        private bool serverClosed = false;
+
         private DateTime timeOfConnection;
 
         private string serverName;
@@ -77,6 +80,10 @@ namespace USNL {
         public bool IsHost { get => Package.Client.instance.IsHost; }
         public bool IsMigratingHost { get => isMigratingHost; }
         public bool IsBecomingHost { get => isBecomingHost; }
+        
+        public bool TimedOut { get => timedOut; set => timedOut = value; }
+        public bool ServerClosed { get => serverClosed; set => serverClosed = value; }
+        
         public DateTime TimeOfConnection { get => timeOfConnection; set => timeOfConnection = value; }
 
         public string ServerExeName { get => serverExeName; set => serverExeName = value; }
@@ -120,6 +127,7 @@ namespace USNL {
 
             if (-USNL.Package.Client.instance.Tcp.LastPacketTime.Subtract(DateTime.Now).TotalSeconds >= timeoutTime & USNL.Package.Client.instance.IsConnected) {
                 Debug.Log("Timed out.");
+                timedOut = true;
                 DisconnectFromServer();
             }
         }
@@ -145,6 +153,8 @@ namespace USNL {
         #region Connection Functions
 
         public void ConnectToServer() {
+            ResetClientManagerVariables();
+            
             Package.Client.instance.SetIP(serverId, port);
             StartCoroutine(AttemptingConnection());
         }
@@ -155,6 +165,8 @@ namespace USNL {
         public void ConnectToServer(int _id, int _port) {
             serverId = _id;
             port = _port;
+
+            ResetClientManagerVariables();
 
             Package.Client.instance.SetIP(serverId, port);
             StartCoroutine(AttemptingConnection());
@@ -193,6 +205,20 @@ namespace USNL {
             }
 
             isAttempingConnection = false;
+        }
+
+        public void Disconnect() {
+            USNL.Package.Client.instance.Disconnect();
+        }
+
+        private void ResetClientManagerVariables() {
+            timedOut = false;
+            serverClosed = false;
+        }
+
+        public bool CheckClientConnected(int _id) {
+            if (ServerInfo.ConnectedClientIds != null) return ServerInfo.ConnectedClientIds.Contains(_id);
+            else return false;
         }
 
         #endregion
@@ -311,6 +337,8 @@ namespace USNL {
 
         private void OnDisconnectClientPacket(object _packetObject) {
             USNL.Package.DisconnectClientPacket _dcp = (USNL.Package.DisconnectClientPacket)_packetObject;
+
+            serverClosed = true;
 
             Debug.Log($"Disconnection commanded from server.\nMessage: {_dcp.DisconnectMessage}");
 

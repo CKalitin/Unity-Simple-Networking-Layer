@@ -110,8 +110,9 @@ namespace USNL {
             Package.Server.ServerData.IsServerActive = false;
             if ((useServerFilesInEditor & Application.isEditor) | !Application.isEditor)
                 WriteServerDataFile();
-            
-            StartCoroutine(Package.Server.ShutdownServer());
+
+            Package.Server.ShutdownServer();
+            //StartCoroutine(Package.Server.ShutdownServerCoroutine());
         }
 
         private void OnWelcomeReceivedPacket(object _packetObject) {

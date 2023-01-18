@@ -294,25 +294,25 @@ namespace USNL.Package {
         }
 
         public void Disconnect() {
-            if (isConnected) {
-                isConnected = false;
+            if (!isConnected) return;
 
-                tcp.socket.Close();
-                if (udp.socket != null) udp.socket.Close();
+            isConnected = false;
 
-                tcp.Reset();
-                udp.Reset();
+            tcp.socket.Close();
+            if (udp.socket != null) udp.socket.Close();
 
-                serverInfoReceived = false;
+            tcp.Reset();
+            udp.Reset();
 
-                USNL.Package.ThreadManager.StopPacketHandleThread();
+            serverInfoReceived = false;
 
-                USNL.ClientManager.instance.ServerInfo = new USNL.ServerInfo();
+            USNL.Package.ThreadManager.StopPacketHandleThread();
 
-                USNL.CallbackEvents.CallOnDisconnectedCallbacks(0);
+            USNL.ClientManager.instance.ServerInfo = new USNL.ServerInfo();
 
-                Debug.Log("Disconnected from server.");
-            }
+            USNL.CallbackEvents.CallOnDisconnectedCallbacks(0);
+
+            Debug.Log("Disconnected from server.");
         }
 
         public int IPToID(string _ip) {
