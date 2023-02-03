@@ -159,7 +159,13 @@ namespace USNL.Package {
 
                     // Remaining Client Packets
                     for (int i = scriptGenerator.ClientPackets.Length; i < packets.Length; i++) {
-                        if (scriptGenerator.ClientPackets.Length > 0) packets[i] = scriptGenerator.ClientPackets[scriptGenerator.ClientPackets.Length - 1];
+                        if (scriptGenerator.ClientPackets.Length > 0) {
+                            ScriptGenerator.ClientPacketConfig fromPacket = scriptGenerator.ClientPackets[scriptGenerator.ClientPackets.Length - 1];
+                            packets[i] = new ScriptGenerator.ClientPacketConfig(fromPacket.PacketName, new ScriptGenerator.PacketVariable[fromPacket.PacketVariables.Length], fromPacket.Protocol);
+                            for (int x = 0; x < fromPacket.PacketVariables.Length; x++) {
+                                packets[i].PacketVariables[x] = new ScriptGenerator.PacketVariable(fromPacket.PacketVariables[x].VariableName, fromPacket.PacketVariables[x].VariableType);
+                            }
+                        }
                         else packets[i] = new ScriptGenerator.ClientPacketConfig("", new ScriptGenerator.PacketVariable[0], ScriptGenerator.Protocol.TCP);
                         foldouts[i] = true;
                     }
@@ -225,7 +231,7 @@ namespace USNL.Package {
                 ScriptGenerator.PacketVariable[] packetVariables = new ScriptGenerator.PacketVariable[targetClientVariblesLengths[_index]];
 
                 for (int i = 0; i < scriptGenerator.ClientPackets[_index].PacketVariables.Length && i < targetClientVariblesLengths[_index]; i++) {
-                    packetVariables[i] = scriptGenerator.ClientPackets[_index].PacketVariables[i];
+                    packetVariables[i] = new ScriptGenerator.PacketVariable(scriptGenerator.ClientPackets[_index].PacketVariables[i].VariableName, scriptGenerator.ClientPackets[_index].PacketVariables[i].VariableType);
                 }
 
                 for (int i = targetClientVariblesLengths[_index]; i < packetVariables.Length; i++) {
@@ -286,8 +292,15 @@ namespace USNL.Package {
 
                     // Remaining Server Packets
                     for (int i = scriptGenerator.ServerPackets.Length; i < packets.Length; i++) {
-                        if (scriptGenerator.ServerPackets.Length > 0) packets[i] = scriptGenerator.ServerPackets[scriptGenerator.ServerPackets.Length - 1];
-                        else packets[i] = new ScriptGenerator.ServerPacketConfig("", new ScriptGenerator.PacketVariable[0], ScriptGenerator.ServerPacketType.SendToAllClients, ScriptGenerator.Protocol.TCP);
+                        if (scriptGenerator.ServerPackets.Length > 0) {
+                            ScriptGenerator.ServerPacketConfig fromPacket = scriptGenerator.ServerPackets[scriptGenerator.ServerPackets.Length - 1];
+                            packets[i] = new ScriptGenerator.ServerPacketConfig(fromPacket.PacketName, new ScriptGenerator.PacketVariable[fromPacket.PacketVariables.Length], fromPacket.SendType, fromPacket.Protocol);
+                            for (int x = 0; x < fromPacket.PacketVariables.Length; x++) {
+                                packets[i].PacketVariables[x] = new ScriptGenerator.PacketVariable(fromPacket.PacketVariables[x].VariableName, fromPacket.PacketVariables[x].VariableType);
+                            }
+                        } else {
+                            packets[i] = new ScriptGenerator.ServerPacketConfig("", new ScriptGenerator.PacketVariable[0], ScriptGenerator.ServerPacketType.SendToAllClients, ScriptGenerator.Protocol.TCP);
+                        }
                         foldouts[i] = true;
                     }
                     scriptGenerator.ServerPackets = packets;
