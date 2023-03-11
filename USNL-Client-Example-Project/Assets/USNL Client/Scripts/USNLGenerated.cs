@@ -8,7 +8,6 @@ namespace USNL {
         WelcomeReceived,
         Ping,
         ClientInput,
-        RaycastFromCamera,
     }
 
     public enum ServerPackets {
@@ -31,53 +30,12 @@ namespace USNL {
         SyncedObjectRotInterpolation,
         SyncedObjectVec2ScaleInterpolation,
         SyncedObjectVec3ScaleInterpolation,
-        PlayerSpawned,
-        MatchUpdate,
-        Countdown,
     }
 
     #endregion
 
     #region Packet Structs
 
-    public struct PlayerSpawnedPacket {
-        private int clientId;
-        private int playerSyncedObjectUUID;
-
-        public PlayerSpawnedPacket(int _clientId, int _playerSyncedObjectUUID) {
-            clientId = _clientId;
-            playerSyncedObjectUUID = _playerSyncedObjectUUID;
-        }
-
-        public int ClientId { get => clientId; set => clientId = value; }
-        public int PlayerSyncedObjectUUID { get => playerSyncedObjectUUID; set => playerSyncedObjectUUID = value; }
-    }
-
-    public struct MatchUpdatePacket {
-        private int matchState;
-
-        public MatchUpdatePacket(int _matchState) {
-            matchState = _matchState;
-        }
-
-        public int MatchState { get => matchState; set => matchState = value; }
-    }
-
-    public struct CountdownPacket {
-        private int[] startTime;
-        private float duration;
-        private string countdownTag;
-
-        public CountdownPacket(int[] _startTime, float _duration, string _countdownTag) {
-            startTime = _startTime;
-            duration = _duration;
-            countdownTag = _countdownTag;
-        }
-
-        public int[] StartTime { get => startTime; set => startTime = value; }
-        public float Duration { get => duration; set => duration = value; }
-        public string CountdownTag { get => countdownTag; set => countdownTag = value; }
-    }
 
 
     #endregion
@@ -106,34 +64,8 @@ namespace USNL {
             { Package.PacketHandlers.SyncedObjectRotInterpolation },
             { Package.PacketHandlers.SyncedObjectVec2ScaleInterpolation },
             { Package.PacketHandlers.SyncedObjectVec3ScaleInterpolation },
-            { PlayerSpawned },
-            { MatchUpdate },
-            { Countdown },
         };
 
-        public static void PlayerSpawned(Package.Packet _packet) {
-            int clientId = _packet.ReadInt();
-            int playerSyncedObjectUUID = _packet.ReadInt();
-
-            USNL.PlayerSpawnedPacket playerSpawnedPacket = new USNL.PlayerSpawnedPacket(clientId, playerSyncedObjectUUID);
-            Package.PacketManager.instance.PacketReceived(_packet, playerSpawnedPacket);
-        }
-
-        public static void MatchUpdate(Package.Packet _packet) {
-            int matchState = _packet.ReadInt();
-
-            USNL.MatchUpdatePacket matchUpdatePacket = new USNL.MatchUpdatePacket(matchState);
-            Package.PacketManager.instance.PacketReceived(_packet, matchUpdatePacket);
-        }
-
-        public static void Countdown(Package.Packet _packet) {
-            int[] startTime = _packet.ReadInts();
-            float duration = _packet.ReadFloat();
-            string countdownTag = _packet.ReadString();
-
-            USNL.CountdownPacket countdownPacket = new USNL.CountdownPacket(startTime, duration, countdownTag);
-            Package.PacketManager.instance.PacketReceived(_packet, countdownPacket);
-        }
     }
 
     #endregion
@@ -141,33 +73,7 @@ namespace USNL {
     #region Packet Send
 
     public static class PacketSend {
-        private static void SendTCPData(USNL.Package.Packet _packet) {
-            _packet.WriteLength();
-            if (USNL.Package.Client.instance.IsConnected) {
-                USNL.Package.Client.instance.Tcp.SendData(_packet);
-                NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length());
-            }
-        }
-    
-        private static void SendUDPData(USNL.Package.Packet _packet) {
-            _packet.WriteLength();
-            if (USNL.Package.Client.instance.IsConnected) {
-                USNL.Package.Client.instance.Udp.SendData(_packet);
-                NetworkDebugInfo.instance.PacketSent(_packet.PacketId, _packet.Length());
-            }
-        }
-    
-        public static void RaycastFromCamera(Vector3 _cameraPosition, Quaternion _cameraRotation, Vector2 _resolution, float _fieldOfView, Vector2 _mousePosition) {
-            using (Package.Packet _packet = new Package.Packet((int)USNL.ClientPackets.RaycastFromCamera)) {
-                _packet.Write(_cameraPosition);
-                _packet.Write(_cameraRotation);
-                _packet.Write(_resolution);
-                _packet.Write(_fieldOfView);
-                _packet.Write(_mousePosition);
 
-                SendTCPData(_packet);
-            }
-        }
     }
 
 #endregion
@@ -179,7 +85,6 @@ namespace USNL.Package {
         WelcomeReceived,
         Ping,
         ClientInput,
-        RaycastFromCamera,
     }
 
     public enum ServerPackets {
@@ -202,9 +107,6 @@ namespace USNL.Package {
         SyncedObjectRotInterpolation,
         SyncedObjectVec2ScaleInterpolation,
         SyncedObjectVec3ScaleInterpolation,
-        PlayerSpawned,
-        MatchUpdate,
-        Countdown,
     }
     #endregion
 
@@ -238,19 +140,19 @@ namespace USNL.Package {
 
     public struct ServerInfoPacket {
         private string serverName;
-        private int[] connectedClientsIds;
+        private int[] connectedClientIds;
         private int maxClients;
         private bool serverFull;
 
-        public ServerInfoPacket(string _serverName, int[] _connectedClientsIds, int _maxClients, bool _serverFull) {
+        public ServerInfoPacket(string _serverName, int[] _connectedClientIds, int _maxClients, bool _serverFull) {
             serverName = _serverName;
-            connectedClientsIds = _connectedClientsIds;
+            connectedClientIds = _connectedClientIds;
             maxClients = _maxClients;
             serverFull = _serverFull;
         }
 
         public string ServerName { get => serverName; set => serverName = value; }
-        public int[] ConnectedClientsIds { get => connectedClientsIds; set => connectedClientsIds = value; }
+        public int[] ConnectedClientIds { get => connectedClientIds; set => connectedClientIds = value; }
         public int MaxClients { get => maxClients; set => maxClients = value; }
         public bool ServerFull { get => serverFull; set => serverFull = value; }
     }
@@ -490,9 +392,6 @@ namespace USNL.Package {
             { SyncedObjectRotInterpolation },
             { SyncedObjectVec2ScaleInterpolation },
             { SyncedObjectVec3ScaleInterpolation },
-            { USNL.PacketHandlers.PlayerSpawned },
-            { USNL.PacketHandlers.MatchUpdate },
-            { USNL.PacketHandlers.Countdown },
         };
 
         public static void Welcome(Package.Packet _packet) {
@@ -513,11 +412,11 @@ namespace USNL.Package {
 
         public static void ServerInfo(Package.Packet _packet) {
             string serverName = _packet.ReadString();
-            int[] connectedClientsIds = _packet.ReadInts();
+            int[] connectedClientIds = _packet.ReadInts();
             int maxClients = _packet.ReadInt();
             bool serverFull = _packet.ReadBool();
 
-            Package.ServerInfoPacket serverInfoPacket = new Package.ServerInfoPacket(serverName, connectedClientsIds, maxClients, serverFull);
+            Package.ServerInfoPacket serverInfoPacket = new Package.ServerInfoPacket(serverName, connectedClientIds, maxClients, serverFull);
             Package.PacketManager.instance.PacketReceived(_packet, serverInfoPacket);
         }
 
@@ -727,9 +626,6 @@ namespace USNL {
             CallOnSyncedObjectRotInterpolationPacketCallbacks,
             CallOnSyncedObjectVec2ScaleInterpolationPacketCallbacks,
             CallOnSyncedObjectVec3ScaleInterpolationPacketCallbacks,
-            CallOnPlayerSpawnedPacketCallbacks,
-            CallOnMatchUpdatePacketCallbacks,
-            CallOnCountdownPacketCallbacks,
         };
 
         public static event CallbackEvent OnConnected;
@@ -754,9 +650,6 @@ namespace USNL {
         public static event CallbackEvent OnSyncedObjectRotInterpolationPacket;
         public static event CallbackEvent OnSyncedObjectVec2ScaleInterpolationPacket;
         public static event CallbackEvent OnSyncedObjectVec3ScaleInterpolationPacket;
-        public static event CallbackEvent OnPlayerSpawnedPacket;
-        public static event CallbackEvent OnMatchUpdatePacket;
-        public static event CallbackEvent OnCountdownPacket;
 
         public static void CallOnConnectedCallbacks(object _param) { if (OnConnected != null) { OnConnected(_param); } }
         public static void CallOnDisconnectedCallbacks(object _param) { if (OnDisconnected != null) { OnDisconnected(_param); } }
@@ -780,9 +673,6 @@ namespace USNL {
         public static void CallOnSyncedObjectRotInterpolationPacketCallbacks(object _param) { if (OnSyncedObjectRotInterpolationPacket != null) { OnSyncedObjectRotInterpolationPacket(_param); } }
         public static void CallOnSyncedObjectVec2ScaleInterpolationPacketCallbacks(object _param) { if (OnSyncedObjectVec2ScaleInterpolationPacket != null) { OnSyncedObjectVec2ScaleInterpolationPacket(_param); } }
         public static void CallOnSyncedObjectVec3ScaleInterpolationPacketCallbacks(object _param) { if (OnSyncedObjectVec3ScaleInterpolationPacket != null) { OnSyncedObjectVec3ScaleInterpolationPacket(_param); } }
-        public static void CallOnPlayerSpawnedPacketCallbacks(object _param) { if (OnPlayerSpawnedPacket != null) { OnPlayerSpawnedPacket(_param); } }
-        public static void CallOnMatchUpdatePacketCallbacks(object _param) { if (OnMatchUpdatePacket != null) { OnMatchUpdatePacket(_param); } }
-        public static void CallOnCountdownPacketCallbacks(object _param) { if (OnCountdownPacket != null) { OnCountdownPacket(_param); } }
     }
 }
 
