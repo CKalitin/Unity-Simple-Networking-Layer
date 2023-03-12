@@ -4,6 +4,9 @@ If you're changing the package itself, see Docs-Package.md.
 
 See the example projects to see this in action. Many of your questions can be answered by examining it.
 
+The USNL Core Project Assets are the assets of a USNL project that contains everything required for USNL. It also has Match Manager, Lobby, and Player Stats scripts and a main menu designed for USNL.
+Think of them like Unity's core projects eg. URP core or 2D core projects.
+
 USNL contains 2 namespaces. USNL and USNL.Package.
 The USNL namespace contains all the scripts you use to make a multiplayer game.
 The USNL.Package namespace contains all the scripts that make the package work. You don't need to mess with these. 

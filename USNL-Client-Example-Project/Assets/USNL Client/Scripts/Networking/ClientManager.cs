@@ -118,7 +118,7 @@ namespace USNL {
                 Application.runInBackground = true;
             }
             
-            StartCoroutine(SetClientId());
+            //StartCoroutine(SetClientId());
         }
 
         private void Update() {
@@ -226,21 +226,18 @@ namespace USNL {
         #region IP and ID Functions
 
         private IEnumerator SetClientId() {
+            // This is a coroutine because of GetWanIP()
+
             wanClientIp = GetWanIP();
             lanClientIp = GetLanIP();
-            while (true) {
-                if (wanClientIp != "" & lanClientIp != "") {
-                    wanClientId = IPToID(wanClientIp);
-                    lanClientId = IPToID(lanClientIp);
-                    yield break;
-                }
-
-                yield return new WaitForEndOfFrame();
-            }
+            
+            if (wanClientIp != "") wanClientId = IPToID(wanClientIp);
+            if (lanClientIp != "") lanClientId = IPToID(lanClientIp);
+            
+            yield return new WaitForEndOfFrame();
         }
 
         private string GetWanIP() {
-            int attempts = 0;
             try {
                 string url = "http://checkip.dyndns.org";
                 System.Net.WebRequest req = System.Net.WebRequest.Create(url);
@@ -253,10 +250,12 @@ namespace USNL {
                 string a4 = a3[0];
                 return a4;
             } catch {
-                attempts++;
+                Debug.LogWarning("Could not Get WAN ID.");
+                return "";
+                /*attempts++;
                 if (attempts < 5) return GetWanIP();
-                else return "";
-                // Kinda jank but it should work
+                else return "";*/
+                // Kinda jank but it should work - Dont be an idiot that's an infinite loop
             }
         }
 
