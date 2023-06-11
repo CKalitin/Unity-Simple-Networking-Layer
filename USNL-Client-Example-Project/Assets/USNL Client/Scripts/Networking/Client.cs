@@ -274,7 +274,7 @@ namespace USNL.Package {
 
         #region Functions
 
-        public void SetIP(int _id, int _port) {
+        public void SetIP(long _id, int _port) {
             if (isConnected) {
                 Debug.Log("Client already connected, cannot change IP.");
                 return;
@@ -333,7 +333,7 @@ namespace USNL.Package {
             ipOctets[1] = (long)((_id / 65536) % 256);
             ipOctets[2] = (long)((_id / 256) % 256);
             ipOctets[3] = (long)((_id / 1) % 256);
-
+            
             return ipOctets[0] + "." + ipOctets[1] + "." + ipOctets[2] + "." + ipOctets[3];
         }
         
