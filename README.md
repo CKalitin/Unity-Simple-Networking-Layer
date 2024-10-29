@@ -6,9 +6,9 @@ Unity Version: 2021.3.15f1
 
 Trello: https://trello.com/b/Fxe9qDjb
 
-## Documentation (Some of this is improperly formatted on Github, better to read the raw .md file):
-
 # USNL Documentation
+Documentation (Some of this is improperly formatted on Github, better to read the raw .md file):
+
 This covers the USNL namespace. It contains all the functions needed for a user to use the package.
 If you're changing the package itself, see Docs-Package.md.
 
