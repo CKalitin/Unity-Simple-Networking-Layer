@@ -6,6 +6,8 @@ Unity Version: 2021.3.15f1
 
 Trello: https://trello.com/b/Fxe9qDjb
 
+![Code Layer Diagram](https://github.com/CKalitin/Unity-Simple-Networking-Layer/blob/main/USNL_Layer-Diagram.png?raw=true)
+
 # USNL Documentation
 Documentation (Some of this is improperly formatted on Github, better to read the raw .md file):
 
