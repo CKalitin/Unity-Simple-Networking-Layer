@@ -9,7 +9,7 @@ Trello: https://trello.com/b/Fxe9qDjb
 ![Code Layer Diagram](https://github.com/CKalitin/Unity-Simple-Networking-Layer/blob/main/USNL_Layer-Diagram.png?raw=true)
 
 NOTES:  
-1. Use virtual/override to inheret from a class that has the packet read functions, this is easier - Just make your own class that inherets monobehaviour and has all the functions, then inherent that class  
+1. Use virtual/override to inheret from a class that has the packet read functions, this is easier - Just make your own class that inherets monobehaviour and has all the functions, then inherent that class - This gets rid of the horrible callbacks that are implemented now that use a c# object as a parameter to pass in structs, probably extremely unsafe - In another life as a C# Unity programmer I would do this but I have other more important projects, time is a scarce resource
    https://discussions.unity.com/t/inheriting-from-a-class-that-inherits-from-monobehaviour/21500/3
 
 # USNL Documentation
